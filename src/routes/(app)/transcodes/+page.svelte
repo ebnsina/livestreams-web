@@ -11,7 +11,7 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import Menu from '$lib/components/Menu.svelte';
 	import Pager from '$lib/components/Pager.svelte';
-	import { UploadCloud } from '@lucide/svelte';
+	import { UploadCloud, Play, ScrollText, RefreshCw, Trash2 } from '@lucide/svelte';
 
 	const qc = useQueryClient();
 	const LIMIT = 20;
@@ -128,17 +128,20 @@
 							<div class="flex justify-end">
 								<Menu>
 									<button class="menu-item" disabled={a.status !== 'ready'} onclick={() => (playing = a)}>
-										Play
+										<Play size={15} /> Play
 									</button>
-									<button class="menu-item" onclick={() => (detail = a)}>Details</button>
+									<button class="menu-item" onclick={() => (detail = a)}>
+										<ScrollText size={15} /> Details
+									</button>
 									{#if auth.canWrite && a.type !== 'clip' && a.status !== 'processing' && a.status !== 'uploading'}
 										<button class="menu-item" onclick={() => retry.mutate(a.id)}>
+											<RefreshCw size={15} />
 											{a.status === 'errored' ? 'Retry' : 'Re-transcode'}
 										</button>
 									{/if}
 									{#if auth.canWrite}
 										<button class="menu-item text-red-600" onclick={() => remove.mutate(a.id)}>
-											Delete
+											<Trash2 size={15} /> Delete
 										</button>
 									{/if}
 								</Menu>
