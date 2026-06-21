@@ -10,6 +10,8 @@ class Auth {
 	token = $state<string | null>(null);
 	refreshToken = $state<string | null>(null);
 	user = $state<User | null>(null);
+	role = $state<string>(''); // role in the active org
+	activeOrgId = $state<string>('');
 
 	constructor() {
 		if (typeof localStorage !== 'undefined') {
@@ -20,6 +22,22 @@ class Auth {
 
 	get isAuthenticated() {
 		return !!this.token;
+	}
+
+	get canWrite() {
+		return this.role !== 'viewer';
+	}
+
+	get isAdmin() {
+		return this.role === 'owner' || this.role === 'admin';
+	}
+
+	// update just the tokens (e.g. after switching org), keeping the user
+	setTokens(token: string, refreshToken: string) {
+		this.token = token;
+		this.refreshToken = refreshToken;
+		localStorage.setItem(TOKEN_KEY, token);
+		localStorage.setItem(REFRESH_KEY, refreshToken);
 	}
 
 	set(token: string, refreshToken: string, user: User) {

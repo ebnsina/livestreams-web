@@ -68,7 +68,12 @@ export const api = {
 		request<AuthResponse>('/v1/auth/register', { method: 'POST', body: input, auth: false }),
 	login: (input: { email: string; password: string }) =>
 		request<AuthResponse>('/v1/auth/login', { method: 'POST', body: input, auth: false }),
-	me: () => request<{ user: User; orgs: Org[] }>('/v1/me'),
+	me: () => request<{ user: User; orgs: Org[]; role: string; org_id: string }>('/v1/me'),
+	switchOrg: (org_id: string) =>
+		request<{ access_token: string; refresh_token: string }>('/v1/me/switch-org', {
+			method: 'POST',
+			body: { org_id }
+		}),
 	updateProfile: (name: string) => request<void>('/v1/me', { method: 'PATCH', body: { name } }),
 	changePassword: (current_password: string, new_password: string) =>
 		request<void>('/v1/me/password', { method: 'POST', body: { current_password, new_password } }),

@@ -2,6 +2,7 @@
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
+	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 
 	const qc = useQueryClient();
@@ -52,7 +53,8 @@
 	</div>
 {/if}
 
-<!-- invite form -->
+<!-- invite form (owners/admins only) -->
+{#if auth.isAdmin}
 <form
 	class="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
 	onsubmit={(e) => {
@@ -69,12 +71,14 @@
 		<select id="role" class="input w-auto" bind:value={role}>
 			<option value="member">Member</option>
 			<option value="admin">Admin</option>
+			<option value="viewer">Viewer (read-only)</option>
 		</select>
 	</div>
 	<button class="btn-primary" type="submit" disabled={create.isPending}>
 		{create.isPending ? 'Inviting…' : 'Send invite'}
 	</button>
 </form>
+{/if}
 
 <!-- members -->
 <section class="mb-8">
@@ -103,7 +107,9 @@
 						<p class="truncate text-sm font-medium">{i.email}</p>
 						<p class="text-xs text-[var(--color-muted)]">invited as {i.role}</p>
 					</div>
-					<button class="btn-danger text-sm" onclick={() => revoke.mutate(i.id)}>Revoke</button>
+					{#if auth.isAdmin}
+						<button class="btn-danger text-sm" onclick={() => revoke.mutate(i.id)}>Revoke</button>
+					{/if}
 				</div>
 			{/each}
 		</div>

@@ -32,7 +32,20 @@
 
 	$effect(() => {
 		if (me.data?.user) auth.setUser(me.data.user);
+		if (me.data) {
+			auth.role = me.data.role;
+			auth.activeOrgId = me.data.org_id;
+		}
 	});
+
+	const orgs = $derived(me.data?.orgs ?? []);
+
+	async function switchOrg(orgId: string) {
+		if (orgId === auth.activeOrgId) return;
+		const toks = await api.switchOrg(orgId);
+		auth.setTokens(toks.access_token, toks.refresh_token);
+		location.reload(); // reload all data under the new org
+	}
 
 	const nav = [
 		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -85,10 +98,23 @@
 			</nav>
 
 			<div class="border-t border-[var(--color-border)] pt-4">
+				{#if orgs.length > 1}
+					<select
+						class="input mb-3 text-sm"
+						value={auth.activeOrgId}
+						onchange={(e) => switchOrg(e.currentTarget.value)}
+					>
+						{#each orgs as o (o.id)}
+							<option value={o.id}>{o.name}</option>
+						{/each}
+					</select>
+				{/if}
 				<div class="mb-3 flex items-center justify-between gap-2">
 					<div class="min-w-0 px-2 text-sm">
 						<p class="truncate font-medium">{auth.user?.name ?? '—'}</p>
-						<p class="truncate text-xs text-[var(--color-muted)]">{auth.user?.email ?? ''}</p>
+						<p class="truncate text-xs text-[var(--color-muted)]">
+							{auth.role || auth.user?.email}
+						</p>
 					</div>
 					<ThemeToggle />
 				</div>

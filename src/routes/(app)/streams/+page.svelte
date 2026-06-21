@@ -2,6 +2,7 @@
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
+	import { auth } from '$lib/auth.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import type { LatencyMode } from '$lib/types';
 
@@ -35,9 +36,11 @@
 		<h1 class="text-2xl font-semibold">Streams</h1>
 		<p class="mt-1 text-sm text-[var(--color-muted)]">Create and manage your channels</p>
 	</div>
-	<button class="btn-primary" onclick={() => (showForm = !showForm)}>
-		{showForm ? 'Cancel' : '+ New stream'}
-	</button>
+	{#if auth.canWrite}
+		<button class="btn-primary" onclick={() => (showForm = !showForm)}>
+			{showForm ? 'Cancel' : '+ New stream'}
+		</button>
+	{/if}
 </header>
 
 {#if showForm}
