@@ -2,6 +2,18 @@
 	import Hls from 'hls.js';
 	import { onDestroy } from 'svelte';
 	import { api } from '$lib/api';
+	import {
+		Play,
+		Pause,
+		Volume2,
+		Volume1,
+		VolumeX,
+		Maximize,
+		Minimize,
+		PictureInPicture2,
+		Settings2,
+		RotateCcw
+	} from '@lucide/svelte';
 
 	let {
 		src,
@@ -10,7 +22,9 @@
 		streamId = ''
 	}: { src: string; live?: boolean; reload?: number; streamId?: string } = $props();
 
-	// QoS tracking
+	const isHls = $derived(/\.m3u8(\?|$)/i.test(src));
+
+	// --- QoS tracking ---
 	const viewerId = typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(36);
 	let startedAt = 0;
 	let startupMs = 0;
@@ -20,7 +34,8 @@
 
 	function beacon() {
 		if (!streamId) return;
-		const br = playingLevel >= 0 && levels[playingLevel] ? Math.round(levels[playingLevel].bitrate / 1000) : 0;
+		const br =
+			playingLevel >= 0 && levels[playingLevel] ? Math.round(levels[playingLevel].bitrate / 1000) : 0;
 		api.sendBeacon({
 			stream_id: streamId,
 			viewer_id: viewerId,
@@ -31,7 +46,9 @@
 		});
 	}
 
-	let video: HTMLVideoElement;
+	let wrap = $state<HTMLDivElement>();
+	let video = $state<HTMLVideoElement>();
+	let bar = $state<HTMLDivElement>();
 	let hls: Hls | null = null;
 	let error = $state(false);
 	let retry: ReturnType<typeof setTimeout> | null = null;
@@ -40,12 +57,27 @@
 	type Level = { name: string; index: number; bitrate: number };
 	let levels = $state<Level[]>([]);
 	let selected = $state(-1); // -1 = auto
-	let playingLevel = $state(-1); // actual level when auto
+	let playingLevel = $state(-1);
 	let menuOpen = $state(false);
 
-	// QoS
+	// playback / chrome state
+	let paused = $state(true);
+	let muted = $state(true);
+	let volume = $state(1);
+	let current = $state(0);
+	let duration = $state(0);
+	let bufferedEnd = $state(0);
+	let isFs = $state(false);
 	let buffering = $state(false);
 	let rebuffers = $state(0);
+	let controlsShown = $state(true);
+	let hideTimer: ReturnType<typeof setTimeout> | null = null;
+	let seeking = false;
+
+	const hasDuration = $derived(duration > 0 && isFinite(duration));
+	const playedPct = $derived(hasDuration ? Math.min(100, (current / duration) * 100) : live ? 100 : 0);
+	const bufferedPct = $derived(hasDuration ? Math.min(100, (bufferedEnd / duration) * 100) : 0);
+	const controlsVisible = $derived(controlsShown || paused);
 
 	$effect(() => {
 		void reload;
@@ -68,14 +100,11 @@
 		if (!video || !src) return;
 		beaconTimer = setInterval(beacon, 10000);
 
-		if (Hls.isSupported()) {
-			// We emit standard HLS (4s segments), not LL-HLS with partial segments,
-			// so lowLatencyMode would make the player stall waiting for parts that
-			// never arrive. Keep live-edge sync only for live; plain config for VOD.
+		if (isHls && Hls.isSupported()) {
+			// Standard HLS (4s segments) — not LL-HLS — so lowLatencyMode would stall.
 			hls = new Hls(live ? { liveSyncDurationCount: 3 } : {});
 			hls.loadSource(src);
 			hls.attachMedia(video);
-
 			hls.on(Hls.Events.MANIFEST_PARSED, () => {
 				levels =
 					hls?.levels.map((l, i) => ({
@@ -84,21 +113,17 @@
 						bitrate: l.bitrate
 					})) ?? [];
 			});
-			hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
-				playingLevel = data.level;
-			});
+			hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => (playingLevel = data.level));
 			hls.on(Hls.Events.ERROR, (_e, data) => {
 				if (!data.fatal) return;
-				if (live && data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-					scheduleRetry();
-				} else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
-					hls?.recoverMediaError();
-				} else {
-					error = true;
-				}
+				if (live && data.type === Hls.ErrorTypes.NETWORK_ERROR) scheduleRetry();
+				else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls?.recoverMediaError();
+				else error = true;
 			});
-		} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-			video.src = src; // Safari native HLS (no manual level control)
+		} else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
+			video.src = src; // Safari native HLS
+		} else if (!isHls) {
+			video.src = src; // progressive mp4 (recordings/clips)
 		} else {
 			error = true;
 		}
@@ -107,7 +132,7 @@
 	function pick(index: number) {
 		selected = index;
 		menuOpen = false;
-		if (hls) hls.currentLevel = index; // -1 = auto
+		if (hls) hls.currentLevel = index;
 	}
 
 	function scheduleRetry() {
@@ -116,6 +141,7 @@
 		retry = setTimeout(() => hls?.startLoad(), 2000);
 	}
 
+	// --- video events ---
 	function onWaiting() {
 		buffering = true;
 		rebuffers += 1;
@@ -127,10 +153,103 @@
 			rebufferStart = 0;
 		}
 		if (startupMs === 0 && startedAt) {
-			startupMs = performance.now() - startedAt; // time to first playback
-			beacon(); // send the startup beacon immediately
+			startupMs = performance.now() - startedAt;
+			beacon();
 		}
 		buffering = false;
+	}
+	function onTime() {
+		if (!video) return;
+		current = video.currentTime;
+		try {
+			const b = video.buffered;
+			if (b.length) bufferedEnd = b.end(b.length - 1);
+		} catch {
+			/* buffered not ready */
+		}
+	}
+
+	// --- controls ---
+	function togglePlay() {
+		if (!video) return;
+		if (video.paused) video.play().catch(() => {});
+		else video.pause();
+	}
+	function toggleMute() {
+		if (!video) return;
+		video.muted = !video.muted;
+	}
+	function changeVolume(v: number) {
+		if (!video) return;
+		video.volume = v;
+		video.muted = v === 0;
+	}
+	function seekFrom(e: PointerEvent) {
+		if (!video || !bar || !hasDuration) return;
+		const r = bar.getBoundingClientRect();
+		const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+		video.currentTime = f * duration;
+	}
+	function goLive() {
+		if (video && hasDuration) video.currentTime = duration;
+	}
+	async function toggleFs() {
+		if (!wrap) return;
+		try {
+			if (document.fullscreenElement) await document.exitFullscreen();
+			else await wrap.requestFullscreen();
+		} catch {
+			/* denied */
+		}
+	}
+	async function togglePip() {
+		if (!video) return;
+		try {
+			if (document.pictureInPictureElement) await document.exitPictureInPicture();
+			else await video.requestPictureInPicture();
+		} catch {
+			/* unsupported */
+		}
+	}
+	function nudge(sec: number) {
+		if (video && hasDuration) video.currentTime = Math.min(duration, Math.max(0, current + sec));
+	}
+
+	function poke() {
+		controlsShown = true;
+		if (hideTimer) clearTimeout(hideTimer);
+		hideTimer = setTimeout(() => {
+			if (!paused && !menuOpen) controlsShown = false;
+		}, 2600);
+	}
+
+	function onKey(e: KeyboardEvent) {
+		switch (e.key) {
+			case ' ':
+			case 'k':
+				e.preventDefault();
+				togglePlay();
+				break;
+			case 'f':
+				toggleFs();
+				break;
+			case 'm':
+				toggleMute();
+				break;
+			case 'ArrowLeft':
+				nudge(-5);
+				break;
+			case 'ArrowRight':
+				nudge(5);
+				break;
+			case 'ArrowUp':
+				changeVolume(Math.min(1, volume + 0.1));
+				break;
+			case 'ArrowDown':
+				changeVolume(Math.max(0, volume - 0.1));
+				break;
+		}
+		poke();
 	}
 
 	function teardown() {
@@ -149,6 +268,20 @@
 	}
 	onDestroy(teardown);
 
+	function onFsChange() {
+		isFs = document.fullscreenElement === wrap;
+	}
+
+	function fmt(s: number) {
+		if (!isFinite(s) || s < 0) return '0:00';
+		const h = Math.floor(s / 3600);
+		const m = Math.floor((s % 3600) / 60);
+		const sec = Math.floor(s % 60);
+		return h
+			? `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+			: `${m}:${sec.toString().padStart(2, '0')}`;
+	}
+
 	const currentLabel = $derived(
 		selected === -1
 			? `Auto${playingLevel >= 0 && levels[playingLevel] ? ` · ${levels[playingLevel].name}` : ''}`
@@ -156,108 +289,231 @@
 	);
 </script>
 
-<div class="relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-black">
+<svelte:document onfullscreenchange={onFsChange} />
+
+<!-- svelte-ignore a11y_no_noninteractive_tabindex a11y_no_noninteractive_element_interactions -->
+<div
+	bind:this={wrap}
+	class="player group relative overflow-hidden rounded-xl border border-[var(--color-border)] bg-black select-none {controlsVisible
+		? ''
+		: 'cursor-none'}"
+	tabindex="0"
+	role="region"
+	aria-label="Video player"
+	onpointermove={poke}
+	onmouseleave={() => !paused && (controlsShown = false)}
+	onkeydown={onKey}
+>
 	<!-- svelte-ignore a11y_media_has_caption -->
 	<video
 		bind:this={video}
-		controls
 		autoplay
-		muted
 		playsinline
+		bind:muted
+		bind:volume
+		onplay={() => (paused = false)}
+		onpause={() => (paused = true)}
 		onwaiting={onWaiting}
 		onplaying={onResume}
 		oncanplay={onResume}
+		ontimeupdate={onTime}
+		onprogress={onTime}
+		onloadedmetadata={onTime}
+		ondurationchange={() => video && (duration = video.duration)}
+		onclick={togglePlay}
+		ondblclick={toggleFs}
 		class="aspect-video w-full bg-black"
 	></video>
 
-	<!-- quality selector (top-right) -->
-	{#if levels.length > 0}
-		<div class="absolute right-3 top-3 z-10">
-			<button
-				class="rounded-md bg-black/60 px-2.5 py-1 font-mono text-[11px] font-medium text-white backdrop-blur transition-colors hover:bg-black/80"
-				onclick={() => (menuOpen = !menuOpen)}
+	<!-- LIVE badge -->
+	{#if live}
+		<div class="pointer-events-none absolute left-3 top-3 z-10">
+			<span
+				class="inline-flex items-center gap-1.5 rounded-md bg-black/55 px-2 py-1 text-[11px] font-semibold tracking-wide text-white backdrop-blur"
 			>
-				{currentLabel}
-			</button>
-			{#if menuOpen}
-				<div
-					class="absolute right-0 mt-1 min-w-[120px] overflow-hidden rounded-lg border border-white/10 bg-black/85 backdrop-blur"
-				>
-					<button
-						class="block w-full px-3 py-1.5 text-left font-mono text-[11px] text-white hover:bg-white/10 {selected ===
-						-1
-							? 'text-[#ff5b3e]'
-							: ''}"
-						onclick={() => pick(-1)}>Auto</button
-					>
-					{#each [...levels].reverse() as l (l.index)}
-						<button
-							class="block w-full px-3 py-1.5 text-left font-mono text-[11px] text-white hover:bg-white/10 {selected ===
-							l.index
-								? 'text-[#ff5b3e]'
-								: ''}"
-							onclick={() => pick(l.index)}
-						>
-							{l.name}
-							<span class="text-white/40">{Math.round(l.bitrate / 1000)}k</span>
-						</button>
-					{/each}
-				</div>
+				<span class="h-1.5 w-1.5 rounded-full bg-[var(--color-live)]"></span> LIVE
+			</span>
+		</div>
+	{/if}
+
+	<!-- center play / buffering -->
+	{#if buffering && !error}
+		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+			<div class="h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+		</div>
+	{:else if paused && !error}
+		<button
+			class="absolute inset-0 z-10 flex items-center justify-center"
+			onclick={togglePlay}
+			aria-label="Play"
+		>
+			<span
+				class="flex h-16 w-16 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition-transform hover:scale-105"
+			>
+				<Play size={28} class="ml-1 fill-current" />
+			</span>
+		</button>
+	{/if}
+
+	<!-- error / waiting overlay -->
+	{#if error}
+		<div
+			class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/75 text-center text-sm text-white/70"
+		>
+			<p class="text-white/90">{live ? 'Waiting for the stream…' : 'Nothing to play yet.'}</p>
+			{#if live}
+				<p class="text-xs">Start publishing from OBS to this stream's ingest URL.</p>
+			{:else}
+				<button class="btn-ghost border-white/20 text-white" onclick={init}>
+					<RotateCcw size={14} /> Retry
+				</button>
 			{/if}
 		</div>
 	{/if}
 
-	<!-- buffering spinner -->
-	{#if buffering && !error}
-		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-			<div
-				class="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white"
-			></div>
-		</div>
-	{/if}
-
-	<!-- waiting overlay -->
-	{#if error}
+	<!-- control bar -->
+	<div
+		class="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/80 via-black/30 to-transparent px-3 pb-2 pt-8 transition-opacity duration-200 {controlsVisible
+			? 'opacity-100'
+			: 'pointer-events-none opacity-0'}"
+	>
+		<!-- seek bar -->
 		<div
-			class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 text-center text-sm text-[var(--color-muted)]"
+			bind:this={bar}
+			class="group/bar relative mb-2 h-3 cursor-pointer"
+			role="slider"
+			tabindex="-1"
+			aria-label="Seek"
+			aria-valuemin={0}
+			aria-valuemax={Math.round(duration) || 0}
+			aria-valuenow={Math.round(current)}
+			onpointerdown={(e) => {
+				if (!hasDuration) return;
+				seeking = true;
+				bar?.setPointerCapture(e.pointerId);
+				seekFrom(e);
+			}}
+			onpointermove={(e) => seeking && seekFrom(e)}
+			onpointerup={() => (seeking = false)}
+			onpointercancel={() => (seeking = false)}
 		>
-			<p>{live ? 'Waiting for the stream…' : 'Nothing to play yet.'}</p>
-			<p class="text-xs">Start publishing from OBS to this stream's ingest URL.</p>
+			<div class="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded-full bg-white/25">
+				<div class="absolute h-full rounded-full bg-white/30" style="width: {bufferedPct}%"></div>
+				<div class="absolute h-full rounded-full bg-[#ff5b3e]" style="width: {playedPct}%"></div>
+			</div>
+			{#if hasDuration}
+				<div
+					class="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ff5b3e] opacity-0 shadow transition-opacity group-hover/bar:opacity-100"
+					style="left: {playedPct}%"
+				></div>
+			{/if}
 		</div>
-	{/if}
+
+		<!-- buttons -->
+		<div class="flex items-center gap-3 text-white">
+			<button onclick={togglePlay} aria-label={paused ? 'Play' : 'Pause'} class="hover:text-white/80">
+				{#if paused}<Play size={18} class="fill-current" />{:else}<Pause
+						size={18}
+						class="fill-current"
+					/>{/if}
+			</button>
+
+			<!-- volume -->
+			<div class="group/vol flex items-center gap-1.5">
+				<button onclick={toggleMute} aria-label="Mute" class="hover:text-white/80">
+					{#if muted || volume === 0}<VolumeX size={18} />{:else if volume < 0.5}<Volume1
+							size={18}
+						/>{:else}<Volume2 size={18} />{/if}
+				</button>
+				<input
+					type="range"
+					min="0"
+					max="1"
+					step="0.05"
+					value={muted ? 0 : volume}
+					oninput={(e) => changeVolume(+e.currentTarget.value)}
+					class="vol w-0 opacity-0 transition-all group-hover/vol:w-16 group-hover/vol:opacity-100"
+					aria-label="Volume"
+				/>
+			</div>
+
+			<!-- time / live -->
+			{#if live}
+				<button
+					onclick={goLive}
+					class="flex items-center gap-1.5 text-[12px] font-medium hover:text-white/80"
+				>
+					<span
+						class="h-1.5 w-1.5 rounded-full {playedPct > 98
+							? 'bg-[var(--color-live)]'
+							: 'bg-white/40'}"
+					></span>
+					{playedPct > 98 ? 'Live' : 'Go live'}
+				</button>
+			{:else}
+				<span class="font-mono text-[12px] tabular-nums text-white/85">
+					{fmt(current)} / {fmt(duration)}
+				</span>
+			{/if}
+
+			<div class="ml-auto flex items-center gap-3">
+				<!-- quality -->
+				{#if levels.length > 0}
+					<div class="relative">
+						<button
+							onclick={() => (menuOpen = !menuOpen)}
+							class="flex items-center gap-1 text-[12px] font-medium hover:text-white/80"
+							aria-label="Quality"
+						>
+							<Settings2 size={17} />
+							<span class="hidden font-mono sm:inline">{currentLabel}</span>
+						</button>
+						{#if menuOpen}
+							<div
+								class="absolute bottom-8 right-0 min-w-[130px] overflow-hidden rounded-lg border border-white/10 bg-black/90 py-1 backdrop-blur"
+							>
+								<button
+									class="block w-full px-3 py-1.5 text-left font-mono text-[11px] hover:bg-white/10 {selected ===
+									-1
+										? 'text-[#ff5b3e]'
+										: 'text-white'}"
+									onclick={() => pick(-1)}>Auto</button
+								>
+								{#each [...levels].reverse() as l (l.index)}
+									<button
+										class="flex w-full items-center justify-between px-3 py-1.5 text-left font-mono text-[11px] hover:bg-white/10 {selected ===
+										l.index
+											? 'text-[#ff5b3e]'
+											: 'text-white'}"
+										onclick={() => pick(l.index)}
+									>
+										{l.name}<span class="text-white/40">{Math.round(l.bitrate / 1000)}k</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				{/if}
+
+				<button onclick={togglePip} aria-label="Picture in picture" class="hover:text-white/80">
+					<PictureInPicture2 size={17} />
+				</button>
+				<button onclick={toggleFs} aria-label="Fullscreen" class="hover:text-white/80">
+					{#if isFs}<Minimize size={18} />{:else}<Maximize size={18} />{/if}
+				</button>
+			</div>
+		</div>
+	</div>
 </div>
 
-{#if levels.length > 0}
-	<div class="mt-2 flex flex-wrap items-center gap-2">
-		<span class="text-xs text-[var(--color-muted)]">Quality</span>
-		<!-- clickable rendition switcher -->
-		<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">
-			<button
-				class="rounded-md px-2.5 py-1 font-mono text-[11px] font-medium transition-colors {selected ===
-				-1
-					? 'bg-[var(--color-surface)] text-[#ff5b3e] shadow-sm'
-					: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
-				onclick={() => pick(-1)}
-			>
-				Auto{selected === -1 && playingLevel >= 0 && levels[playingLevel]
-					? ` · ${levels[playingLevel].name}`
-					: ''}
-			</button>
-			{#each [...levels].reverse() as l (l.index)}
-				<button
-					class="rounded-md px-2.5 py-1 font-mono text-[11px] font-medium transition-colors {selected ===
-					l.index
-						? 'bg-[var(--color-surface)] text-[#ff5b3e] shadow-sm'
-						: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
-					onclick={() => pick(l.index)}
-					title="{Math.round(l.bitrate / 1000)} kbps"
-				>
-					{l.name}
-				</button>
-			{/each}
-		</div>
-		<span class="ml-auto text-xs text-[var(--color-muted)]"
-			>Rebuffers: <span class="font-mono tabular-nums">{rebuffers}</span></span
-		>
-	</div>
-{/if}
+<style>
+	/* coral range thumb/track for the volume slider */
+	.vol {
+		accent-color: #ff5b3e;
+		height: 4px;
+	}
+	.player:focus-visible {
+		outline: 2px solid #ff5b3e;
+		outline-offset: 2px;
+	}
+</style>

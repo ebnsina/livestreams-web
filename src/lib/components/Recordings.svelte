@@ -19,7 +19,6 @@
 
 	let playingId = $state<string | null>(null);
 	let playingUrl = $state<string | null>(null);
-	let playingKind = $state<'hls' | 'file'>('file');
 	let loadingId = $state<string | null>(null);
 	let error = $state<string | null>(null);
 
@@ -30,7 +29,6 @@
 			const res = await api.assetPlayback(a.id);
 			playingId = a.id;
 			playingUrl = res.url;
-			playingKind = res.kind;
 		} catch {
 			error = 'Could not load recording';
 		} finally {
@@ -68,13 +66,9 @@
 
 	{#if playingUrl}
 		<div class="border-b border-[var(--color-border)] bg-black p-3">
-			{#if playingKind === 'hls'}
+			{#key playingUrl}
 				<Player src={playingUrl} />
-			{:else}
-				<!-- svelte-ignore a11y_media_has_caption -->
-				<video src={playingUrl} controls autoplay class="aspect-video w-full rounded-lg bg-black"
-				></video>
-			{/if}
+			{/key}
 		</div>
 	{/if}
 
