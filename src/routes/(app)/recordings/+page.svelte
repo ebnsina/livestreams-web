@@ -7,6 +7,8 @@
 	import Recordings from '$lib/components/Recordings.svelte';
 	import UploadVOD from '$lib/components/UploadVOD.svelte';
 	import ClipModal from '$lib/components/ClipModal.svelte';
+	import EmbedSnippet from '$lib/components/EmbedSnippet.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import Pager from '$lib/components/Pager.svelte';
 	import { UploadCloud } from '@lucide/svelte';
 
@@ -16,6 +18,7 @@
 	let offset = $state(0);
 	let showUpload = $state(false);
 	let clipping = $state<Asset | null>(null);
+	let embedding = $state<Asset | null>(null);
 
 	$effect(() => {
 		void q;
@@ -70,9 +73,15 @@
 		assets={list}
 		onDelete={auth.canWrite ? (id) => remove.mutate(id) : undefined}
 		onClip={auth.canWrite ? (a) => (clipping = a) : undefined}
+		onEmbed={(a) => (embedding = a)}
 	/>
 	<Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />
 {/if}
 
 <UploadVOD open={showUpload} onClose={() => (showUpload = false)} onDone={refresh} />
 <ClipModal asset={clipping} onClose={() => (clipping = null)} onDone={refresh} />
+<Modal open={!!embedding} title="Embed video" onClose={() => (embedding = null)}>
+	{#if embedding}
+		<EmbedSnippet id={embedding.id} kind="vod" />
+	{/if}
+</Modal>

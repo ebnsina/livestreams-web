@@ -13,6 +13,7 @@
 	import Recordings from '$lib/components/Recordings.svelte';
 	import Restream from '$lib/components/Restream.svelte';
 	import Chart from '$lib/components/Chart.svelte';
+	import EmbedSnippet from '$lib/components/EmbedSnippet.svelte';
 
 	const qc = useQueryClient();
 	const id = $derived(page.params.id as string);
@@ -214,8 +215,9 @@
 				)}
 			</div>
 
-			<div class="card p-4">
-				<CopyField label="Playback URL (HLS)" value={s.playback_url} />
+			<div class="card space-y-3 p-4">
+				<h2 class="text-sm font-semibold text-[var(--color-muted)]">Share &amp; embed</h2>
+				<EmbedSnippet {id} kind="live" hlsUrl={s.playback_url} />
 			</div>
 			<Timeline events={timeline} live={isLive} />
 		</div>

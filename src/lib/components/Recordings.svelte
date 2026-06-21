@@ -7,12 +7,14 @@
 		assets,
 		compact = false,
 		onDelete,
-		onClip
+		onClip,
+		onEmbed
 	}: {
 		assets: Asset[];
 		compact?: boolean;
 		onDelete?: (id: string) => void;
 		onClip?: (a: Asset) => void;
+		onEmbed?: (a: Asset) => void;
 	} = $props();
 
 	let playingId = $state<string | null>(null);
@@ -113,6 +115,9 @@
 						>
 							{loadingId === a.id ? 'Loading…' : playingId === a.id ? 'Playing' : 'Play'}
 						</button>
+						{#if onEmbed && !compact && a.type === 'vod' && a.status === 'ready'}
+							<button class="btn-ghost text-sm" onclick={() => onEmbed?.(a)}>Embed</button>
+						{/if}
 						{#if onClip && !compact && a.status === 'ready'}
 							<button class="btn-ghost text-sm" onclick={() => onClip?.(a)}>Clip</button>
 						{/if}
