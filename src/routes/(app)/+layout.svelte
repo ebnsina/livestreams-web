@@ -6,7 +6,15 @@
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import { LayoutDashboard, Radio, Cpu, ScrollText, Webhook, KeyRound } from '@lucide/svelte';
+	import {
+		LayoutDashboard,
+		Radio,
+		Film,
+		Cpu,
+		ScrollText,
+		Webhook,
+		KeyRound
+	} from '@lucide/svelte';
 
 	let { children } = $props();
 
@@ -27,6 +35,7 @@
 	const nav = [
 		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 		{ href: '/streams', label: 'Streams', icon: Radio },
+		{ href: '/recordings', label: 'Recordings', icon: Film },
 		{ href: '/jobs', label: 'Jobs', icon: Cpu },
 		{ href: '/logs', label: 'Logs', icon: ScrollText },
 		{ href: '/webhooks', label: 'Webhooks', icon: Webhook },

@@ -2,7 +2,11 @@
 	import { api } from '$lib/api';
 	import type { Asset } from '$lib/types';
 
-	let { assets, compact = false }: { assets: Asset[]; compact?: boolean } = $props();
+	let {
+		assets,
+		compact = false,
+		onDelete
+	}: { assets: Asset[]; compact?: boolean; onDelete?: (id: string) => void } = $props();
 
 	let playingId = $state<string | null>(null);
 	let playingUrl = $state<string | null>(null);
@@ -65,13 +69,18 @@
 							{#if a.status !== 'ready'}· {a.status}{/if}
 						</p>
 					</div>
-					<button
-						class="btn-ghost shrink-0 text-sm {playingId === a.id ? 'text-violet-500' : ''}"
-						onclick={() => play(a)}
-						disabled={loadingId === a.id || a.status !== 'ready'}
-					>
-						{loadingId === a.id ? 'Loading…' : playingId === a.id ? 'Playing' : 'Play'}
-					</button>
+					<div class="flex shrink-0 items-center gap-2">
+						<button
+							class="btn-ghost text-sm {playingId === a.id ? 'text-violet-500' : ''}"
+							onclick={() => play(a)}
+							disabled={loadingId === a.id || a.status !== 'ready'}
+						>
+							{loadingId === a.id ? 'Loading…' : playingId === a.id ? 'Playing' : 'Play'}
+						</button>
+						{#if onDelete}
+							<button class="btn-danger text-sm" onclick={() => onDelete?.(a.id)}>Delete</button>
+						{/if}
+					</div>
 				</li>
 			{/each}
 		</ul>

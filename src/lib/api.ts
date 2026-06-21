@@ -94,6 +94,7 @@ export const api = {
 		request<{ data: Asset[] }>(`/v1/recordings?stream_id=${streamId}`),
 	assetPlayback: (id: string) =>
 		request<{ url: string; expires_at: string }>(`/v1/assets/${id}/playback`),
+	deleteAsset: (id: string) => request<void>(`/v1/assets/${id}`, { method: 'DELETE' }),
 
 	// multistream destinations
 	destinations: () => request<{ data: Destination[] }>('/v1/destinations'),
