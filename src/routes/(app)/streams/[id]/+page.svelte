@@ -1,0 +1,215 @@
+<script lang="ts">
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { api } from '$lib/api';
+	import { keys } from '$lib/query';
+	import type { StreamEvent } from '$lib/types';
+	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import CopyField from '$lib/components/CopyField.svelte';
+	import Player from '$lib/components/Player.svelte';
+	import Timeline from '$lib/components/Timeline.svelte';
+	import Recordings from '$lib/components/Recordings.svelte';
+
+	const qc = useQueryClient();
+	const id = $derived(page.params.id as string);
+
+	const stream = createQuery(() => ({
+		queryKey: keys.stream(id),
+		queryFn: () => api.getStream(id),
+		refetchInterval: 8000 // status fallback; live events arrive via SSE
+	}));
+	const s = $derived(stream.data);
+	const isLive = $derived(s?.status === 'live');
+
+	const sessions = createQuery(() => ({
+		queryKey: keys.sessions(id),
+		queryFn: () => api.sessions(id)
+	}));
+
+	const recordings = createQuery(() => ({
+		queryKey: keys.recordings(id),
+		queryFn: () => api.streamRecordings(id),
+		refetchInterval: 10000 // a recording appears shortly after a stream ends
+	}));
+
+	// --- activity log: history (REST) + live (SSE) ---
+	const history = createQuery(() => ({
+		queryKey: keys.events(id),
+		queryFn: () => api.events(id)
+	}));
+
+	let liveEvents = $state<StreamEvent[]>([]);
+	let playerReload = $state(0);
+
+	// Merge live + history, newest first, deduped by id.
+	const timeline = $derived.by(() => {
+		const seen = new Set<string>();
+		const all: StreamEvent[] = [];
+		for (const e of [...liveEvents, ...(history.data?.data ?? [])]) {
+			if (seen.has(e.id)) continue;
+			seen.add(e.id);
+			all.push(e);
+		}
+		return all.sort((a, b) => b.created_at.localeCompare(a.created_at));
+	});
+
+	// Open the SSE stream for this stream id; reconnects when id changes.
+	$effect(() => {
+		liveEvents = [];
+		const es = new EventSource(api.eventStreamUrl(id));
+		es.onmessage = (e) => {
+			try {
+				const ev = JSON.parse(e.data) as StreamEvent;
+				liveEvents = [ev, ...liveEvents];
+				if (ev.type.startsWith('session.')) {
+					qc.invalidateQueries({ queryKey: keys.stream(id) });
+					qc.invalidateQueries({ queryKey: keys.sessions(id) });
+				}
+				if (ev.type === 'recording.saved' || ev.type === 'session.ended') {
+					qc.invalidateQueries({ queryKey: keys.recordings(id) });
+				}
+				if (ev.type === 'session.started' || ev.type === 'transcode.started') {
+					playerReload++; // pick up the freshly-live stream
+				}
+			} catch {
+				/* ignore malformed frame */
+			}
+		};
+		return () => es.close();
+	});
+
+	const rotate = createMutation(() => ({
+		mutationFn: () => api.rotateKey(id),
+		onSuccess: () => qc.invalidateQueries({ queryKey: keys.stream(id) })
+	}));
+
+	const stop = createMutation(() => ({
+		mutationFn: () => api.stopStream(id),
+		onSuccess: () => qc.invalidateQueries({ queryKey: keys.stream(id) })
+	}));
+
+	const remove = createMutation(() => ({
+		mutationFn: () => api.deleteStream(id),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.streams });
+			goto('/streams');
+		}
+	}));
+
+	function fmtDate(d: string | null) {
+		return d ? new Date(d).toLocaleString() : '—';
+	}
+</script>
+
+<a
+	href="/streams"
+	class="mb-4 inline-block text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
+	>← Back to streams</a
+>
+
+{#if stream.isPending}
+	<p class="text-sm text-[var(--color-muted)]">Loading…</p>
+{:else if stream.isError || !s}
+	<p class="text-sm text-red-400">Could not load this stream.</p>
+{:else}
+	<header class="mb-6 flex items-start justify-between gap-4">
+		<div>
+			<div class="flex items-center gap-3">
+				<h1 class="text-2xl font-semibold">{s.name}</h1>
+				<StatusBadge status={s.status} />
+			</div>
+			{#if s.description}<p class="mt-1 text-sm text-[var(--color-muted)]">{s.description}</p>{/if}
+		</div>
+		<div class="flex shrink-0 items-center gap-2">
+			{#if isLive}
+				<button class="btn-ghost" onclick={() => stop.mutate()} disabled={stop.isPending}>
+					{stop.isPending ? 'Stopping…' : 'Stop stream'}
+				</button>
+			{/if}
+			<button class="btn-danger" onclick={() => remove.mutate()} disabled={remove.isPending}>
+				Delete
+			</button>
+		</div>
+	</header>
+
+	<div class="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+		<!-- Player -->
+		<div class="min-w-0 space-y-4">
+			<Player src={s.playback_url} live={isLive} reload={playerReload} />
+			<div class="card p-4">
+				<CopyField label="Playback URL (HLS)" value={s.playback_url} />
+			</div>
+			<Timeline events={timeline} live={isLive} />
+		</div>
+
+		<!-- Ingest + meta -->
+		<div class="min-w-0 space-y-4">
+			<div class="card space-y-4 p-5">
+				<h2 class="text-sm font-semibold text-[var(--color-muted)]">Ingest</h2>
+				{#if s.ingest?.rtmp_url}
+					<CopyField label="RTMP Server" value={s.ingest.rtmp_url} />
+				{/if}
+				{#if s.ingest?.stream_key}
+					<CopyField label="Stream Key" value={s.ingest.stream_key} secret />
+				{/if}
+				<button
+					class="btn-ghost w-full text-sm"
+					onclick={() => rotate.mutate()}
+					disabled={rotate.isPending}
+				>
+					{rotate.isPending ? 'Rotating…' : 'Rotate stream key'}
+				</button>
+			</div>
+
+			<div class="card space-y-2 p-5 text-sm">
+				<div class="flex justify-between">
+					<span class="text-[var(--color-muted)]">Latency</span><span
+						>{s.latency_mode.replace('_', ' ')}</span
+					>
+				</div>
+				<div class="flex justify-between">
+					<span class="text-[var(--color-muted)]">Recording</span><span
+						>{s.recording_enabled ? 'On' : 'Off'}</span
+					>
+				</div>
+				<div class="flex justify-between">
+					<span class="text-[var(--color-muted)]">Created</span><span>{fmtDate(s.created_at)}</span>
+				</div>
+			</div>
+
+			<Recordings assets={recordings.data?.data ?? []} />
+		</div>
+	</div>
+
+	<!-- Sessions -->
+	<section class="mt-8">
+		<h2 class="mb-3 text-lg font-medium">Session history</h2>
+		<div class="card overflow-x-auto">
+			{#if (sessions.data?.data ?? []).length === 0}
+				<div class="p-6 text-sm text-[var(--color-muted)]">No sessions yet.</div>
+			{:else}
+				<table class="w-full min-w-[480px] text-sm">
+					<thead class="bg-[var(--color-surface-2)] text-left text-[var(--color-muted)]">
+						<tr>
+							<th class="px-4 py-2 font-medium">Started</th>
+							<th class="px-4 py-2 font-medium">Ended</th>
+							<th class="px-4 py-2 font-medium">Status</th>
+							<th class="px-4 py-2 font-medium">Peak viewers</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-[var(--color-border)]">
+						{#each sessions.data?.data ?? [] as sess (sess.id)}
+							<tr>
+								<td class="px-4 py-2">{fmtDate(sess.started_at)}</td>
+								<td class="px-4 py-2">{fmtDate(sess.ended_at)}</td>
+								<td class="px-4 py-2">{sess.status}</td>
+								<td class="px-4 py-2">{sess.peak_viewers}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
+		</div>
+	</section>
+{/if}
