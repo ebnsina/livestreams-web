@@ -66,6 +66,9 @@ export const api = {
 	login: (input: { email: string; password: string }) =>
 		request<AuthResponse>('/v1/auth/login', { method: 'POST', body: input, auth: false }),
 	me: () => request<{ user: User; orgs: Org[] }>('/v1/me'),
+	updateProfile: (name: string) => request<void>('/v1/me', { method: 'PATCH', body: { name } }),
+	changePassword: (current_password: string, new_password: string) =>
+		request<void>('/v1/me/password', { method: 'POST', body: { current_password, new_password } }),
 
 	// streams
 	listStreams: () => request<{ data: Stream[] }>('/v1/streams'),

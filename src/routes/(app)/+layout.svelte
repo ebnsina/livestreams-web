@@ -13,7 +13,8 @@
 		Cpu,
 		ScrollText,
 		Webhook,
-		KeyRound
+		KeyRound,
+		Settings
 	} from '@lucide/svelte';
 
 	let { children } = $props();
@@ -39,7 +40,8 @@
 		{ href: '/jobs', label: 'Jobs', icon: Cpu },
 		{ href: '/logs', label: 'Logs', icon: ScrollText },
 		{ href: '/webhooks', label: 'Webhooks', icon: Webhook },
-		{ href: '/api-keys', label: 'API Keys', icon: KeyRound }
+		{ href: '/api-keys', label: 'API Keys', icon: KeyRound },
+		{ href: '/settings', label: 'Settings', icon: Settings }
 	];
 
 	function logout() {
