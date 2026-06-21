@@ -10,16 +10,21 @@
 	const items = $derived(list.data?.data ?? []);
 
 	let name = $state('');
+	let access = $state<'full' | 'read'>('full');
 	let newKey = $state<string | null>(null);
 
 	const create = createMutation(() => ({
-		mutationFn: () => api.createApiKey(name),
+		mutationFn: () => api.createApiKey(name, access === 'read' ? ['read'] : ['*']),
 		onSuccess: (k) => {
 			newKey = k.key ?? null;
 			name = '';
 			qc.invalidateQueries({ queryKey: keys.apiKeys });
 		}
 	}));
+
+	function isReadOnly(scopes: string[]) {
+		return scopes.length > 0 && !scopes.includes('*') && !scopes.includes('write');
+	}
 
 	const revoke = createMutation(() => ({
 		mutationFn: (id: string) => api.revokeApiKey(id),
@@ -57,6 +62,13 @@
 		<label class="label" for="name">Key name</label>
 		<input id="name" class="input" bind:value={name} placeholder="CI pipeline" required />
 	</div>
+	<div>
+		<label class="label" for="access">Access</label>
+		<select id="access" class="input w-auto" bind:value={access}>
+			<option value="full">Read &amp; write</option>
+			<option value="read">Read only</option>
+		</select>
+	</div>
 	<button class="btn-primary" type="submit" disabled={create.isPending}>
 		{create.isPending ? 'Creating…' : 'Create key'}
 	</button>
@@ -69,7 +81,16 @@
 		{#each items as k (k.id)}
 			<div class="flex items-center justify-between gap-3 p-4">
 				<div class="min-w-0">
-					<p class="truncate font-medium">{k.name}</p>
+					<p class="flex items-center gap-2 font-medium">
+						{k.name}
+						<span
+							class="rounded px-1.5 py-0.5 text-[10px] font-medium {isReadOnly(k.scopes)
+								? 'bg-sky-500/12 text-sky-500'
+								: 'bg-violet-500/12 text-violet-500'}"
+						>
+							{isReadOnly(k.scopes) ? 'read-only' : 'read & write'}
+						</span>
+					</p>
 					<p class="font-mono text-[11px] text-[var(--color-muted)]">
 						{k.prefix}… · last used {when(k.last_used_at)}
 					</p>

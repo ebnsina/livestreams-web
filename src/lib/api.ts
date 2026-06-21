@@ -119,6 +119,7 @@ export const api = {
 
 	// API keys
 	apiKeys: () => request<{ data: ApiKey[] }>('/v1/api-keys'),
-	createApiKey: (name: string) => request<ApiKey>('/v1/api-keys', { method: 'POST', body: { name } }),
+	createApiKey: (name: string, scopes: string[]) =>
+		request<ApiKey>('/v1/api-keys', { method: 'POST', body: { name, scopes } }),
 	revokeApiKey: (id: string) => request<void>(`/v1/api-keys/${id}`, { method: 'DELETE' })
 };
