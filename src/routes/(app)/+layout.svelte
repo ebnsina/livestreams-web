@@ -66,10 +66,10 @@
 </script>
 
 {#if auth.isAuthenticated}
-	<div class="flex min-h-screen">
+	<div class="flex min-h-screen bg-[var(--color-surface-2)]">
 		<!-- Desktop sidebar (fixed: stays in place while main scrolls) -->
 		<aside
-			class="hidden w-60 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)] p-4 md:flex md:sticky md:top-0 md:h-screen md:self-start md:overflow-y-auto"
+			class="hidden w-60 shrink-0 flex-col bg-transparent p-4 md:flex md:sticky md:top-0 md:h-screen md:self-start md:overflow-y-auto"
 		>
 			<div class="mb-8 flex items-center gap-2 px-2">
 				<div
@@ -156,10 +156,14 @@
 				{/each}
 			</nav>
 
-			<!-- Main content -->
-			<main class="min-w-0 flex-1">
-				<div class="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-					{@render children()}
+			<!-- Main content — floating white panel on the gray app background -->
+			<main class="min-w-0 flex-1 p-3 sm:p-4 md:pl-0">
+				<div
+					class="min-h-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm"
+				>
+					<div class="mx-auto w-full max-w-6xl px-5 py-6 sm:px-8 sm:py-8">
+						{@render children()}
+					</div>
 				</div>
 			</main>
 		</div>
