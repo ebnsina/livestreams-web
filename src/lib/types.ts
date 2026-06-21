@@ -84,6 +84,25 @@ export interface Destination {
 	enabled?: boolean;
 }
 
+export interface WebhookEndpoint {
+	id: string;
+	url: string;
+	events: string[];
+	enabled: boolean;
+	created_at: string;
+	secret?: string; // returned once on create
+}
+
+export interface WebhookDelivery {
+	id: string;
+	event_type: string;
+	status: string;
+	attempts: number;
+	response_code?: number;
+	error?: string;
+	created_at: string;
+}
+
 export interface JobError {
 	at: string;
 	error: string;

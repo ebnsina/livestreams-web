@@ -12,6 +12,8 @@ import type {
 	Job,
 	Asset,
 	Destination,
+	WebhookEndpoint,
+	WebhookDelivery,
 	User,
 	Org
 } from './types';
@@ -103,5 +105,12 @@ export const api = {
 		request<void>(`/v1/stream-destinations?stream_id=${streamId}&dest_id=${destId}`, {
 			method: 'PUT',
 			body: { enabled }
-		})
+		}),
+
+	// webhooks
+	webhooks: () => request<{ data: WebhookEndpoint[] }>('/v1/webhooks'),
+	createWebhook: (input: { url: string; events: string[] }) =>
+		request<WebhookEndpoint>('/v1/webhooks', { method: 'POST', body: input }),
+	deleteWebhook: (id: string) => request<void>(`/v1/webhooks/${id}`, { method: 'DELETE' }),
+	webhookDeliveries: () => request<{ data: WebhookDelivery[] }>('/v1/webhook-deliveries')
 };

@@ -9,5 +9,7 @@ export const keys = {
 	activity: (level?: string) => ['activity', level ?? 'all'] as const,
 	assets: ['assets'] as const,
 	recordings: (id: string) => ['streams', id, 'recordings'] as const,
-	streamDestinations: (id: string) => ['streams', id, 'destinations'] as const
+	streamDestinations: (id: string) => ['streams', id, 'destinations'] as const,
+	webhooks: ['webhooks'] as const,
+	webhookDeliveries: ['webhook-deliveries'] as const
 };
