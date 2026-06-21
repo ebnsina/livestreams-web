@@ -1,7 +1,11 @@
 <script lang="ts">
 	import type { StreamEvent } from '$lib/types';
 
-	let { events, live = false }: { events: StreamEvent[]; live?: boolean } = $props();
+	let {
+		events,
+		live = false,
+		onSelect
+	}: { events: StreamEvent[]; live?: boolean; onSelect?: (e: StreamEvent) => void } = $props();
 
 	// Soft-tint level pills (single colors that read on both light and dark).
 	const pill: Record<string, string> = {
@@ -58,41 +62,51 @@
 		>
 	</div>
 
+	{#snippet rowContent(e: StreamEvent)}
+		<span class="mt-[7px] h-2 w-2 shrink-0 rounded-full {dot[e.level] ?? 'bg-slate-400'}"></span>
+		<div class="min-w-0">
+			<p
+				class="truncate text-[13px] font-medium {e.level === 'error'
+					? 'text-red-500'
+					: 'text-[var(--color-text)]'}"
+			>
+				{e.message}
+			</p>
+			<div class="mt-1 flex min-w-0 items-center gap-2">
+				<span
+					class="shrink-0 rounded px-1.5 py-px font-mono text-[10px] font-medium {pill[e.level] ??
+						'bg-slate-500/12 text-slate-400'}"
+				>
+					{e.type}
+				</span>
+				{#if detail(e)}
+					<span class="truncate font-mono text-[11px] text-[var(--color-muted)]">{detail(e)}</span>
+				{/if}
+			</div>
+		</div>
+		<time class="mt-px shrink-0 font-mono text-[11px] tabular-nums text-[var(--color-muted)]"
+			>{clock(e.created_at)}</time
+		>
+	{/snippet}
+
 	{#if events.length === 0}
 		<div class="px-5 py-10 text-center text-sm text-[var(--color-muted)]">No activity yet.</div>
 	{:else}
 		<ul class="divide-y divide-[var(--color-border)]">
 			{#each events as e (e.id)}
-				<li
-					class="grid grid-cols-[10px_1fr_auto] items-start gap-3 px-5 py-2.5 transition-colors hover:bg-[var(--color-surface-2)]"
-				>
-					<span class="mt-[7px] h-2 w-2 shrink-0 rounded-full {dot[e.level] ?? 'bg-slate-400'}"></span>
-
-					<div class="min-w-0">
-						<p
-							class="truncate text-[13px] font-medium {e.level === 'error'
-								? 'text-red-500'
-								: 'text-[var(--color-text)]'}"
+				<li>
+					{#if onSelect}
+						<button
+							class="grid w-full grid-cols-[10px_1fr_auto] items-start gap-3 px-5 py-2.5 text-left transition-colors hover:bg-[var(--color-surface-2)]"
+							onclick={() => onSelect?.(e)}
 						>
-							{e.message}
-						</p>
-						<div class="mt-1 flex min-w-0 items-center gap-2">
-							<span
-								class="shrink-0 rounded px-1.5 py-px font-mono text-[10px] font-medium {pill[
-									e.level
-								] ?? 'bg-slate-500/12 text-slate-400'}"
-							>
-								{e.type}
-							</span>
-							{#if detail(e)}
-								<span class="truncate font-mono text-[11px] text-[var(--color-muted)]">{detail(e)}</span>
-							{/if}
+							{@render rowContent(e)}
+						</button>
+					{:else}
+						<div class="grid grid-cols-[10px_1fr_auto] items-start gap-3 px-5 py-2.5">
+							{@render rowContent(e)}
 						</div>
-					</div>
-
-					<time class="mt-px shrink-0 font-mono text-[11px] tabular-nums text-[var(--color-muted)]"
-						>{clock(e.created_at)}</time
-					>
+					{/if}
 				</li>
 			{/each}
 		</ul>

@@ -26,7 +26,8 @@
 	const nav = [
 		{ href: '/dashboard', label: 'Dashboard', icon: 'M3 12l9-9 9 9M5 10v10h14V10' },
 		{ href: '/streams', label: 'Streams', icon: 'M4 6h16M4 12h16M4 18h10' },
-		{ href: '/jobs', label: 'Jobs & Logs', icon: 'M4 5h16M4 12h16M4 19h16M8 5v14' },
+		{ href: '/jobs', label: 'Jobs', icon: 'M4 7h16M4 12h16M4 17h16' },
+		{ href: '/logs', label: 'Logs', icon: 'M8 6h10M8 12h10M8 18h6M4 6h.01M4 12h.01M4 18h.01' },
 		{ href: '/webhooks', label: 'Webhooks', icon: 'M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' }
 	];
 
