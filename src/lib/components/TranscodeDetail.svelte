@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { api } from '$lib/api';
 	import type { Asset } from '$lib/types';
 	import Modal from './Modal.svelte';
-	import Player from './Player.svelte';
 	import TranscodeTimeline from './TranscodeTimeline.svelte';
 
 	let {
@@ -19,27 +17,12 @@
 		onClip?: (a: Asset) => void;
 	} = $props();
 
-	let playUrl = $state<string | null>(null);
-	let playErr = $state(false);
-
 	const typeLabel: Record<string, string> = {
 		live_recording: 'Recording',
 		vod: 'VOD',
 		clip: 'Clip',
 		upload: 'Upload'
 	};
-
-	$effect(() => {
-		const a = asset;
-		playUrl = null;
-		playErr = false;
-		if (a && a.status === 'ready') {
-			api
-				.assetPlayback(a.id)
-				.then((r) => a === asset && (playUrl = r.url))
-				.catch(() => (playErr = true));
-		}
-	});
 
 	function mb(b: number) {
 		if (!b) return '—';
@@ -66,23 +49,10 @@
 				<span>· {new Date(a.created_at).toLocaleString()}</span>
 			</div>
 
-			<!-- video (ready only) -->
-			{#if a.status === 'ready'}
-				{#if playUrl}
-					{#key playUrl}
-						<Player src={playUrl} />
-					{/key}
-				{:else if playErr}
-					<p class="text-sm text-red-500">Could not load the video.</p>
-				{:else}
-					<div class="aspect-video w-full animate-pulse rounded-xl bg-[var(--color-surface-2)]"></div>
-				{/if}
-			{/if}
-
 			<!-- transcode timeline — always visible -->
 			<div>
 				<h3 class="mb-2 text-sm font-semibold">Transcode timeline</h3>
-				<TranscodeTimeline assetId={a.id} />
+				<TranscodeTimeline assetId={a.id} height="52vh" />
 			</div>
 
 			<!-- actions -->

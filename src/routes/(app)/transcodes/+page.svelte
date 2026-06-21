@@ -6,6 +6,7 @@
 	import UploadVOD from '$lib/components/UploadVOD.svelte';
 	import ClipModal from '$lib/components/ClipModal.svelte';
 	import TranscodeDetail from '$lib/components/TranscodeDetail.svelte';
+	import PlayerModal from '$lib/components/PlayerModal.svelte';
 	import EmbedSnippet from '$lib/components/EmbedSnippet.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import Pager from '$lib/components/Pager.svelte';
@@ -19,6 +20,7 @@
 	let offset = $state(0);
 	let showUpload = $state(false);
 	let detail = $state<Asset | null>(null);
+	let playing = $state<Asset | null>(null);
 	let clipping = $state<Asset | null>(null);
 	let embedding = $state<Asset | null>(null);
 
@@ -118,10 +120,7 @@
 			</thead>
 			<tbody class="divide-y divide-[var(--color-border)]">
 				{#each items as a (a.id)}
-					<tr
-						class="cursor-pointer transition-colors hover:bg-[var(--color-surface-2)]"
-						onclick={() => (detail = a)}
-					>
+					<tr class="transition-colors hover:bg-[var(--color-surface-2)]">
 						<td class="max-w-[260px] truncate px-4 py-2.5 font-medium">{a.title}</td>
 						<td class="px-4 py-2.5 text-[var(--color-muted)]">{typeLabel[a.type] ?? a.type}</td>
 						<td class="px-4 py-2.5">
@@ -132,16 +131,18 @@
 						<td class="px-4 py-2.5 font-mono text-[12px] tabular-nums">{dur(a.duration_sec)}</td>
 						<td class="px-4 py-2.5 font-mono text-[12px] tabular-nums">{mb(a.size_bytes)}</td>
 						<td class="px-4 py-2.5 text-[12px] text-[var(--color-muted)]">{when(a.created_at)}</td>
-						<td class="px-4 py-2.5 text-right">
-							{#if auth.canWrite}
+						<td class="px-4 py-2.5">
+							<div class="flex items-center justify-end gap-1.5">
 								<button
-									class="btn-danger text-sm"
-									onclick={(e) => {
-										e.stopPropagation();
-										remove.mutate(a.id);
-									}}>Delete</button
+									class="btn-ghost text-sm"
+									disabled={a.status !== 'ready'}
+									onclick={() => (playing = a)}>Play</button
 								>
-							{/if}
+								<button class="btn-ghost text-sm" onclick={() => (detail = a)}>Details</button>
+								{#if auth.canWrite}
+									<button class="btn-danger text-sm" onclick={() => remove.mutate(a.id)}>Delete</button>
+								{/if}
+							</div>
 						</td>
 					</tr>
 				{/each}
@@ -152,6 +153,7 @@
 
 <Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />
 
+<PlayerModal asset={playing} onClose={() => (playing = null)} />
 <UploadVOD open={showUpload} onClose={() => (showUpload = false)} onDone={refresh} />
 <ClipModal asset={clipping} onClose={() => (clipping = null)} onDone={refresh} />
 <TranscodeDetail
