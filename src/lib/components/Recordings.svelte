@@ -2,20 +2,25 @@
 	import { api } from '$lib/api';
 	import type { Asset } from '$lib/types';
 	import Player from './Player.svelte';
+	import TranscodeProgress from './TranscodeProgress.svelte';
 
 	let {
 		assets,
 		compact = false,
 		onDelete,
 		onClip,
-		onEmbed
+		onEmbed,
+		onProgressDone
 	}: {
 		assets: Asset[];
 		compact?: boolean;
 		onDelete?: (id: string) => void;
 		onClip?: (a: Asset) => void;
 		onEmbed?: (a: Asset) => void;
+		onProgressDone?: () => void;
 	} = $props();
+
+	const inProgress = (s: string) => s === 'pending' || s === 'uploading' || s === 'processing';
 
 	let playingId = $state<string | null>(null);
 	let playingUrl = $state<string | null>(null);
@@ -92,14 +97,19 @@
 								>{typeLabel[a.type] ?? a.type}</span
 							>
 						</p>
-						<p class="font-mono text-[11px] text-[var(--color-muted)]">
-							{when(a.created_at)} · {size(a.size_bytes)}{a.duration_sec ? ` · ${dur(a.duration_sec)}` : ''}
-							{#if a.status === 'errored'}
+						<div class="flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-[var(--color-muted)]">
+							<span
+								>{when(a.created_at)} · {size(a.size_bytes)}{a.duration_sec
+									? ` · ${dur(a.duration_sec)}`
+									: ''}</span
+							>
+							{#if inProgress(a.status)}
+								<span>·</span>
+								<TranscodeProgress assetId={a.id} onDone={onProgressDone} />
+							{:else if a.status === 'errored'}
 								· <span class="text-red-500" title={a.error}>failed</span>
-							{:else if a.status !== 'ready'}
-								· <span class="text-amber-500">{a.status}</span>
 							{/if}
-						</p>
+						</div>
 					</div>
 					<div class="flex shrink-0 items-center gap-2">
 						<button

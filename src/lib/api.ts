@@ -126,6 +126,9 @@ export const api = {
 	// SSE URL for live events (token in query — EventSource can't set headers)
 	eventStreamUrl: (id: string) =>
 		`${BASE}/v1/streams/${id}/events/stream?access_token=${encodeURIComponent(auth.token ?? '')}`,
+	// SSE URL for live transcode-progress of an asset
+	assetEventStreamUrl: (id: string) =>
+		`${BASE}/v1/assets/${id}/events/stream?access_token=${encodeURIComponent(auth.token ?? '')}`,
 
 	// analytics
 	analyticsOverview: (range: '24h' | '7d' | '30d') =>

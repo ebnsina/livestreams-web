@@ -74,6 +74,7 @@
 		onDelete={auth.canWrite ? (id) => remove.mutate(id) : undefined}
 		onClip={auth.canWrite ? (a) => (clipping = a) : undefined}
 		onEmbed={(a) => (embedding = a)}
+		onProgressDone={refresh}
 	/>
 	<Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />
 {/if}
