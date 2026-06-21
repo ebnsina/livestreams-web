@@ -46,8 +46,10 @@
 		return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 	}
 
+	const MAX_ROWS = 500;
 	async function append(r: Row) {
-		rows = [...rows, r];
+		const next = [...rows, r];
+		rows = next.length > MAX_ROWS ? next.slice(-MAX_ROWS) : next;
 		await tick();
 		if (term) term.scrollTop = term.scrollHeight;
 	}
@@ -106,9 +108,9 @@
 				if (aid !== assetId) return; // changed while loading
 				stage = res.status;
 				if (res.status === 'ready') pct = 100;
-				for (const l of res.logs) {
-					rows = [...rows, { t: hhmm(l.at), kind: 'log', text: l.line }];
-				}
+				rows = res.logs
+					.slice(-MAX_ROWS)
+					.map((l) => ({ t: hhmm(l.at), kind: 'log' as const, text: l.line }));
 				await tick();
 				if (term) term.scrollTop = term.scrollHeight;
 				if (!terminal(res.status)) connectLive();
