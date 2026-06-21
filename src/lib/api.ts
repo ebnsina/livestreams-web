@@ -11,6 +11,7 @@ import type {
 	StreamEvent,
 	Job,
 	Asset,
+	Destination,
 	User,
 	Org
 } from './types';
@@ -89,5 +90,18 @@ export const api = {
 	streamRecordings: (streamId: string) =>
 		request<{ data: Asset[] }>(`/v1/recordings?stream_id=${streamId}`),
 	assetPlayback: (id: string) =>
-		request<{ url: string; expires_at: string }>(`/v1/assets/${id}/playback`)
+		request<{ url: string; expires_at: string }>(`/v1/assets/${id}/playback`),
+
+	// multistream destinations
+	destinations: () => request<{ data: Destination[] }>('/v1/destinations'),
+	createDestination: (input: { platform: string; name: string; url: string; stream_key: string }) =>
+		request<Destination>('/v1/destinations', { method: 'POST', body: input }),
+	deleteDestination: (id: string) => request<void>(`/v1/destinations/${id}`, { method: 'DELETE' }),
+	streamDestinations: (streamId: string) =>
+		request<{ data: Destination[] }>(`/v1/stream-destinations?stream_id=${streamId}`),
+	toggleStreamDestination: (streamId: string, destId: string, enabled: boolean) =>
+		request<void>(`/v1/stream-destinations?stream_id=${streamId}&dest_id=${destId}`, {
+			method: 'PUT',
+			body: { enabled }
+		})
 };

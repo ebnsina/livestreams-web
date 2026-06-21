@@ -74,6 +74,16 @@ export interface Asset {
 	created_at: string;
 }
 
+export interface Destination {
+	id: string;
+	platform: string;
+	name: string;
+	url: string;
+	created_at: string;
+	attached?: boolean;
+	enabled?: boolean;
+}
+
 export interface JobError {
 	at: string;
 	error: string;

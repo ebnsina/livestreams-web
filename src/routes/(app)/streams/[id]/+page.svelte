@@ -10,6 +10,7 @@
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Recordings from '$lib/components/Recordings.svelte';
+	import Restream from '$lib/components/Restream.svelte';
 
 	const qc = useQueryClient();
 	const id = $derived(page.params.id as string);
@@ -208,6 +209,8 @@
 					<span class="text-[var(--color-muted)]">Created</span><span>{fmtDate(s.created_at)}</span>
 				</div>
 			</div>
+
+			<Restream streamId={id} />
 
 			<Recordings assets={recordings.data?.data ?? []} />
 		</div>

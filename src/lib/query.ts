@@ -8,5 +8,6 @@ export const keys = {
 	jobs: ['jobs'] as const,
 	activity: (level?: string) => ['activity', level ?? 'all'] as const,
 	assets: ['assets'] as const,
-	recordings: (id: string) => ['streams', id, 'recordings'] as const
+	recordings: (id: string) => ['streams', id, 'recordings'] as const,
+	streamDestinations: (id: string) => ['streams', id, 'destinations'] as const
 };
