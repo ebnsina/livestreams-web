@@ -25,7 +25,7 @@
 	<div class="w-full max-w-sm">
 		<div class="mb-8 text-center">
 			<div
-				class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600 text-lg font-bold text-white"
+				class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-[#ff5b3e] text-lg font-bold text-white"
 			>
 				L
 			</div>
@@ -56,7 +56,7 @@
 
 		<p class="mt-6 text-center text-sm text-[var(--color-muted)]">
 			No account?
-			<a class="font-medium text-violet-400 hover:text-violet-300" href="/register">Create one</a>
+			<a class="font-medium text-[#ff5b3e] hover:text-[#ff7a63]" href="/register">Create one</a>
 		</p>
 	</div>
 </div>

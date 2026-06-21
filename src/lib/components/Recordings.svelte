@@ -71,7 +71,7 @@
 					</div>
 					<div class="flex shrink-0 items-center gap-2">
 						<button
-							class="btn-ghost text-sm {playingId === a.id ? 'text-violet-500' : ''}"
+							class="btn-ghost text-sm {playingId === a.id ? 'text-[#ff5b3e]' : ''}"
 							onclick={() => play(a)}
 							disabled={loadingId === a.id || a.status !== 'ready'}
 						>

@@ -45,8 +45,8 @@
 </header>
 
 {#if newKey}
-	<div class="card mb-6 border-violet-600/40 bg-violet-500/5 p-5">
-		<p class="mb-2 text-sm font-medium text-violet-600">API key created — copy it now, shown only once</p>
+	<div class="card mb-6 border-[#ff5b3e]/40 bg-[#ff5b3e]/5 p-5">
+		<p class="mb-2 text-sm font-medium text-[#ff5b3e]">API key created — copy it now, shown only once</p>
 		<CopyField label="Key" value={newKey} secret />
 	</div>
 {/if}
@@ -86,7 +86,7 @@
 						<span
 							class="rounded px-1.5 py-0.5 text-[10px] font-medium {isReadOnly(k.scopes)
 								? 'bg-sky-500/12 text-sky-500'
-								: 'bg-violet-500/12 text-violet-500'}"
+								: 'bg-[#ff5b3e]/12 text-[#ff5b3e]'}"
 						>
 							{isReadOnly(k.scopes) ? 'read-only' : 'read & write'}
 						</span>

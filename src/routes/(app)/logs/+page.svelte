@@ -91,7 +91,7 @@
 			<div class="flex justify-between gap-4">
 				<dt class="text-[var(--color-muted)]">Stream</dt>
 				<dd>
-					<a class="font-mono text-xs text-violet-500 hover:underline" href="/streams/{e.stream_id}"
+					<a class="font-mono text-xs text-[#ff5b3e] hover:underline" href="/streams/{e.stream_id}"
 						>{e.stream_id}</a
 					>
 				</dd>

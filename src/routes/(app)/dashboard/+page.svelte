@@ -52,7 +52,7 @@
 <section class="mt-8">
 	<div class="mb-3 flex items-center justify-between">
 		<h2 class="text-lg font-medium">Recent streams</h2>
-		<a class="text-sm font-medium text-violet-400 hover:text-violet-300" href="/streams">View all</a
+		<a class="text-sm font-medium text-[#ff5b3e] hover:text-[#ff7a63]" href="/streams">View all</a
 		>
 	</div>
 
@@ -61,7 +61,7 @@
 			<div class="p-6 text-sm text-[var(--color-muted)]">Loading…</div>
 		{:else if list.length === 0}
 			<div class="p-6 text-sm text-[var(--color-muted)]">
-				No streams yet. <a class="text-violet-400" href="/streams">Create your first one →</a>
+				No streams yet. <a class="text-[#ff5b3e]" href="/streams">Create your first one →</a>
 			</div>
 		{:else}
 			{#each list.slice(0, 5) as s (s.id)}

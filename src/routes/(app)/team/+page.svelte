@@ -35,7 +35,7 @@
 	}));
 
 	const roleColor: Record<string, string> = {
-		owner: 'bg-violet-500/12 text-violet-500',
+		owner: 'bg-[#ff5b3e]/12 text-[#ff5b3e]',
 		admin: 'bg-sky-500/12 text-sky-500',
 		member: 'bg-slate-500/12 text-slate-400'
 	};
@@ -47,8 +47,8 @@
 </header>
 
 {#if inviteLink}
-	<div class="card mb-6 border-violet-600/40 bg-violet-500/5 p-5">
-		<p class="mb-2 text-sm font-medium text-violet-600">Invite created — share this link</p>
+	<div class="card mb-6 border-[#ff5b3e]/40 bg-[#ff5b3e]/5 p-5">
+		<p class="mb-2 text-sm font-medium text-[#ff5b3e]">Invite created — share this link</p>
 		<CopyField label="Invite link" value={inviteLink} />
 	</div>
 {/if}

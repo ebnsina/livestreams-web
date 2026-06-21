@@ -143,7 +143,7 @@
 					</div>
 					<button
 						class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors {d.enabled
-							? 'bg-violet-600'
+							? 'bg-[#ff5b3e]'
 							: 'bg-[var(--color-border)]'}"
 						onclick={() => toggle.mutate({ destId: d.id, enabled: !d.enabled })}
 						disabled={toggle.isPending}

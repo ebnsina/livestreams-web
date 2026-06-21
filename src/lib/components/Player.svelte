@@ -183,7 +183,7 @@
 					<button
 						class="block w-full px-3 py-1.5 text-left font-mono text-[11px] text-white hover:bg-white/10 {selected ===
 						-1
-							? 'text-violet-400'
+							? 'text-[#ff5b3e]'
 							: ''}"
 						onclick={() => pick(-1)}>Auto</button
 					>
@@ -191,7 +191,7 @@
 						<button
 							class="block w-full px-3 py-1.5 text-left font-mono text-[11px] text-white hover:bg-white/10 {selected ===
 							l.index
-								? 'text-violet-400'
+								? 'text-[#ff5b3e]'
 								: ''}"
 							onclick={() => pick(l.index)}
 						>
@@ -232,7 +232,7 @@
 			<button
 				class="rounded-md px-2.5 py-1 font-mono text-[11px] font-medium transition-colors {selected ===
 				-1
-					? 'bg-[var(--color-surface)] text-violet-500 shadow-sm'
+					? 'bg-[var(--color-surface)] text-[#ff5b3e] shadow-sm'
 					: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
 				onclick={() => pick(-1)}
 			>
@@ -244,7 +244,7 @@
 				<button
 					class="rounded-md px-2.5 py-1 font-mono text-[11px] font-medium transition-colors {selected ===
 					l.index
-						? 'bg-[var(--color-surface)] text-violet-500 shadow-sm'
+						? 'bg-[var(--color-surface)] text-[#ff5b3e] shadow-sm'
 						: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
 					onclick={() => pick(l.index)}
 					title="{Math.round(l.bitrate / 1000)} kbps"

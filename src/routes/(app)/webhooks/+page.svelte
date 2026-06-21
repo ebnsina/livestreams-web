@@ -60,8 +60,8 @@
 </header>
 
 {#if newSecret}
-	<div class="card mb-6 border-violet-600/40 bg-violet-500/5 p-5">
-		<p class="mb-2 text-sm font-medium text-violet-500">Signing secret — copy it now, shown only once</p>
+	<div class="card mb-6 border-[#ff5b3e]/40 bg-[#ff5b3e]/5 p-5">
+		<p class="mb-2 text-sm font-medium text-[#ff5b3e]">Signing secret — copy it now, shown only once</p>
 		<CopyField label="Secret" value={newSecret} secret />
 	</div>
 {/if}
@@ -135,7 +135,7 @@
 							<td class="px-4 py-2.5 text-[12px] text-[var(--color-muted)]">{when(d.created_at)}</td>
 							<td class="px-4 py-2.5 text-right">
 								<button
-									class="text-[12px] font-medium text-violet-500 hover:text-violet-400 disabled:opacity-50"
+									class="text-[12px] font-medium text-[#ff5b3e] hover:text-[#ff5b3e] disabled:opacity-50"
 									onclick={() => redeliver.mutate(d.id)}
 									disabled={redeliver.isPending}>Redeliver</button
 								>
