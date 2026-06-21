@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { X } from '@lucide/svelte';
 
 	let {
 		open = false,
@@ -34,16 +35,7 @@
 					onclick={onClose}
 					aria-label="Close dialog"
 				>
-					<svg
-						class="h-5 w-5"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-					>
-						<path d="M6 6l12 12M18 6L6 18" />
-					</svg>
+					<X size={18} />
 				</button>
 			</header>
 			<div class="max-h-[70vh] overflow-y-auto p-5">

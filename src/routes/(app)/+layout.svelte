@@ -6,6 +6,7 @@
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import { LayoutDashboard, Radio, Cpu, ScrollText, Webhook, KeyRound } from '@lucide/svelte';
 
 	let { children } = $props();
 
@@ -24,12 +25,12 @@
 	});
 
 	const nav = [
-		{ href: '/dashboard', label: 'Dashboard', icon: 'M3 12l9-9 9 9M5 10v10h14V10' },
-		{ href: '/streams', label: 'Streams', icon: 'M4 6h16M4 12h16M4 18h10' },
-		{ href: '/jobs', label: 'Jobs', icon: 'M4 7h16M4 12h16M4 17h16' },
-		{ href: '/logs', label: 'Logs', icon: 'M8 6h10M8 12h10M8 18h6M4 6h.01M4 12h.01M4 18h.01' },
-		{ href: '/webhooks', label: 'Webhooks', icon: 'M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' },
-		{ href: '/api-keys', label: 'API Keys', icon: 'M15 7a4 4 0 11-4 4m4-4l5 5m-2-2l-2 2m-1-9a9 9 0 100 18 9 9 0 000-18z' }
+		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+		{ href: '/streams', label: 'Streams', icon: Radio },
+		{ href: '/jobs', label: 'Jobs', icon: Cpu },
+		{ href: '/logs', label: 'Logs', icon: ScrollText },
+		{ href: '/webhooks', label: 'Webhooks', icon: Webhook },
+		{ href: '/api-keys', label: 'API Keys', icon: KeyRound }
 	];
 
 	function logout() {
@@ -56,6 +57,7 @@
 			<nav class="flex flex-1 flex-col gap-1">
 				{#each nav as item (item.href)}
 					{@const active = page.url.pathname.startsWith(item.href)}
+					{@const Icon = item.icon}
 					<a
 						href={item.href}
 						class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
@@ -63,17 +65,7 @@
 							? 'bg-violet-500/15 text-violet-400'
 							: 'text-[var(--color-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)]'}"
 					>
-						<svg
-							class="h-4 w-4"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<path d={item.icon} />
-						</svg>
+						<Icon size={16} />
 						{item.label}
 					</a>
 				{/each}
