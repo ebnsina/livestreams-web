@@ -39,6 +39,11 @@
 		onSuccess: () => qc.invalidateQueries({ queryKey: keys.assets })
 	}));
 
+	const retry = createMutation(() => ({
+		mutationFn: (id: string) => api.retryAsset(id),
+		onSuccess: () => qc.invalidateQueries({ queryKey: keys.assets })
+	}));
+
 	function refresh() {
 		qc.invalidateQueries({ queryKey: keys.assets });
 	}
@@ -74,6 +79,7 @@
 		onDelete={auth.canWrite ? (id) => remove.mutate(id) : undefined}
 		onClip={auth.canWrite ? (a) => (clipping = a) : undefined}
 		onEmbed={(a) => (embedding = a)}
+		onRetry={auth.canWrite ? (id) => retry.mutate(id) : undefined}
 		onProgressDone={refresh}
 	/>
 	<Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />

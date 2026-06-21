@@ -10,6 +10,7 @@
 		onDelete,
 		onClip,
 		onEmbed,
+		onRetry,
 		onProgressDone
 	}: {
 		assets: Asset[];
@@ -17,6 +18,7 @@
 		onDelete?: (id: string) => void;
 		onClip?: (a: Asset) => void;
 		onEmbed?: (a: Asset) => void;
+		onRetry?: (id: string) => void;
 		onProgressDone?: () => void;
 	} = $props();
 
@@ -123,6 +125,9 @@
 						<a class="btn-ghost text-sm" href="/transcode/{a.id}?title={encodeURIComponent(a.title)}"
 							>Console</a
 						>
+					{/if}
+					{#if onRetry && a.status === 'errored' && a.type !== 'clip'}
+						<button class="btn-ghost text-sm" onclick={() => onRetry?.(a.id)}>Retry</button>
 					{/if}
 					{#if onEmbed && !compact && a.type === 'vod' && a.status === 'ready'}
 							<button class="btn-ghost text-sm" onclick={() => onEmbed?.(a)}>Embed</button>

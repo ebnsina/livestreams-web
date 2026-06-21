@@ -176,6 +176,7 @@ export const api = {
 		}),
 	processUpload: (id: string) =>
 		request<Asset>(`/v1/assets/${id}/process`, { method: 'POST' }),
+	retryAsset: (id: string) => request<Asset>(`/v1/assets/${id}/retry`, { method: 'POST' }),
 	createClip: (id: string, input: { title?: string; start_sec: number; end_sec: number }) =>
 		request<Asset>(`/v1/assets/${id}/clip`, { method: 'POST', body: input }),
 
