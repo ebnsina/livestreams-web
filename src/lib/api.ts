@@ -114,6 +114,8 @@ export const api = {
 		request<WebhookEndpoint>('/v1/webhooks', { method: 'POST', body: input }),
 	deleteWebhook: (id: string) => request<void>(`/v1/webhooks/${id}`, { method: 'DELETE' }),
 	webhookDeliveries: () => request<{ data: WebhookDelivery[] }>('/v1/webhook-deliveries'),
+	redeliverWebhook: (id: string) =>
+		request<void>(`/v1/webhook-deliveries/${id}/redeliver`, { method: 'POST' }),
 
 	// API keys
 	apiKeys: () => request<{ data: ApiKey[] }>('/v1/api-keys'),

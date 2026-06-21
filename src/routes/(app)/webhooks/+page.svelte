@@ -36,6 +36,11 @@
 		onSuccess: () => qc.invalidateQueries({ queryKey: keys.webhooks })
 	}));
 
+	const redeliver = createMutation(() => ({
+		mutationFn: (id: string) => api.redeliverWebhook(id),
+		onSuccess: () => qc.invalidateQueries({ queryKey: keys.webhookDeliveries })
+	}));
+
 	const statusColor: Record<string, string> = {
 		success: 'text-emerald-500',
 		failed: 'text-red-500',
@@ -117,6 +122,7 @@
 						<th class="px-4 py-2.5 font-mono">Code</th>
 						<th class="px-4 py-2.5 font-mono">Attempts</th>
 						<th class="px-4 py-2.5 font-mono">When</th>
+						<th class="px-4 py-2.5"></th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-[var(--color-border)]">
@@ -127,6 +133,13 @@
 							<td class="px-4 py-2.5 font-mono text-[12px] tabular-nums">{d.response_code ?? '—'}</td>
 							<td class="px-4 py-2.5 font-mono text-[12px] tabular-nums">{d.attempts}</td>
 							<td class="px-4 py-2.5 text-[12px] text-[var(--color-muted)]">{when(d.created_at)}</td>
+							<td class="px-4 py-2.5 text-right">
+								<button
+									class="text-[12px] font-medium text-violet-500 hover:text-violet-400 disabled:opacity-50"
+									onclick={() => redeliver.mutate(d.id)}
+									disabled={redeliver.isPending}>Redeliver</button
+								>
+							</td>
 						</tr>
 					{/each}
 				</tbody>
