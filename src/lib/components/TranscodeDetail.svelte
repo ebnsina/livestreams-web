@@ -63,8 +63,10 @@
 				{#if onEmbed && a.type === 'vod' && a.status === 'ready'}
 					<button class="btn-ghost text-sm" onclick={() => onEmbed?.(a)}>Embed</button>
 				{/if}
-				{#if onRetry && a.status === 'errored' && a.type !== 'clip'}
-					<button class="btn-ghost text-sm" onclick={() => onRetry?.(a.id)}>Retry</button>
+				{#if onRetry && a.type !== 'clip' && a.status !== 'processing' && a.status !== 'uploading'}
+					<button class="btn-ghost text-sm" onclick={() => onRetry?.(a.id)}>
+						{a.status === 'errored' ? 'Retry' : 'Re-transcode'}
+					</button>
 				{/if}
 				<a
 					class="btn-ghost text-sm"

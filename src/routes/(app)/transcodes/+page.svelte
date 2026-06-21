@@ -131,6 +131,9 @@
 									onclick={() => (playing = a)}>Play</button
 								>
 								<button class="btn-ghost text-sm" onclick={() => (detail = a)}>Details</button>
+								{#if auth.canWrite && a.type !== 'clip' && a.status !== 'processing' && a.status !== 'uploading'}
+									<button class="btn-ghost text-sm" onclick={() => retry.mutate(a.id)}>Retry</button>
+								{/if}
 								{#if auth.canWrite}
 									<button class="btn-danger text-sm" onclick={() => remove.mutate(a.id)}>Delete</button>
 								{/if}
