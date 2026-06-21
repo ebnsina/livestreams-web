@@ -160,7 +160,13 @@
 	style="height: {height}"
 >
 	{#if rows.length === 0}
-		<p class="text-white/30">No transcode activity recorded.</p>
+		{#if stage === 'loading'}
+			<p class="text-white/30">Loading timeline…</p>
+		{:else if terminal(stage)}
+			<p class="text-white/30">No activity was recorded for this transcode.</p>
+		{:else}
+			<p class="text-white/30">Waiting for activity…</p>
+		{/if}
 	{/if}
 	{#each rows as r, i (i)}
 		<div class="flex gap-3">
