@@ -95,6 +95,14 @@ export interface ApiKey {
 	key?: string; // full key, returned once on create
 }
 
+export interface OAuthConnection {
+	id: string;
+	platform: string;
+	account_name: string;
+	status: string;
+	created_at: string;
+}
+
 export interface WebhookEndpoint {
 	id: string;
 	url: string;

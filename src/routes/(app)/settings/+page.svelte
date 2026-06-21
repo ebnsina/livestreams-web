@@ -8,6 +8,34 @@
 	const user = $derived(me.data?.user);
 	const orgs = $derived(me.data?.orgs ?? []);
 
+	// OAuth connected accounts
+	const providers = createQuery(() => ({
+		queryKey: keys.oauthProviders,
+		queryFn: () => api.oauthProviders()
+	}));
+	const connections = createQuery(() => ({
+		queryKey: keys.oauthConnections,
+		queryFn: () => api.oauthConnections()
+	}));
+	const providerList = $derived(providers.data?.providers ?? []);
+	const connList = $derived(connections.data?.data ?? []);
+
+	const disconnect = createMutation(() => ({
+		mutationFn: (id: string) => api.deleteOauthConnection(id),
+		onSuccess: () => qc.invalidateQueries({ queryKey: keys.oauthConnections })
+	}));
+
+	async function connect(platform: string) {
+		const { redirect_url } = await api.oauthAuthorize(platform);
+		window.location.href = redirect_url;
+	}
+
+	const platformLabel: Record<string, string> = {
+		youtube: 'YouTube',
+		twitch: 'Twitch',
+		mock: 'Mock (test)'
+	};
+
 	let name = $state('');
 	$effect(() => {
 		if (user && !name) name = user.name;
@@ -96,6 +124,43 @@
 				{changePw.isPending ? 'Updating…' : 'Update password'}
 			</button>
 		</form>
+	</section>
+
+	<!-- Connected accounts -->
+	<section class="card p-5 lg:col-span-2">
+		<h2 class="mb-1 text-[15px] font-semibold">Connected accounts</h2>
+		<p class="mb-4 text-sm text-[var(--color-muted)]">
+			Link platform accounts for multistreaming.
+		</p>
+
+		{#if connList.length > 0}
+			<ul class="mb-4 divide-y divide-[var(--color-border)]">
+				{#each connList as c (c.id)}
+					<li class="flex items-center justify-between py-2 text-sm">
+						<span>
+							<span class="font-medium">{platformLabel[c.platform] ?? c.platform}</span>
+							<span class="text-[var(--color-muted)]">· {c.account_name || 'connected'}</span>
+						</span>
+						<button class="btn-danger text-sm" onclick={() => disconnect.mutate(c.id)}>Disconnect</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+
+		{#if providerList.length === 0}
+			<p class="text-sm text-[var(--color-muted)]">
+				No OAuth providers configured. Set the provider client IDs in the API environment to enable
+				connecting YouTube/Twitch.
+			</p>
+		{:else}
+			<div class="flex flex-wrap gap-2">
+				{#each providerList as p (p)}
+					<button class="btn-ghost text-sm" onclick={() => connect(p)}>
+						Connect {platformLabel[p] ?? p}
+					</button>
+				{/each}
+			</div>
+		{/if}
 	</section>
 
 	<!-- Organizations -->

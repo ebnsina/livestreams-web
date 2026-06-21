@@ -15,6 +15,7 @@ import type {
 	WebhookEndpoint,
 	WebhookDelivery,
 	ApiKey,
+	OAuthConnection,
 	User,
 	Org
 } from './types';
@@ -125,5 +126,13 @@ export const api = {
 	apiKeys: () => request<{ data: ApiKey[] }>('/v1/api-keys'),
 	createApiKey: (name: string, scopes: string[]) =>
 		request<ApiKey>('/v1/api-keys', { method: 'POST', body: { name, scopes } }),
-	revokeApiKey: (id: string) => request<void>(`/v1/api-keys/${id}`, { method: 'DELETE' })
+	revokeApiKey: (id: string) => request<void>(`/v1/api-keys/${id}`, { method: 'DELETE' }),
+
+	// OAuth account linking
+	oauthProviders: () => request<{ providers: string[] }>('/v1/oauth/providers'),
+	oauthConnections: () => request<{ data: OAuthConnection[] }>('/v1/oauth/connections'),
+	oauthAuthorize: (platform: string) =>
+		request<{ redirect_url: string }>(`/v1/oauth/${platform}/authorize`),
+	deleteOauthConnection: (id: string) =>
+		request<void>(`/v1/oauth/connections/${id}`, { method: 'DELETE' })
 };
