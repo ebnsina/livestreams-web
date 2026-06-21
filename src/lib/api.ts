@@ -142,8 +142,12 @@ export const api = {
 		request<{ data: StreamEvent[] }>(`/v1/activity${level ? `?level=${level}` : ''}`),
 
 	// recordings / assets
-	assets: (params?: { q?: string; limit?: number; offset?: number }) =>
+	assets: (params?: { q?: string; limit?: number; offset?: number; category?: 'recording' | 'transcode' }) =>
 		request<Paginated<Asset>>(`/v1/assets${qs(params)}`),
+	transcodeLogs: (id: string) =>
+		request<{ status: string; logs: { stage: string; line: string; at: string }[] }>(
+			`/v1/assets/${id}/transcode`
+		),
 	streamRecordings: (streamId: string) =>
 		request<{ data: Asset[] }>(`/v1/recordings?stream_id=${streamId}`),
 	assetPlayback: (id: string) =>
