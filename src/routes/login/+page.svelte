@@ -21,6 +21,8 @@
 	}
 </script>
 
+<svelte:head><title>Sign in · Livestreams</title></svelte:head>
+
 <div class="flex min-h-screen items-center justify-center px-4">
 	<div class="w-full max-w-sm">
 		<div class="mb-8 text-center">

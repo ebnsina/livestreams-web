@@ -65,7 +65,18 @@
 		auth.clear();
 		goto('/login');
 	}
+
+	// Derive the page title from the longest matching nav entry (sub-routes like
+	// /streams/[id] inherit the parent label).
+	const pageTitle = $derived.by(() => {
+		const match = [...nav]
+			.filter((n) => page.url.pathname.startsWith(n.href))
+			.sort((a, b) => b.href.length - a.href.length)[0];
+		return match ? `${match.label} · Livestreams` : 'Livestreams';
+	});
 </script>
+
+<svelte:head><title>{pageTitle}</title></svelte:head>
 
 {#if auth.isAuthenticated}
 	<div class="flex min-h-screen bg-[var(--color-surface-2)]">
