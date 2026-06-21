@@ -6,6 +6,7 @@ export const keys = {
 	sessions: (id: string) => ['streams', id, 'sessions'] as const,
 	events: (id: string) => ['streams', id, 'events'] as const,
 	jobs: ['jobs'] as const,
+	analytics: (range: string) => ['analytics', range] as const,
 	activity: (level?: string) => ['activity', level ?? 'all'] as const,
 	assets: ['assets'] as const,
 	recordings: (id: string) => ['streams', id, 'recordings'] as const,

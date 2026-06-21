@@ -19,7 +19,8 @@ import type {
 	Member,
 	Invitation,
 	User,
-	Org
+	Org,
+	AnalyticsOverview
 } from './types';
 
 const BASE = PUBLIC_API_BASE_URL ?? 'http://localhost:8085';
@@ -111,6 +112,10 @@ export const api = {
 	// SSE URL for live events (token in query — EventSource can't set headers)
 	eventStreamUrl: (id: string) =>
 		`${BASE}/v1/streams/${id}/events/stream?access_token=${encodeURIComponent(auth.token ?? '')}`,
+
+	// analytics
+	analyticsOverview: (range: '24h' | '7d' | '30d') =>
+		request<AnalyticsOverview>(`/v1/analytics/overview?range=${range}`),
 
 	// jobs & org-wide activity
 	jobs: () => request<{ data: Job[] }>('/v1/jobs'),

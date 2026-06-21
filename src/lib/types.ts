@@ -64,6 +64,29 @@ export interface StreamEvent {
 	created_at: string;
 }
 
+export interface AnalyticsPoint {
+	t: string;
+	viewers: number;
+	bitrate_kbps: number;
+	rebuffers: number;
+}
+
+export interface AnalyticsOverview {
+	range: string;
+	unit: string;
+	summary: {
+		streams: number;
+		live_now: number;
+		recordings: number;
+		vod: number;
+		storage_bytes: number;
+		peak_viewers: number;
+		avg_startup_ms: number;
+		total_rebuffers: number;
+	};
+	series: AnalyticsPoint[];
+}
+
 export interface Asset {
 	id: string;
 	title: string;
