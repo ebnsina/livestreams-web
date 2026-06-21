@@ -44,7 +44,7 @@
 		>
 			<div class="mb-8 flex items-center gap-2 px-2">
 				<div
-					class="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-sm font-bold text-white"
+					class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-sm font-bold text-white"
 				>
 					L
 				</div>
@@ -58,7 +58,7 @@
 						href={item.href}
 						class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
 							{active
-							? 'bg-teal-500/15 text-teal-400'
+							? 'bg-violet-500/15 text-violet-400'
 							: 'text-[var(--color-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)]'}"
 					>
 						<svg
@@ -96,7 +96,7 @@
 			>
 				<div class="flex items-center gap-2">
 					<div
-						class="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-600 text-xs font-bold text-white"
+						class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-600 text-xs font-bold text-white"
 					>
 						L
 					</div>
@@ -117,7 +117,7 @@
 					<a
 						href={item.href}
 						class="rounded-lg px-3 py-1.5 text-sm font-medium {active
-							? 'bg-teal-500/15 text-teal-400'
+							? 'bg-violet-500/15 text-violet-400'
 							: 'text-[var(--color-muted)]'}">{item.label}</a
 					>
 				{/each}

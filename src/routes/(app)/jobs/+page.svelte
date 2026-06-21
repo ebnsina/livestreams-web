@@ -128,7 +128,7 @@
 							<td class="px-4 py-2.5"><JobStateBadge state={j.state} /></td>
 							<td class="px-4 py-2.5">
 								{#if j.stream_id}
-									<a class="font-mono text-[11px] text-teal-400 hover:text-teal-300" href="/streams/{j.stream_id}"
+									<a class="font-mono text-[11px] text-violet-400 hover:text-violet-300" href="/streams/{j.stream_id}"
 										>{j.stream_id.slice(0, 8)}</a
 									>
 								{:else}—{/if}

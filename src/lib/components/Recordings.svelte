@@ -66,7 +66,7 @@
 						</p>
 					</div>
 					<button
-						class="btn-ghost shrink-0 text-sm {playingId === a.id ? 'text-teal-500' : ''}"
+						class="btn-ghost shrink-0 text-sm {playingId === a.id ? 'text-violet-500' : ''}"
 						onclick={() => play(a)}
 						disabled={loadingId === a.id || a.status !== 'ready'}
 					>

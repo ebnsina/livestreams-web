@@ -1,18 +1,19 @@
-// Light/dark theme as a runes singleton. Persists to localStorage and toggles
-// the `.light` class on <html> (dark is the default).
+// Light/dark theme as a runes singleton. Light is the default (brand kit);
+// dark is opt-in. Persists to localStorage and toggles the `.dark` class on
+// <html>.
 
 type Mode = 'dark' | 'light';
 const KEY = 'ls.theme';
 
 class Theme {
-	mode = $state<Mode>('dark');
+	mode = $state<Mode>('light');
 
 	init() {
 		if (typeof localStorage === 'undefined') return;
 		const saved = localStorage.getItem(KEY) as Mode | null;
-		const prefersLight =
-			typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: light)').matches;
-		this.mode = saved ?? (prefersLight ? 'light' : 'dark');
+		const prefersDark =
+			typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches;
+		this.mode = saved ?? (prefersDark ? 'dark' : 'light');
 		this.apply();
 	}
 
@@ -23,7 +24,7 @@ class Theme {
 	}
 
 	private apply() {
-		document.documentElement.classList.toggle('light', this.mode === 'light');
+		document.documentElement.classList.toggle('dark', this.mode === 'dark');
 	}
 }
 

@@ -55,8 +55,8 @@
 </header>
 
 {#if newSecret}
-	<div class="card mb-6 border-teal-600/40 bg-teal-500/5 p-5">
-		<p class="mb-2 text-sm font-medium text-teal-500">Signing secret — copy it now, shown only once</p>
+	<div class="card mb-6 border-violet-600/40 bg-violet-500/5 p-5">
+		<p class="mb-2 text-sm font-medium text-violet-500">Signing secret — copy it now, shown only once</p>
 		<CopyField label="Secret" value={newSecret} secret />
 	</div>
 {/if}
