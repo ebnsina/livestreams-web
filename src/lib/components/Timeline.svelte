@@ -28,6 +28,8 @@
 		if (!d) return '';
 		if (d.renditions) return (d.renditions as string[]).join(' · ');
 		if (d.size_bytes) return `${Math.round(Number(d.size_bytes) / 1024)} KB`;
+		if (d.bitrate_kbps !== undefined) return `${d.bitrate_kbps} kbps`;
+		if (d.codec) return `codec: ${d.codec}`;
 		if (d.error) return String(d.error);
 		if (d.ingest_ip) return `from ${d.ingest_ip}`;
 		return '';

@@ -54,6 +54,21 @@
 		return all.sort((a, b) => b.created_at.localeCompare(a.created_at));
 	});
 
+	// Active ingest-health issues: replay the timeline newest-first; the first
+	// event seen per rule wins. A rule is "active" if its latest event is an
+	// alert (not a recovery).
+	const healthIssues = $derived.by(() => {
+		const seen = new Set<string>();
+		const active: string[] = [];
+		for (const e of timeline) {
+			const rule = (e.data as Record<string, unknown> | undefined)?.rule as string | undefined;
+			if (!rule || seen.has(rule)) continue;
+			seen.add(rule);
+			if (e.type !== 'health.recovered') active.push(e.message);
+		}
+		return active;
+	});
+
 	// Open the SSE stream for this stream id; reconnects when id changes.
 	$effect(() => {
 		liveEvents = [];
@@ -115,9 +130,25 @@
 {:else}
 	<header class="mb-6 flex items-start justify-between gap-4">
 		<div>
-			<div class="flex items-center gap-3">
+			<div class="flex flex-wrap items-center gap-3">
 				<h1 class="text-2xl font-semibold">{s.name}</h1>
 				<StatusBadge status={s.status} />
+				{#if isLive}
+					{#if healthIssues.length > 0}
+						<span
+							class="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-500"
+							title={healthIssues.join('\n')}
+						>
+							⚠ {healthIssues.length} issue{healthIssues.length === 1 ? '' : 's'}
+						</span>
+					{:else}
+						<span
+							class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-500"
+						>
+							Healthy
+						</span>
+					{/if}
+				{/if}
 			</div>
 			{#if s.description}<p class="mt-1 text-sm text-[var(--color-muted)]">{s.description}</p>{/if}
 		</div>
