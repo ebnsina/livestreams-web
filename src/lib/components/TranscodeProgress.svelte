@@ -32,9 +32,9 @@
 		es = new EventSource(api.assetEventStreamUrl(assetId));
 		es.onmessage = (e) => {
 			try {
-				const p = JSON.parse(e.data) as { stage: Stage; pct: number; message?: string };
+				const p = JSON.parse(e.data) as { stage: Stage; pct: number; message?: string; line?: string };
 				stage = p.stage;
-				pct = p.pct ?? 0;
+				if (!p.line) pct = p.pct ?? 0; // log-line frames carry pct:0
 				message = p.message ?? '';
 				if (p.stage === 'ready' || p.stage === 'failed') {
 					es?.close();

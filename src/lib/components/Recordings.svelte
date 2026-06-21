@@ -119,7 +119,12 @@
 						>
 							{loadingId === a.id ? 'Loading…' : playingId === a.id ? 'Playing' : 'Play'}
 						</button>
-						{#if onEmbed && !compact && a.type === 'vod' && a.status === 'ready'}
+						{#if inProgress(a.status) && !compact}
+						<a class="btn-ghost text-sm" href="/transcode/{a.id}?title={encodeURIComponent(a.title)}"
+							>Console</a
+						>
+					{/if}
+					{#if onEmbed && !compact && a.type === 'vod' && a.status === 'ready'}
 							<button class="btn-ghost text-sm" onclick={() => onEmbed?.(a)}>Embed</button>
 						{/if}
 						{#if onClip && !compact && a.status === 'ready'}
