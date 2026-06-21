@@ -82,4 +82,7 @@ h3 {
 	.label {
 		@apply mb-1.5 block text-sm font-medium text-[var(--color-muted)];
 	}
+	.menu-item {
+		@apply flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface-2)] disabled:cursor-not-allowed disabled:opacity-40;
+	}
 }

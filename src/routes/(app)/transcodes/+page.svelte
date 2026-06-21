@@ -9,6 +9,7 @@
 	import PlayerModal from '$lib/components/PlayerModal.svelte';
 	import EmbedSnippet from '$lib/components/EmbedSnippet.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import Menu from '$lib/components/Menu.svelte';
 	import Pager from '$lib/components/Pager.svelte';
 	import { UploadCloud } from '@lucide/svelte';
 
@@ -124,19 +125,23 @@
 						<td class="px-4 py-2.5 font-mono text-[12px] tabular-nums">{mb(a.size_bytes)}</td>
 						<td class="px-4 py-2.5 text-[12px] text-[var(--color-muted)]">{when(a.created_at)}</td>
 						<td class="px-4 py-2.5">
-							<div class="flex items-center justify-end gap-1.5">
-								<button
-									class="btn-ghost text-sm"
-									disabled={a.status !== 'ready'}
-									onclick={() => (playing = a)}>Play</button
-								>
-								<button class="btn-ghost text-sm" onclick={() => (detail = a)}>Details</button>
-								{#if auth.canWrite && a.type !== 'clip' && a.status !== 'processing' && a.status !== 'uploading'}
-									<button class="btn-ghost text-sm" onclick={() => retry.mutate(a.id)}>Retry</button>
-								{/if}
-								{#if auth.canWrite}
-									<button class="btn-danger text-sm" onclick={() => remove.mutate(a.id)}>Delete</button>
-								{/if}
+							<div class="flex justify-end">
+								<Menu>
+									<button class="menu-item" disabled={a.status !== 'ready'} onclick={() => (playing = a)}>
+										Play
+									</button>
+									<button class="menu-item" onclick={() => (detail = a)}>Details</button>
+									{#if auth.canWrite && a.type !== 'clip' && a.status !== 'processing' && a.status !== 'uploading'}
+										<button class="menu-item" onclick={() => retry.mutate(a.id)}>
+											{a.status === 'errored' ? 'Retry' : 'Re-transcode'}
+										</button>
+									{/if}
+									{#if auth.canWrite}
+										<button class="menu-item text-red-600" onclick={() => remove.mutate(a.id)}>
+											Delete
+										</button>
+									{/if}
+								</Menu>
 							</div>
 						</td>
 					</tr>
