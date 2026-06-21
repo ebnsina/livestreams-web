@@ -82,6 +82,7 @@ export interface Destination {
 	created_at: string;
 	attached?: boolean;
 	enabled?: boolean;
+	relay_state?: string; // relaying | stopped | error
 }
 
 export interface ApiKey {

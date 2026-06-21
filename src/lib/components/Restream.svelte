@@ -8,7 +8,8 @@
 
 	const dests = createQuery(() => ({
 		queryKey: keys.streamDestinations(streamId),
-		queryFn: () => api.streamDestinations(streamId)
+		queryFn: () => api.streamDestinations(streamId),
+		refetchInterval: 5000
 	}));
 	const list = $derived(dests.data?.data ?? []);
 
@@ -120,7 +121,22 @@
 			{#each list as d (d.id)}
 				<li class="flex items-center justify-between gap-3 px-5 py-3">
 					<div class="min-w-0">
-						<p class="truncate text-sm font-medium">{d.name}</p>
+						<p class="flex items-center gap-2 truncate text-sm font-medium">
+							{d.name}
+							{#if d.relay_state === 'relaying'}
+								<span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+									<span class="relative flex h-1.5 w-1.5">
+										<span
+											class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75"
+										></span>
+										<span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+									</span>
+									live
+								</span>
+							{:else if d.relay_state === 'error'}
+								<span class="text-[11px] font-medium text-red-500">error</span>
+							{/if}
+						</p>
 						<p class="font-mono text-[11px] text-[var(--color-muted)]">
 							{platformLabel[d.platform] ?? d.platform}
 						</p>
