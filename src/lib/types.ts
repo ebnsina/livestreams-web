@@ -95,6 +95,21 @@ export interface ApiKey {
 	key?: string; // full key, returned once on create
 }
 
+export interface Member {
+	id: string;
+	name: string;
+	email: string;
+	role: string;
+}
+
+export interface Invitation {
+	id: string;
+	email: string;
+	role: string;
+	created_at: string;
+	token?: string; // returned once on create
+}
+
 export interface OAuthConnection {
 	id: string;
 	platform: string;

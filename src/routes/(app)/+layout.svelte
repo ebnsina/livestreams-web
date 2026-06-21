@@ -14,6 +14,7 @@
 		ScrollText,
 		Webhook,
 		KeyRound,
+		Users,
 		Settings
 	} from '@lucide/svelte';
 
@@ -41,6 +42,7 @@
 		{ href: '/logs', label: 'Logs', icon: ScrollText },
 		{ href: '/webhooks', label: 'Webhooks', icon: Webhook },
 		{ href: '/api-keys', label: 'API Keys', icon: KeyRound },
+		{ href: '/team', label: 'Team', icon: Users },
 		{ href: '/settings', label: 'Settings', icon: Settings }
 	];
 

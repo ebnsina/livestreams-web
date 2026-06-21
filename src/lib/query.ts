@@ -14,5 +14,7 @@ export const keys = {
 	webhookDeliveries: ['webhook-deliveries'] as const,
 	apiKeys: ['api-keys'] as const,
 	oauthProviders: ['oauth-providers'] as const,
-	oauthConnections: ['oauth-connections'] as const
+	oauthConnections: ['oauth-connections'] as const,
+	teamMembers: ['team-members'] as const,
+	teamInvitations: ['team-invitations'] as const
 };

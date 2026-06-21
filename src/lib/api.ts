@@ -16,6 +16,8 @@ import type {
 	WebhookDelivery,
 	ApiKey,
 	OAuthConnection,
+	Member,
+	Invitation,
 	User,
 	Org
 } from './types';
@@ -152,5 +154,15 @@ export const api = {
 	oauthAuthorize: (platform: string) =>
 		request<{ redirect_url: string }>(`/v1/oauth/${platform}/authorize`),
 	deleteOauthConnection: (id: string) =>
-		request<void>(`/v1/oauth/connections/${id}`, { method: 'DELETE' })
+		request<void>(`/v1/oauth/connections/${id}`, { method: 'DELETE' }),
+
+	// team / membership
+	teamMembers: () => request<{ data: Member[] }>('/v1/team/members'),
+	teamInvitations: () => request<{ data: Invitation[] }>('/v1/team/invitations'),
+	createInvitation: (email: string, role: string) =>
+		request<Invitation>('/v1/team/invitations', { method: 'POST', body: { email, role } }),
+	revokeInvitation: (id: string) =>
+		request<void>(`/v1/team/invitations/${id}`, { method: 'DELETE' }),
+	acceptInvitation: (token: string) =>
+		request<void>('/v1/team/invitations/accept', { method: 'POST', body: { token } })
 };
