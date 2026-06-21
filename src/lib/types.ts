@@ -84,6 +84,16 @@ export interface Destination {
 	enabled?: boolean;
 }
 
+export interface ApiKey {
+	id: string;
+	name: string;
+	prefix: string;
+	scopes: string[];
+	last_used_at?: string;
+	created_at: string;
+	key?: string; // full key, returned once on create
+}
+
 export interface WebhookEndpoint {
 	id: string;
 	url: string;

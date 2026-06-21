@@ -28,7 +28,8 @@
 		{ href: '/streams', label: 'Streams', icon: 'M4 6h16M4 12h16M4 18h10' },
 		{ href: '/jobs', label: 'Jobs', icon: 'M4 7h16M4 12h16M4 17h16' },
 		{ href: '/logs', label: 'Logs', icon: 'M8 6h10M8 12h10M8 18h6M4 6h.01M4 12h.01M4 18h.01' },
-		{ href: '/webhooks', label: 'Webhooks', icon: 'M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' }
+		{ href: '/webhooks', label: 'Webhooks', icon: 'M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1' },
+		{ href: '/api-keys', label: 'API Keys', icon: 'M15 7a4 4 0 11-4 4m4-4l5 5m-2-2l-2 2m-1-9a9 9 0 100 18 9 9 0 000-18z' }
 	];
 
 	function logout() {

@@ -14,6 +14,7 @@ import type {
 	Destination,
 	WebhookEndpoint,
 	WebhookDelivery,
+	ApiKey,
 	User,
 	Org
 } from './types';
@@ -112,5 +113,10 @@ export const api = {
 	createWebhook: (input: { url: string; events: string[] }) =>
 		request<WebhookEndpoint>('/v1/webhooks', { method: 'POST', body: input }),
 	deleteWebhook: (id: string) => request<void>(`/v1/webhooks/${id}`, { method: 'DELETE' }),
-	webhookDeliveries: () => request<{ data: WebhookDelivery[] }>('/v1/webhook-deliveries')
+	webhookDeliveries: () => request<{ data: WebhookDelivery[] }>('/v1/webhook-deliveries'),
+
+	// API keys
+	apiKeys: () => request<{ data: ApiKey[] }>('/v1/api-keys'),
+	createApiKey: (name: string) => request<ApiKey>('/v1/api-keys', { method: 'POST', body: { name } }),
+	revokeApiKey: (id: string) => request<void>(`/v1/api-keys/${id}`, { method: 'DELETE' })
 };

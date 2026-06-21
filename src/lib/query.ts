@@ -11,5 +11,6 @@ export const keys = {
 	recordings: (id: string) => ['streams', id, 'recordings'] as const,
 	streamDestinations: (id: string) => ['streams', id, 'destinations'] as const,
 	webhooks: ['webhooks'] as const,
-	webhookDeliveries: ['webhook-deliveries'] as const
+	webhookDeliveries: ['webhook-deliveries'] as const,
+	apiKeys: ['api-keys'] as const
 };
