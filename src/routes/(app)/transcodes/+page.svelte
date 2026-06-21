@@ -37,14 +37,6 @@
 	const items = $derived(list.data?.data ?? []);
 	const total = $derived(list.data?.total ?? 0);
 
-	// keep the open detail modal's asset fresh as the list refetches
-	$effect(() => {
-		if (detail) {
-			const fresh = items.find((a) => a.id === detail!.id);
-			if (fresh) detail = fresh;
-		}
-	});
-
 	function refresh() {
 		qc.invalidateQueries({ queryKey: ['transcodes'] });
 	}
