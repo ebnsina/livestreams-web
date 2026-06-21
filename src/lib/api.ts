@@ -20,7 +20,8 @@ import type {
 	Invitation,
 	User,
 	Org,
-	AnalyticsOverview
+	AnalyticsOverview,
+	StreamAnalytics
 } from './types';
 
 const BASE = PUBLIC_API_BASE_URL ?? 'http://localhost:8085';
@@ -116,6 +117,8 @@ export const api = {
 	// analytics
 	analyticsOverview: (range: '24h' | '7d' | '30d') =>
 		request<AnalyticsOverview>(`/v1/analytics/overview?range=${range}`),
+	streamAnalytics: (id: string, range: '24h' | '7d' | '30d') =>
+		request<StreamAnalytics>(`/v1/analytics/stream?stream_id=${id}&range=${range}`),
 
 	// jobs & org-wide activity
 	jobs: () => request<{ data: Job[] }>('/v1/jobs'),

@@ -11,9 +11,23 @@
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Recordings from '$lib/components/Recordings.svelte';
 	import Restream from '$lib/components/Restream.svelte';
+	import Chart from '$lib/components/Chart.svelte';
 
 	const qc = useQueryClient();
 	const id = $derived(page.params.id as string);
+
+	let anRange = $state<'24h' | '7d' | '30d'>('24h');
+	const analytics = createQuery(() => ({
+		queryKey: ['streams', id, 'analytics', anRange],
+		queryFn: () => api.streamAnalytics(id, anRange),
+		refetchInterval: 15000
+	}));
+	const anSeries = $derived(analytics.data?.series ?? []);
+	const anRanges: { id: '24h' | '7d' | '30d'; label: string }[] = [
+		{ id: '24h', label: '24h' },
+		{ id: '7d', label: '7d' },
+		{ id: '30d', label: '30d' }
+	];
 
 	const stream = createQuery(() => ({
 		queryKey: keys.stream(id),
@@ -243,6 +257,62 @@
 			<Recordings assets={recordings.data?.data ?? []} />
 		</div>
 	</div>
+
+	<!-- Analytics -->
+	<section class="mt-8">
+		<div class="mb-3 flex items-center justify-between gap-3">
+			<h2 class="text-lg font-medium">Analytics</h2>
+			<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">
+				{#each anRanges as r (r.id)}
+					<button
+						class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors {anRange === r.id
+							? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
+							: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
+						onclick={() => (anRange = r.id)}
+					>
+						{r.label}
+					</button>
+				{/each}
+			</div>
+		</div>
+		<div class="mb-4 grid grid-cols-3 gap-3">
+			<div class="card p-4">
+				<p class="text-xs text-[var(--color-muted)]">Peak viewers</p>
+				<p class="mt-1 text-2xl font-semibold tabular-nums">
+					{analytics.data?.summary.peak_viewers ?? 0}
+				</p>
+			</div>
+			<div class="card p-4">
+				<p class="text-xs text-[var(--color-muted)]">Avg startup</p>
+				<p class="mt-1 text-2xl font-semibold tabular-nums">
+					{analytics.data?.summary.avg_startup_ms
+						? `${analytics.data.summary.avg_startup_ms}ms`
+						: '—'}
+				</p>
+			</div>
+			<div class="card p-4">
+				<p class="text-xs text-[var(--color-muted)]">Total rebuffers</p>
+				<p class="mt-1 text-2xl font-semibold tabular-nums">
+					{analytics.data?.summary.total_rebuffers ?? 0}
+				</p>
+			</div>
+		</div>
+		<div class="grid gap-4 lg:grid-cols-2">
+			<div class="card p-5">
+				<h3 class="mb-3 text-sm font-semibold">Concurrent viewers</h3>
+				<Chart points={anSeries.map((p) => ({ t: p.t, v: p.viewers }))} color="#ff5b3e" height={140} />
+			</div>
+			<div class="card p-5">
+				<h3 class="mb-3 text-sm font-semibold">Average bitrate (kbps)</h3>
+				<Chart
+					points={anSeries.map((p) => ({ t: p.t, v: p.bitrate_kbps }))}
+					color="#0ea5e9"
+					height={140}
+					format={(n) => `${n}k`}
+				/>
+			</div>
+		</div>
+	</section>
 
 	<!-- Sessions -->
 	<section class="mt-8">

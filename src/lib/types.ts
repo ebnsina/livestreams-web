@@ -87,6 +87,17 @@ export interface AnalyticsOverview {
 	series: AnalyticsPoint[];
 }
 
+export interface StreamAnalytics {
+	range: string;
+	unit: string;
+	summary: {
+		peak_viewers: number;
+		avg_startup_ms: number;
+		total_rebuffers: number;
+	};
+	series: AnalyticsPoint[];
+}
+
 export interface Asset {
 	id: string;
 	title: string;
