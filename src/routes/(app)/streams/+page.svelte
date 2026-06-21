@@ -4,16 +4,27 @@
 	import { keys } from '$lib/query';
 	import { auth } from '$lib/auth.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import Pager from '$lib/components/Pager.svelte';
 	import type { LatencyMode } from '$lib/types';
 
 	const qc = useQueryClient();
 
+	const LIMIT = 20;
+	let search = $state('');
+	let offset = $state(0);
+	// reset to the first page whenever the search term changes
+	$effect(() => {
+		void search;
+		offset = 0;
+	});
+
 	const streams = createQuery(() => ({
-		queryKey: keys.streams,
-		queryFn: () => api.listStreams(),
+		queryKey: [...keys.streams, search, offset],
+		queryFn: () => api.listStreams({ q: search, limit: LIMIT, offset }),
 		refetchInterval: 5000
 	}));
 	const list = $derived(streams.data?.data ?? []);
+	const total = $derived(streams.data?.total ?? 0);
 
 	let showForm = $state(false);
 	let name = $state('');
@@ -75,12 +86,16 @@
 	</form>
 {/if}
 
+<div class="mb-5">
+	<input class="input sm:max-w-xs" bind:value={search} placeholder="Search streams…" />
+</div>
+
 <div class="card divide-y divide-[var(--color-border)] overflow-hidden">
 	{#if streams.isPending}
 		<div class="p-6 text-sm text-[var(--color-muted)]">Loading…</div>
 	{:else if list.length === 0}
 		<div class="p-10 text-center text-sm text-[var(--color-muted)]">
-			No streams yet. Create one to get started.
+			{search ? 'No streams match your search.' : 'No streams yet. Create one to get started.'}
 		</div>
 	{:else}
 		{#each list as s (s.id)}
@@ -99,3 +114,5 @@
 		{/each}
 	{/if}
 </div>
+
+<Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />

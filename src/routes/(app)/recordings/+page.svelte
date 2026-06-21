@@ -7,23 +7,29 @@
 	import Recordings from '$lib/components/Recordings.svelte';
 	import UploadVOD from '$lib/components/UploadVOD.svelte';
 	import ClipModal from '$lib/components/ClipModal.svelte';
+	import Pager from '$lib/components/Pager.svelte';
 	import { UploadCloud } from '@lucide/svelte';
 
 	const qc = useQueryClient();
+	const LIMIT = 24;
 	let q = $state('');
+	let offset = $state(0);
 	let showUpload = $state(false);
 	let clipping = $state<Asset | null>(null);
 
+	$effect(() => {
+		void q;
+		offset = 0;
+	});
+
 	const assets = createQuery(() => ({
-		queryKey: keys.assets,
-		queryFn: () => api.assets(),
+		queryKey: [...keys.assets, q, offset],
+		queryFn: () => api.assets({ q, limit: LIMIT, offset }),
 		// keep status fresh while uploads/clips transcode in the background
 		refetchInterval: 5000
 	}));
-	const all = $derived(assets.data?.data ?? []);
-	const filtered = $derived(
-		q.trim() ? all.filter((a) => a.title.toLowerCase().includes(q.trim().toLowerCase())) : all
-	);
+	const list = $derived(assets.data?.data ?? []);
+	const total = $derived(assets.data?.total ?? 0);
 
 	const remove = createMutation(() => ({
 		mutationFn: (id: string) => api.deleteAsset(id),
@@ -55,16 +61,17 @@
 
 {#if assets.isPending}
 	<div class="card p-6 text-sm text-[var(--color-muted)]">Loading…</div>
-{:else if filtered.length === 0}
+{:else if list.length === 0}
 	<div class="card p-10 text-center text-sm text-[var(--color-muted)]">
 		{q ? 'Nothing matches your search.' : 'No recordings or videos yet. Upload one to get started.'}
 	</div>
 {:else}
 	<Recordings
-		assets={filtered}
-		onDelete={(id) => remove.mutate(id)}
+		assets={list}
+		onDelete={auth.canWrite ? (id) => remove.mutate(id) : undefined}
 		onClip={auth.canWrite ? (a) => (clipping = a) : undefined}
 	/>
+	<Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />
 {/if}
 
 <UploadVOD open={showUpload} onClose={() => (showUpload = false)} onDone={refresh} />

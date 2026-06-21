@@ -7,6 +7,7 @@
 	import Modal from '$lib/components/Modal.svelte';
 
 	let streamFilter = $state('');
+	let search = $state('');
 	let selected = $state<Job | null>(null);
 
 	const streams = createQuery(() => ({
@@ -21,7 +22,12 @@
 
 	const streamList = $derived(streams.data?.data ?? []);
 	const jobList = $derived(
-		(jobs.data?.data ?? []).filter((j) => !streamFilter || j.stream_id === streamFilter)
+		(jobs.data?.data ?? []).filter(
+			(j) =>
+				(!streamFilter || j.stream_id === streamFilter) &&
+				(!search.trim() ||
+					`#${j.id} ${j.kind} ${j.state}`.toLowerCase().includes(search.trim().toLowerCase()))
+		)
 	);
 	const kindLabel: Record<string, string> = { transcode: 'Transcode', restream: 'Restream' };
 
@@ -43,7 +49,8 @@
 	<p class="mt-1 text-sm text-[var(--color-muted)]">Background transcoder and restream jobs</p>
 </header>
 
-<div class="mb-5 flex items-center justify-end">
+<div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+	<input class="input sm:max-w-xs" bind:value={search} placeholder="Search jobs…" />
 	<label class="flex items-center gap-2 text-sm">
 		<span class="text-[var(--color-muted)]">Stream</span>
 		<select class="input w-auto py-1.5 text-sm" bind:value={streamFilter}>

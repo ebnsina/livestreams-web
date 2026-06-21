@@ -21,8 +21,20 @@ import type {
 	User,
 	Org,
 	AnalyticsOverview,
-	StreamAnalytics
+	StreamAnalytics,
+	Paginated
 } from './types';
+
+// Build a query string from defined params (skips undefined/empty values).
+function qs(params?: Record<string, string | number | undefined>): string {
+	if (!params) return '';
+	const sp = new URLSearchParams();
+	for (const [k, v] of Object.entries(params)) {
+		if (v !== undefined && v !== '') sp.set(k, String(v));
+	}
+	const s = sp.toString();
+	return s ? `?${s}` : '';
+}
 
 const BASE = PUBLIC_API_BASE_URL ?? 'http://localhost:8085';
 
@@ -81,7 +93,8 @@ export const api = {
 		request<void>('/v1/me/password', { method: 'POST', body: { current_password, new_password } }),
 
 	// streams
-	listStreams: () => request<{ data: Stream[] }>('/v1/streams'),
+	listStreams: (params?: { q?: string; limit?: number; offset?: number }) =>
+		request<Paginated<Stream>>(`/v1/streams${qs(params)}`),
 	getStream: (id: string) => request<Stream>(`/v1/streams/${id}`),
 	createStream: (input: CreateStreamInput) =>
 		request<Stream>('/v1/streams', { method: 'POST', body: input }),
@@ -126,7 +139,8 @@ export const api = {
 		request<{ data: StreamEvent[] }>(`/v1/activity${level ? `?level=${level}` : ''}`),
 
 	// recordings / assets
-	assets: () => request<{ data: Asset[] }>('/v1/assets'),
+	assets: (params?: { q?: string; limit?: number; offset?: number }) =>
+		request<Paginated<Asset>>(`/v1/assets${qs(params)}`),
 	streamRecordings: (streamId: string) =>
 		request<{ data: Asset[] }>(`/v1/recordings?stream_id=${streamId}`),
 	assetPlayback: (id: string) =>

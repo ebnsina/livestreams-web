@@ -8,6 +8,7 @@
 
 	let level = $state<'all' | 'error'>('all');
 	let streamFilter = $state('');
+	let search = $state('');
 	let selected = $state<StreamEvent | null>(null);
 
 	const streams = createQuery(() => ({ queryKey: keys.streams, queryFn: () => api.listStreams() }));
@@ -24,7 +25,14 @@
 
 	const streamList = $derived(streams.data?.data ?? []);
 	const source = $derived(level === 'error' ? (errs.data?.data ?? []) : (all.data?.data ?? []));
-	const list = $derived(source.filter((e) => !streamFilter || e.stream_id === streamFilter));
+	const list = $derived(
+		source.filter(
+			(e) =>
+				(!streamFilter || e.stream_id === streamFilter) &&
+				(!search.trim() ||
+					`${e.type} ${e.message}`.toLowerCase().includes(search.trim().toLowerCase()))
+		)
+	);
 
 	const pill: Record<string, string> = {
 		info: 'bg-sky-500/12 text-sky-500',
@@ -59,15 +67,18 @@
 		{/each}
 	</div>
 
-	<label class="flex items-center gap-2 text-sm">
-		<span class="text-[var(--color-muted)]">Stream</span>
-		<select class="input w-auto py-1.5 text-sm" bind:value={streamFilter}>
-			<option value="">All streams</option>
-			{#each streamList as s (s.id)}
-				<option value={s.id}>{s.name}</option>
-			{/each}
-		</select>
-	</label>
+	<div class="flex flex-wrap items-center gap-2">
+		<input class="input w-auto py-1.5 text-sm" bind:value={search} placeholder="Search events…" />
+		<label class="flex items-center gap-2 text-sm">
+			<span class="text-[var(--color-muted)]">Stream</span>
+			<select class="input w-auto py-1.5 text-sm" bind:value={streamFilter}>
+				<option value="">All streams</option>
+				{#each streamList as s (s.id)}
+					<option value={s.id}>{s.name}</option>
+				{/each}
+			</select>
+		</label>
+	</div>
 </div>
 
 <Timeline events={list} onSelect={(e) => (selected = e)} />

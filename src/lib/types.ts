@@ -87,6 +87,13 @@ export interface AnalyticsOverview {
 	series: AnalyticsPoint[];
 }
 
+export interface Paginated<T> {
+	data: T[];
+	total: number;
+	limit: number;
+	offset: number;
+}
+
 export interface StreamAnalytics {
 	range: string;
 	unit: string;

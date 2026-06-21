@@ -2,6 +2,7 @@
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
+	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 
 	const qc = useQueryClient();
@@ -51,28 +52,30 @@
 	</div>
 {/if}
 
-<form
-	class="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
-	onsubmit={(e) => {
-		e.preventDefault();
-		create.mutate();
-	}}
->
-	<div class="flex-1">
-		<label class="label" for="name">Key name</label>
-		<input id="name" class="input" bind:value={name} placeholder="CI pipeline" required />
-	</div>
-	<div>
-		<label class="label" for="access">Access</label>
-		<select id="access" class="input w-auto" bind:value={access}>
-			<option value="full">Read &amp; write</option>
-			<option value="read">Read only</option>
-		</select>
-	</div>
-	<button class="btn-primary" type="submit" disabled={create.isPending}>
-		{create.isPending ? 'Creating…' : 'Create key'}
-	</button>
-</form>
+{#if auth.canWrite}
+	<form
+		class="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
+		onsubmit={(e) => {
+			e.preventDefault();
+			create.mutate();
+		}}
+	>
+		<div class="flex-1">
+			<label class="label" for="name">Key name</label>
+			<input id="name" class="input" bind:value={name} placeholder="CI pipeline" required />
+		</div>
+		<div>
+			<label class="label" for="access">Access</label>
+			<select id="access" class="input w-auto" bind:value={access}>
+				<option value="full">Read &amp; write</option>
+				<option value="read">Read only</option>
+			</select>
+		</div>
+		<button class="btn-primary" type="submit" disabled={create.isPending}>
+			{create.isPending ? 'Creating…' : 'Create key'}
+		</button>
+	</form>
+{/if}
 
 <div class="card divide-y divide-[var(--color-border)] overflow-hidden">
 	{#if items.length === 0}
@@ -95,7 +98,9 @@
 						{k.prefix}… · last used {when(k.last_used_at)}
 					</p>
 				</div>
-				<button class="btn-danger shrink-0 text-sm" onclick={() => revoke.mutate(k.id)}>Revoke</button>
+				{#if auth.canWrite}
+					<button class="btn-danger shrink-0 text-sm" onclick={() => revoke.mutate(k.id)}>Revoke</button>
+				{/if}
 			</div>
 		{/each}
 	{/if}

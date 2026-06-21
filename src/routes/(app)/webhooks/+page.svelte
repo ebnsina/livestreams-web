@@ -2,6 +2,7 @@
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
+	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 
 	const qc = useQueryClient();
@@ -67,21 +68,23 @@
 {/if}
 
 <!-- create -->
-<form
-	class="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
-	onsubmit={(e) => {
-		e.preventDefault();
-		create.mutate();
-	}}
->
-	<div class="flex-1">
-		<label class="label" for="url">Endpoint URL</label>
-		<input id="url" class="input" bind:value={url} placeholder="https://example.com/webhooks" required />
-	</div>
-	<button class="btn-primary" type="submit" disabled={create.isPending}>
-		{create.isPending ? 'Adding…' : 'Add endpoint'}
-	</button>
-</form>
+{#if auth.canWrite}
+	<form
+		class="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
+		onsubmit={(e) => {
+			e.preventDefault();
+			create.mutate();
+		}}
+	>
+		<div class="flex-1">
+			<label class="label" for="url">Endpoint URL</label>
+			<input id="url" class="input" bind:value={url} placeholder="https://example.com/webhooks" required />
+		</div>
+		<button class="btn-primary" type="submit" disabled={create.isPending}>
+			{create.isPending ? 'Adding…' : 'Add endpoint'}
+		</button>
+	</form>
+{/if}
 
 <!-- endpoints -->
 <section class="mb-8">
@@ -98,7 +101,9 @@
 							events: {e.events.join(', ')} · {e.enabled ? 'enabled' : 'disabled'}
 						</p>
 					</div>
-					<button class="btn-danger shrink-0 text-sm" onclick={() => remove.mutate(e.id)}>Delete</button>
+					{#if auth.canWrite}
+						<button class="btn-danger shrink-0 text-sm" onclick={() => remove.mutate(e.id)}>Delete</button>
+					{/if}
 				</div>
 			{/each}
 		{/if}
@@ -134,11 +139,13 @@
 							<td class="px-4 py-2.5 font-mono text-[12px] tabular-nums">{d.attempts}</td>
 							<td class="px-4 py-2.5 text-[12px] text-[var(--color-muted)]">{when(d.created_at)}</td>
 							<td class="px-4 py-2.5 text-right">
-								<button
-									class="text-[12px] font-medium text-[#ff5b3e] hover:text-[#ff5b3e] disabled:opacity-50"
-									onclick={() => redeliver.mutate(d.id)}
-									disabled={redeliver.isPending}>Redeliver</button
-								>
+								{#if auth.canWrite}
+									<button
+										class="text-[12px] font-medium text-[#ff5b3e] hover:text-[#ff5b3e] disabled:opacity-50"
+										onclick={() => redeliver.mutate(d.id)}
+										disabled={redeliver.isPending}>Redeliver</button
+									>
+								{/if}
 							</td>
 						</tr>
 					{/each}

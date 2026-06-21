@@ -2,6 +2,7 @@
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
+	import { auth } from '$lib/auth.svelte';
 
 	let { streamId }: { streamId: string } = $props();
 	const qc = useQueryClient();
@@ -62,9 +63,11 @@
 <section class="card overflow-hidden">
 	<div class="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3.5">
 		<span class="text-[13px] font-semibold tracking-[-0.01em]">Multistream</span>
-		<button class="btn-ghost text-xs" onclick={() => (showForm = !showForm)}>
-			{showForm ? 'Cancel' : '+ Destination'}
-		</button>
+		{#if auth.canWrite}
+			<button class="btn-ghost text-xs" onclick={() => (showForm = !showForm)}>
+				{showForm ? 'Cancel' : '+ Destination'}
+			</button>
+		{/if}
 	</div>
 
 	{#if showForm}
@@ -141,20 +144,26 @@
 							{platformLabel[d.platform] ?? d.platform}
 						</p>
 					</div>
-					<button
-						class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors {d.enabled
-							? 'bg-[#ff5b3e]'
-							: 'bg-[var(--color-border)]'}"
-						onclick={() => toggle.mutate({ destId: d.id, enabled: !d.enabled })}
-						disabled={toggle.isPending}
-						aria-label="Toggle {d.name}"
-					>
-						<span
-							class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {d.enabled
-								? 'translate-x-4'
-								: 'translate-x-0.5'}"
-						></span>
-					</button>
+					{#if auth.canWrite}
+						<button
+							class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors {d.enabled
+								? 'bg-[#ff5b3e]'
+								: 'bg-[var(--color-border)]'}"
+							onclick={() => toggle.mutate({ destId: d.id, enabled: !d.enabled })}
+							disabled={toggle.isPending}
+							aria-label="Toggle {d.name}"
+						>
+							<span
+								class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {d.enabled
+									? 'translate-x-4'
+									: 'translate-x-0.5'}"
+							></span>
+						</button>
+					{:else}
+						<span class="shrink-0 text-[11px] text-[var(--color-muted)]"
+							>{d.enabled ? 'on' : 'off'}</span
+						>
+					{/if}
 				</li>
 			{/each}
 		</ul>

@@ -4,6 +4,7 @@
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
+	import { auth } from '$lib/auth.svelte';
 	import type { StreamEvent } from '$lib/types';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
@@ -181,14 +182,16 @@
 			{#if s.description}<p class="mt-1 text-sm text-[var(--color-muted)]">{s.description}</p>{/if}
 		</div>
 		<div class="flex shrink-0 items-center gap-2">
-			{#if isLive}
-				<button class="btn-ghost" onclick={() => stop.mutate()} disabled={stop.isPending}>
-					{stop.isPending ? 'Stopping…' : 'Stop stream'}
+			{#if auth.canWrite}
+				{#if isLive}
+					<button class="btn-ghost" onclick={() => stop.mutate()} disabled={stop.isPending}>
+						{stop.isPending ? 'Stopping…' : 'Stop stream'}
+					</button>
+				{/if}
+				<button class="btn-danger" onclick={() => remove.mutate()} disabled={remove.isPending}>
+					Delete
 				</button>
 			{/if}
-			<button class="btn-danger" onclick={() => remove.mutate()} disabled={remove.isPending}>
-				Delete
-			</button>
 		</div>
 	</header>
 
@@ -227,13 +230,15 @@
 				{#if s.ingest?.stream_key}
 					<CopyField label="Stream Key" value={s.ingest.stream_key} secret />
 				{/if}
-				<button
-					class="btn-ghost w-full text-sm"
-					onclick={() => rotate.mutate()}
-					disabled={rotate.isPending}
-				>
-					{rotate.isPending ? 'Rotating…' : 'Rotate stream key'}
-				</button>
+				{#if auth.canWrite}
+					<button
+						class="btn-ghost w-full text-sm"
+						onclick={() => rotate.mutate()}
+						disabled={rotate.isPending}
+					>
+						{rotate.isPending ? 'Rotating…' : 'Rotate stream key'}
+					</button>
+				{/if}
 			</div>
 
 			<div class="card space-y-2 p-5 text-sm">
