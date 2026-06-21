@@ -69,7 +69,10 @@
 		beaconTimer = setInterval(beacon, 10000);
 
 		if (Hls.isSupported()) {
-			hls = new Hls({ lowLatencyMode: true, liveSyncDurationCount: 3 });
+			// We emit standard HLS (4s segments), not LL-HLS with partial segments,
+			// so lowLatencyMode would make the player stall waiting for parts that
+			// never arrive. Keep live-edge sync only for live; plain config for VOD.
+			hls = new Hls(live ? { liveSyncDurationCount: 3 } : {});
 			hls.loadSource(src);
 			hls.attachMedia(video);
 
