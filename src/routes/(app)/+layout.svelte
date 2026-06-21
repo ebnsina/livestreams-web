@@ -97,7 +97,7 @@
 				{/each}
 			</nav>
 
-			<div class="border-t border-[var(--color-border)] pt-4">
+			<div class="pt-4">
 				{#if orgs.length > 1}
 					<select
 						class="input mb-3 text-sm"
