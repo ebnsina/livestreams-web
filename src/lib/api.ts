@@ -122,8 +122,37 @@ export const api = {
 	streamRecordings: (streamId: string) =>
 		request<{ data: Asset[] }>(`/v1/recordings?stream_id=${streamId}`),
 	assetPlayback: (id: string) =>
-		request<{ url: string; expires_at: string }>(`/v1/assets/${id}/playback`),
+		request<{ url: string; kind: 'hls' | 'file'; expires_at?: string }>(
+			`/v1/assets/${id}/playback`
+		),
 	deleteAsset: (id: string) => request<void>(`/v1/assets/${id}`, { method: 'DELETE' }),
+
+	// VOD upload (3 steps: reserve → PUT to storage → process)
+	createUpload: (input: { title?: string; filename: string; size_bytes: number }) =>
+		request<{ asset_id: string; upload_url: string; expires_at: string }>('/v1/vod/uploads', {
+			method: 'POST',
+			body: input
+		}),
+	// Direct PUT to the presigned storage URL with progress (bypasses the API).
+	uploadToUrl: (url: string, file: File, onProgress?: (pct: number) => void) =>
+		new Promise<void>((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('PUT', url);
+			xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+			xhr.upload.onprogress = (e) => {
+				if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+			};
+			xhr.onload = () =>
+				xhr.status >= 200 && xhr.status < 300
+					? resolve()
+					: reject(new Error(`upload failed (${xhr.status})`));
+			xhr.onerror = () => reject(new Error('upload failed'));
+			xhr.send(file);
+		}),
+	processUpload: (id: string) =>
+		request<Asset>(`/v1/assets/${id}/process`, { method: 'POST' }),
+	createClip: (id: string, input: { title?: string; start_sec: number; end_sec: number }) =>
+		request<Asset>(`/v1/assets/${id}/clip`, { method: 'POST', body: input }),
 
 	// multistream destinations
 	destinations: () => request<{ data: Destination[] }>('/v1/destinations'),

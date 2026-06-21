@@ -71,6 +71,7 @@ export interface Asset {
 	status: string;
 	duration_sec: number;
 	size_bytes: number;
+	error?: string;
 	created_at: string;
 }
 
