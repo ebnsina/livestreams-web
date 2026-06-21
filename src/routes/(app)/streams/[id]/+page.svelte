@@ -34,6 +34,12 @@
 		refetchInterval: 10000 // a recording appears shortly after a stream ends
 	}));
 
+	const qos = createQuery(() => ({
+		queryKey: ['streams', id, 'qos'],
+		queryFn: () => api.qos(id),
+		refetchInterval: 5000
+	}));
+
 	// --- activity log: history (REST) + live (SSE) ---
 	const history = createQuery(() => ({
 		queryKey: keys.events(id),
@@ -118,6 +124,13 @@
 	}
 </script>
 
+{#snippet qosStat(label: string, value: string)}
+	<div class="bg-[var(--color-surface)] p-3">
+		<p class="text-[11px] text-[var(--color-muted)]">{label}</p>
+		<p class="mt-0.5 font-mono text-lg font-semibold tabular-nums">{value}</p>
+	</div>
+{/snippet}
+
 <a
 	href="/streams"
 	class="mb-4 inline-block text-sm text-[var(--color-muted)] hover:text-[var(--color-text)]"
@@ -168,7 +181,22 @@
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
 		<!-- Player -->
 		<div class="min-w-0 space-y-4">
-			<Player src={s.playback_url} live={isLive} reload={playerReload} />
+			<Player src={s.playback_url} live={isLive} reload={playerReload} streamId={id} />
+
+			<!-- Playback QoS (from viewer beacons) -->
+			<div class="card grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-4">
+				{@render qosStat('Viewers', qos.data ? String(qos.data.viewers) : '—')}
+				{@render qosStat(
+					'Avg startup',
+					qos.data?.avg_startup_ms ? `${qos.data.avg_startup_ms} ms` : '—'
+				)}
+				{@render qosStat('Rebuffers', qos.data ? String(qos.data.total_rebuffers) : '—')}
+				{@render qosStat(
+					'Avg bitrate',
+					qos.data?.avg_bitrate_kbps ? `${qos.data.avg_bitrate_kbps}k` : '—'
+				)}
+			</div>
+
 			<div class="card p-4">
 				<CopyField label="Playback URL (HLS)" value={s.playback_url} />
 			</div>

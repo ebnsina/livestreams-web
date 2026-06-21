@@ -81,6 +81,24 @@ export const api = {
 	rotateKey: (id: string) => request<Stream>(`/v1/streams/${id}/key/rotate`, { method: 'POST' }),
 	sessions: (id: string) => request<{ data: StreamSession[] }>(`/v1/streams/${id}/sessions`),
 
+	// playback QoS
+	qos: (id: string) =>
+		request<{
+			viewers: number;
+			avg_startup_ms: number;
+			total_rebuffers: number;
+			avg_bitrate_kbps: number;
+		}>(`/v1/streams/${id}/qos`),
+	sendBeacon: (body: unknown) => {
+		// fire-and-forget; no auth
+		fetch(`${BASE}/v1/playback/beacon`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body),
+			keepalive: true
+		}).catch(() => {});
+	},
+
 	// activity log (history)
 	events: (id: string) => request<{ data: StreamEvent[] }>(`/v1/streams/${id}/events`),
 	// SSE URL for live events (token in query — EventSource can't set headers)

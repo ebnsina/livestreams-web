@@ -1,12 +1,35 @@
 <script lang="ts">
 	import Hls from 'hls.js';
 	import { onDestroy } from 'svelte';
+	import { api } from '$lib/api';
 
 	let {
 		src,
 		live = false,
-		reload = 0
-	}: { src: string; live?: boolean; reload?: number } = $props();
+		reload = 0,
+		streamId = ''
+	}: { src: string; live?: boolean; reload?: number; streamId?: string } = $props();
+
+	// QoS tracking
+	const viewerId = typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(36);
+	let startedAt = 0;
+	let startupMs = 0;
+	let rebufferStart = 0;
+	let rebufferMs = 0;
+	let beaconTimer: ReturnType<typeof setInterval> | null = null;
+
+	function beacon() {
+		if (!streamId) return;
+		const br = playingLevel >= 0 && levels[playingLevel] ? Math.round(levels[playingLevel].bitrate / 1000) : 0;
+		api.sendBeacon({
+			stream_id: streamId,
+			viewer_id: viewerId,
+			startup_ms: Math.round(startupMs),
+			rebuffers,
+			rebuffer_ms: Math.round(rebufferMs),
+			bitrate_kbps: br
+		});
+	}
 
 	let video: HTMLVideoElement;
 	let hls: Hls | null = null;
@@ -37,8 +60,13 @@
 		buffering = false;
 		levels = [];
 		selected = -1;
+		startedAt = performance.now();
+		startupMs = 0;
+		rebufferMs = 0;
+		rebufferStart = 0;
 		teardown();
 		if (!video || !src) return;
+		beaconTimer = setInterval(beacon, 10000);
 
 		if (Hls.isSupported()) {
 			hls = new Hls({ lowLatencyMode: true, liveSyncDurationCount: 3 });
@@ -88,12 +116,25 @@
 	function onWaiting() {
 		buffering = true;
 		rebuffers += 1;
+		rebufferStart = performance.now();
 	}
 	function onResume() {
+		if (rebufferStart) {
+			rebufferMs += performance.now() - rebufferStart;
+			rebufferStart = 0;
+		}
+		if (startupMs === 0 && startedAt) {
+			startupMs = performance.now() - startedAt; // time to first playback
+			beacon(); // send the startup beacon immediately
+		}
 		buffering = false;
 	}
 
 	function teardown() {
+		if (beaconTimer) {
+			clearInterval(beaconTimer);
+			beaconTimer = null;
+		}
 		if (retry) {
 			clearTimeout(retry);
 			retry = null;
