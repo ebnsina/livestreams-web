@@ -84,6 +84,22 @@
 			// or the m-line order won't match SRS's answer.
 			for (const track of stream.getTracks()) conn.addTrack(track, stream);
 
+			// SRS bridges WebRTC→RTMP, which requires H.264 video. Browsers often
+			// offer VP8 first; pin H.264 so the bridge doesn't drop the publish.
+			try {
+				const caps = RTCRtpSender.getCapabilities?.('video');
+				const h264 = caps?.codecs.filter((c) => /h264/i.test(c.mimeType)) ?? [];
+				if (h264.length) {
+					for (const t of conn.getTransceivers()) {
+						if (t.sender.track?.kind === 'video' && 'setCodecPreferences' in t) {
+							t.setCodecPreferences(h264);
+						}
+					}
+				}
+			} catch {
+				/* setCodecPreferences unsupported — fall back to default negotiation */
+			}
+
 			const offer = await conn.createOffer();
 			await conn.setLocalDescription(offer);
 
@@ -95,7 +111,13 @@
 				},
 				body: offer.sdp ?? ''
 			});
-			if (!res.ok) throw new Error(`Ingest rejected the broadcast (${res.status})`);
+			if (!res.ok) {
+				throw new Error(
+					res.status >= 500
+						? 'Media server busy — if you were just live, wait a few seconds and try again.'
+						: `Ingest rejected the broadcast (${res.status})`
+				);
+			}
 			const answer = await res.text();
 			await conn.setRemoteDescription({ type: 'answer', sdp: answer });
 
