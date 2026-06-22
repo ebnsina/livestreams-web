@@ -72,6 +72,14 @@
 
 	let active = $state(0); // selected feature in the interactive showcase
 
+	// each platform's own brand color (for chat/multistream indicator dots)
+	const brandColor: Record<string, string> = {
+		youtube: '#ff0000',
+		twitch: '#9146ff',
+		facebook: '#1877f2',
+		kick: '#53fc18'
+	};
+
 	// Pricing tiers (placeholder prices — edit to taste).
 	const tiers = [
 		{
@@ -278,12 +286,12 @@
 					>
 						{#if active === 0}
 							<!-- browser go-live -->
-							<div class="flex h-full w-full items-center justify-center rounded-xl bg-[#0e0f13]">
-								<span class="absolute left-4 top-4 flex items-center gap-1.5 text-xs font-medium text-white">
+							<div class="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl bg-[#0e0f13]">
+								<span class="absolute left-3 top-3 flex items-center gap-1.5 text-xs font-medium text-white">
 									<span class="h-2 w-2 rounded-full bg-red-500"></span> LIVE
 								</span>
 								<Video size={48} class="text-white/40" />
-								<div class="absolute inset-x-4 bottom-4 flex items-center gap-2">
+								<div class="absolute inset-x-3 bottom-3 flex items-center gap-2">
 									<span class="h-7 w-7 rounded-lg bg-white/10"></span>
 									<span class="h-7 w-7 rounded-lg bg-white/10"></span>
 									<span class="flex-1"></span>
@@ -303,7 +311,7 @@
 							<div class="flex h-full flex-col justify-center gap-2.5">
 								{#each ['YouTube', 'Twitch', 'Facebook', 'Kick'] as p (p)}
 									<div class="flex items-center gap-2 rounded-lg bg-[var(--color-surface)] px-3 py-2 text-sm">
-										<span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+										<span class="h-2.5 w-2.5 rounded-full" style="background:{brandColor[p.toLowerCase()]}"></span>
 										<span class="font-medium">{p}</span>
 										<span class="ml-auto text-xs text-[var(--color-muted)]">streaming</span>
 									</div>
@@ -329,9 +337,9 @@
 						{:else if active === 5}
 							<!-- live chat -->
 							<div class="flex h-full flex-col justify-center gap-2">
-								{#each [['#f00', 'nova', 'this looks great 🔥'], ['#9146ff', 'kai', 'gg'], ['#f00', 'mei', 'where are you based?']] as [c, who, msg] (who)}
+								{#each [['youtube', 'nova', 'this looks great 🔥'], ['twitch', 'kai', 'gg'], ['youtube', 'mei', 'where are you based?']] as [plat, who, msg] (who)}
 									<div class="flex items-start gap-2 rounded-lg bg-[var(--color-surface)] px-3 py-2 text-sm">
-										<span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" style="background:{c}"></span>
+										<span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style="background:{brandColor[plat]}"></span>
 										<span><span class="font-medium">{who}</span> <span class="text-[var(--color-muted)]">{msg}</span></span>
 									</div>
 								{/each}
