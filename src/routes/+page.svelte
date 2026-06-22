@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
 	import { auth } from '$lib/auth.svelte';
 	import {
 		Radio,
@@ -69,19 +70,7 @@
 		}
 	];
 
-	// bento spans (lg, 4-col grid): varied widths, equal height/prominence so
-	// every feature reads as important (one wide + two narrow per row).
-	const spans = [
-		'col-span-2', // 0
-		'', // 1
-		'', // 2
-		'', // 3
-		'', // 4
-		'col-span-2', // 5
-		'', // 6
-		'col-span-2', // 7
-		'' // 8
-	];
+	let active = $state(0); // selected feature in the interactive showcase
 
 	const steps = [
 		{ n: '1', title: 'Create a stream', body: 'Pick webcam or encoder. Get an ingest URL, key, and a player instantly.' },
@@ -132,23 +121,29 @@
 
 	<!-- Hero -->
 	<section class="mx-auto max-w-6xl px-5 pb-10 pt-16 text-center sm:px-8 sm:pt-28">
-		<h1 class="mx-auto max-w-3xl text-4xl font-semibold leading-[1.12] tracking-tight sm:text-6xl">
+		<h1 class="mx-auto max-w-3xl text-4xl font-semibold leading-[1.18] tracking-tight sm:text-6xl">
 			The all-in-one live
 			<span class="relative whitespace-nowrap">
-				streaming &amp; video
+				streaming
 				<svg
 					aria-hidden="true"
-					viewBox="0 0 320 14"
+					viewBox="0 0 120 12"
 					preserveAspectRatio="none"
-					class="absolute -bottom-2 left-0 h-3 w-full text-[var(--color-accent)]"
+					class="absolute -bottom-1.5 left-0 h-2.5 w-full text-[var(--color-accent)]"
 				>
-					<path
-						d="M3 9 C 80 3, 150 3, 220 6 S 300 9, 317 5"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="4"
-						stroke-linecap="round"
-					/>
+					<path d="M2 8 C 35 3, 85 3, 118 6" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+				</svg>
+			</span>
+			&amp;
+			<span class="relative whitespace-nowrap">
+				video
+				<svg
+					aria-hidden="true"
+					viewBox="0 0 80 12"
+					preserveAspectRatio="none"
+					class="absolute -bottom-1.5 left-0 h-2.5 w-full text-[var(--color-accent)]"
+				>
+					<path d="M2 7 C 25 3, 55 3, 78 6" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
 				</svg>
 			</span>
 			platform
@@ -192,21 +187,140 @@
 				One platform for ingest, delivery, engagement and monetization.
 			</p>
 		</div>
-		<div class="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:auto-rows-[200px]">
-			{#each features as f, i (f.title)}
-				{@const Icon = f.icon}
-				<div class="card flex flex-col p-6 {spans[i]}">
-					<div
-						class="squircle flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--color-accent)]/12 text-[var(--color-accent)]"
+		<div class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+			<!-- feature list -->
+			<div class="flex flex-col gap-1.5">
+				{#each features as f, i (f.title)}
+					{@const Icon = f.icon}
+					{@const on = active === i}
+					<button
+						class="squircle flex items-start gap-3 rounded-2xl px-4 py-3 text-left transition-all {on
+							? 'bg-[var(--color-surface)]'
+							: 'hover:bg-[var(--color-surface)]/60'}"
+						style={on ? 'box-shadow: var(--shadow-card)' : ''}
+						onclick={() => (active = i)}
+						onpointerenter={() => (active = i)}
 					>
-						<Icon size={20} />
+						<span
+							class="squircle flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors {on
+								? 'bg-[var(--color-accent)] text-white'
+								: 'bg-[var(--color-accent)]/12 text-[var(--color-accent)]'}"
+						>
+							<Icon size={18} />
+						</span>
+						<div class="min-w-0">
+							<p class="font-medium">{f.title}</p>
+							{#if on}
+								<p class="mt-0.5 text-sm leading-relaxed text-[var(--color-muted)]">{f.body}</p>
+							{/if}
+						</div>
+					</button>
+				{/each}
+			</div>
+
+			<!-- preview pane -->
+			<div class="card squircle p-2.5">
+				{#key active}
+					<div
+						in:fade={{ duration: 180 }}
+						class="squircle relative aspect-video overflow-hidden rounded-2xl bg-[var(--color-surface-2)] p-5"
+					>
+						{#if active === 0}
+							<!-- browser go-live -->
+							<div class="flex h-full w-full items-center justify-center rounded-xl bg-[#0e0f13]">
+								<span class="absolute left-4 top-4 flex items-center gap-1.5 text-xs font-medium text-white">
+									<span class="h-2 w-2 rounded-full bg-red-500"></span> LIVE
+								</span>
+								<Video size={48} class="text-white/40" />
+								<div class="absolute inset-x-4 bottom-4 flex items-center gap-2">
+									<span class="h-7 w-7 rounded-lg bg-white/10"></span>
+									<span class="h-7 w-7 rounded-lg bg-white/10"></span>
+									<span class="flex-1"></span>
+									<span class="rounded-lg bg-[var(--color-accent)] px-3 py-1 text-xs font-medium text-white">Go live</span>
+								</div>
+							</div>
+						{:else if active === 1}
+							<!-- encoder ingest -->
+							<div class="flex h-full flex-col justify-center gap-3">
+								<p class="text-xs font-medium text-[var(--color-muted)]">RTMP server</p>
+								<div class="rounded-lg bg-[var(--color-surface)] px-3 py-2 font-mono text-xs">rtmp://ingest.live/app</div>
+								<p class="text-xs font-medium text-[var(--color-muted)]">Stream key</p>
+								<div class="rounded-lg bg-[var(--color-surface)] px-3 py-2 font-mono text-xs">sk_live_•••••••••••••••</div>
+							</div>
+						{:else if active === 2}
+							<!-- multistream -->
+							<div class="flex h-full flex-col justify-center gap-2.5">
+								{#each ['YouTube', 'Twitch', 'Facebook', 'Kick'] as p (p)}
+									<div class="flex items-center gap-2 rounded-lg bg-[var(--color-surface)] px-3 py-2 text-sm">
+										<span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+										<span class="font-medium">{p}</span>
+										<span class="ml-auto text-xs text-[var(--color-muted)]">streaming</span>
+									</div>
+								{/each}
+							</div>
+						{:else if active === 3}
+							<!-- recording / VOD -->
+							<div class="grid h-full grid-cols-3 grid-rows-2 gap-2">
+								{#each Array(6) as _, k (k)}
+									<div class="flex items-end rounded-lg bg-[var(--color-surface)] p-1.5">
+										<span class="rounded bg-[var(--color-accent)]/15 px-1 text-[9px] font-mono text-[var(--color-accent)]">12:0{k}</span>
+									</div>
+								{/each}
+							</div>
+						{:else if active === 4}
+							<!-- AI captions -->
+							<div class="relative flex h-full items-center justify-center rounded-xl bg-[#0e0f13]">
+								<Captions size={40} class="text-white/30" />
+								<div class="absolute inset-x-6 bottom-6 rounded-md bg-black/70 px-3 py-1.5 text-center text-sm text-white">
+									Welcome to today's stream
+								</div>
+							</div>
+						{:else if active === 5}
+							<!-- live chat -->
+							<div class="flex h-full flex-col justify-center gap-2">
+								{#each [['#f00', 'nova', 'this looks great 🔥'], ['#9146ff', 'kai', 'gg'], ['#f00', 'mei', 'where are you based?']] as [c, who, msg] (who)}
+									<div class="flex items-start gap-2 rounded-lg bg-[var(--color-surface)] px-3 py-2 text-sm">
+										<span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" style="background:{c}"></span>
+										<span><span class="font-medium">{who}</span> <span class="text-[var(--color-muted)]">{msg}</span></span>
+									</div>
+								{/each}
+							</div>
+						{:else if active === 6}
+							<!-- secure delivery -->
+							<div class="flex h-full flex-col items-center justify-center gap-3 text-center">
+								<span class="squircle flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-accent)]/12 text-[var(--color-accent)]"><ShieldCheck size={24} /></span>
+								<div class="rounded-lg bg-[var(--color-surface)] px-3 py-2 font-mono text-xs">…/index.m3u8?t=••• · expires 6h</div>
+							</div>
+						{:else if active === 7}
+							<!-- analytics -->
+							<div class="flex h-full flex-col justify-center gap-4">
+								<div class="grid grid-cols-3 gap-3">
+									{#each [['Viewers', '1,284'], ['Startup', '0.8s'], ['Rebuffer', '0.1%']] as [l, v] (l)}
+										<div class="rounded-lg bg-[var(--color-surface)] p-2.5">
+											<p class="text-[10px] text-[var(--color-muted)]">{l}</p>
+											<p class="text-sm font-semibold tabular-nums">{v}</p>
+										</div>
+									{/each}
+								</div>
+								<div class="flex items-end gap-1.5">
+									{#each [40, 55, 48, 70, 62, 85, 78, 96] as h (h)}
+										<div class="flex-1 rounded-t bg-[var(--color-accent)]/60" style="height:{h * 0.5}px"></div>
+									{/each}
+								</div>
+							</div>
+						{:else}
+							<!-- webhooks / API -->
+							<div class="flex h-full items-center">
+								<pre class="w-full overflow-hidden rounded-lg bg-[#0e0f13] p-4 font-mono text-[11px] leading-relaxed text-white/80"><span class="text-emerald-400">POST</span> /your/webhook
+{`{`}
+  "event": <span class="text-[var(--color-accent-2)]">"stream.online"</span>,
+  "stream": <span class="text-[var(--color-accent-2)]">"main"</span>
+{`}`}</pre>
+							</div>
+						{/if}
 					</div>
-					<div class="mt-auto pt-4">
-						<h3 class="font-semibold">{f.title}</h3>
-						<p class="mt-1.5 text-sm leading-relaxed text-[var(--color-muted)]">{f.body}</p>
-					</div>
-				</div>
-			{/each}
+				{/key}
+			</div>
 		</div>
 	</section>
 
