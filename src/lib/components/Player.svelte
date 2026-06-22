@@ -48,7 +48,6 @@
 
 	let wrap = $state<HTMLDivElement>();
 	let video = $state<HTMLVideoElement>();
-	let bar = $state<HTMLDivElement>();
 	let hls: Hls | null = null;
 	let error = $state(false);
 	let retry: ReturnType<typeof setTimeout> | null = null;
@@ -72,7 +71,6 @@
 	let rebuffers = $state(0);
 	let controlsShown = $state(true);
 	let hideTimer: ReturnType<typeof setTimeout> | null = null;
-	let seeking = false;
 
 	const hasDuration = $derived(duration > 0 && isFinite(duration));
 	const playedPct = $derived(hasDuration ? Math.min(100, (current / duration) * 100) : live ? 100 : 0);
@@ -184,11 +182,8 @@
 		video.volume = v;
 		video.muted = v === 0;
 	}
-	function seekFrom(e: PointerEvent) {
-		if (!video || !bar || !hasDuration) return;
-		const r = bar.getBoundingClientRect();
-		const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-		video.currentTime = f * duration;
+	function seekTo(sec: number) {
+		if (video && hasDuration) video.currentTime = sec;
 	}
 	function goLive() {
 		if (video && hasDuration) video.currentTime = duration;
@@ -380,35 +375,25 @@
 			: 'pointer-events-none opacity-0'}"
 	>
 		<!-- seek bar -->
-		<div
-			bind:this={bar}
-			class="group/bar relative mb-2 h-3 cursor-pointer"
-			role="slider"
-			tabindex="-1"
-			aria-label="Seek"
-			aria-valuemin={0}
-			aria-valuemax={Math.round(duration) || 0}
-			aria-valuenow={Math.round(current)}
-			onpointerdown={(e) => {
-				if (!hasDuration) return;
-				seeking = true;
-				bar?.setPointerCapture(e.pointerId);
-				seekFrom(e);
-			}}
-			onpointermove={(e) => seeking && seekFrom(e)}
-			onpointerup={() => (seeking = false)}
-			onpointercancel={() => (seeking = false)}
-		>
-			<div class="absolute top-1/2 h-1 w-full -translate-y-1/2 rounded-full bg-white/25">
-				<div class="absolute h-full rounded-full bg-white/30" style="width: {bufferedPct}%"></div>
-				<div class="absolute h-full rounded-full bg-[#ff5b3e]" style="width: {playedPct}%"></div>
-			</div>
-			{#if hasDuration}
-				<div
-					class="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ff5b3e] opacity-0 shadow transition-opacity group-hover/bar:opacity-100"
-					style="left: {playedPct}%"
-				></div>
-			{/if}
+		<div class="relative mb-2 flex h-3.5 items-center">
+			<!-- base + buffered track (behind the range, which has a transparent unplayed track) -->
+			<div class="pointer-events-none absolute h-1 w-full rounded-full bg-white/20"></div>
+			<div
+				class="pointer-events-none absolute h-1 rounded-full bg-white/30"
+				style="width: {bufferedPct}%"
+			></div>
+			<input
+				class="range seek absolute inset-x-0 w-full"
+				type="range"
+				min="0"
+				max={hasDuration ? duration : 1}
+				step="0.1"
+				value={current}
+				disabled={!hasDuration}
+				style="--v: {playedPct}%"
+				oninput={(e) => seekTo(+e.currentTarget.value)}
+				aria-label="Seek"
+			/>
 		</div>
 
 		<!-- buttons -->
@@ -433,8 +418,9 @@
 					max="1"
 					step="0.05"
 					value={muted ? 0 : volume}
+					style="--v: {(muted ? 0 : volume) * 100}%"
 					oninput={(e) => changeVolume(+e.currentTarget.value)}
-					class="vol w-0 opacity-0 transition-all group-hover/vol:w-16 group-hover/vol:opacity-100"
+					class="range vol w-0 opacity-0 transition-[width,opacity] group-hover/vol:w-16 group-hover/vol:opacity-100"
 					aria-label="Volume"
 				/>
 			</div>
@@ -509,11 +495,71 @@
 </div>
 
 <style>
-	/* coral range thumb/track for the volume slider */
-	.vol {
-		accent-color: #ff5b3e;
-		height: 4px;
+	/* Unified coral range styling for both the seek bar and the volume slider.
+	   --v (0–100%) drives the filled portion. */
+	.range {
+		-webkit-appearance: none;
+		appearance: none;
+		height: 14px; /* hit area */
+		background: transparent;
+		cursor: pointer;
 	}
+	.range:disabled {
+		cursor: default;
+		opacity: 0.5;
+	}
+
+	/* WebKit track: coral fill up to --v, light track after. */
+	.range::-webkit-slider-runnable-track {
+		height: 4px;
+		border-radius: 9999px;
+		background: linear-gradient(
+			to right,
+			#ff5b3e var(--v, 0%),
+			rgba(255, 255, 255, 0.28) var(--v, 0%)
+		);
+	}
+	/* Seek leaves the unplayed part transparent so the buffered bar shows through. */
+	.range.seek::-webkit-slider-runnable-track {
+		background: linear-gradient(to right, #ff5b3e var(--v, 0%), transparent var(--v, 0%));
+	}
+	.range::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		margin-top: -4px; /* center 12px thumb on 4px track */
+		height: 12px;
+		width: 12px;
+		border-radius: 9999px;
+		background: #ff5b3e;
+		box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
+		transition: transform 0.1s;
+	}
+	.range:hover::-webkit-slider-thumb {
+		transform: scale(1.15);
+	}
+
+	/* Firefox */
+	.range::-moz-range-track {
+		height: 4px;
+		border-radius: 9999px;
+		background: rgba(255, 255, 255, 0.28);
+	}
+	.range.seek::-moz-range-track {
+		background: transparent;
+	}
+	.range::-moz-range-progress {
+		height: 4px;
+		border-radius: 9999px;
+		background: #ff5b3e;
+	}
+	.range::-moz-range-thumb {
+		height: 12px;
+		width: 12px;
+		border: none;
+		border-radius: 9999px;
+		background: #ff5b3e;
+		box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
+	}
+
 	.player:focus-visible {
 		outline: 2px solid #ff5b3e;
 		outline-offset: 2px;
