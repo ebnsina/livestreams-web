@@ -15,23 +15,32 @@
 	}));
 	const list = $derived(dests.data?.data ?? []);
 
-	const presets: Record<string, string> = {
-		youtube: 'rtmp://a.rtmp.youtube.com/live2',
-		twitch: 'rtmp://live.twitch.tv/app',
-		facebook: 'rtmps://live-api-s.facebook.com:443/rtmp',
-		custom: ''
-	};
+	// Multistream targets are plain RTMP/RTMPS, so any platform works. Those with
+	// a stable public ingest URL are pre-filled; the rest give a per-stream URL
+	// you paste (the field stays editable).
+	const providers: { id: string; label: string; url: string }[] = [
+		{ id: 'youtube', label: 'YouTube', url: 'rtmp://a.rtmp.youtube.com/live2' },
+		{ id: 'twitch', label: 'Twitch', url: 'rtmp://live.twitch.tv/app' },
+		{ id: 'facebook', label: 'Facebook', url: 'rtmps://live-api-s.facebook.com:443/rtmp' },
+		{ id: 'trovo', label: 'Trovo', url: 'rtmp://livepush.trovo.live/live/' },
+		{ id: 'kick', label: 'Kick', url: '' },
+		{ id: 'tiktok', label: 'TikTok', url: '' },
+		{ id: 'rumble', label: 'Rumble', url: '' },
+		{ id: 'x', label: 'X (Twitter)', url: '' },
+		{ id: 'linkedin', label: 'LinkedIn', url: '' },
+		{ id: 'custom', label: 'Custom RTMP', url: '' }
+	];
 
 	let showForm = $state(false);
 	let platform = $state('youtube');
 	let name = $state('');
-	let url = $state(presets.youtube);
+	let url = $state('rtmp://a.rtmp.youtube.com/live2');
 	let streamKey = $state('');
 
-	$effect(() => {
-		// keep url in sync with the chosen preset (custom keeps whatever is typed)
-		if (platform !== 'custom') url = presets[platform];
-	});
+	function pickPlatform(id: string) {
+		platform = id;
+		url = providers.find((p) => p.id === id)?.url ?? '';
+	}
 
 	const toggle = createMutation(() => ({
 		mutationFn: (v: { destId: string; enabled: boolean }) =>
@@ -54,13 +63,9 @@
 		onError: () => toast.error("Couldn't add destination — try again")
 	}));
 
-	const platformLabel: Record<string, string> = {
-		youtube: 'YouTube',
-		twitch: 'Twitch',
-		facebook: 'Facebook',
-		kick: 'Kick',
-		custom: 'Custom'
-	};
+	const platformLabel: Record<string, string> = Object.fromEntries(
+		providers.map((p) => [p.id, p.label])
+	);
 
 	// --- simulcast presets ---
 	const presetsQ = createQuery(() => ({
@@ -171,21 +176,26 @@
 				add.mutate();
 			}}
 		>
-			<div class="grid grid-cols-2 gap-3">
-				<div>
-					<label class="label" for="plat">Platform</label>
-					<select id="plat" class="input" bind:value={platform}>
-						<option value="youtube">YouTube</option>
-						<option value="twitch">Twitch</option>
-						<option value="facebook">Facebook</option>
-						<option value="kick">Kick</option>
-						<option value="custom">Custom RTMP</option>
-					</select>
+			<div>
+				<span class="label">Platform</span>
+				<div class="flex flex-wrap gap-1.5">
+					{#each providers as p (p.id)}
+						<button
+							type="button"
+							class="squircle rounded-lg px-2.5 py-1 text-xs font-medium transition-colors {platform ===
+							p.id
+								? 'bg-[var(--color-accent)] text-white'
+								: 'bg-[var(--color-surface-2)] text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
+							onclick={() => pickPlatform(p.id)}
+						>
+							{p.label}
+						</button>
+					{/each}
 				</div>
-				<div>
-					<label class="label" for="dname">Name</label>
-					<input id="dname" class="input" bind:value={name} placeholder="My channel" required />
-				</div>
+			</div>
+			<div>
+				<label class="label" for="dname">Name</label>
+				<input id="dname" class="input" bind:value={name} placeholder="My channel" required />
 			</div>
 			<div>
 				<label class="label" for="durl">RTMP/RTMPS URL</label>
@@ -196,6 +206,11 @@
 					placeholder="rtmp://…"
 					required
 				/>
+				{#if !url}
+					<p class="mt-1 text-xs text-[var(--color-muted)]">
+						Paste the ingest URL {platformLabel[platform] ?? 'your platform'} gives you in its live dashboard.
+					</p>
+				{/if}
 			</div>
 			<div>
 				<label class="label" for="dkey">Stream key</label>
