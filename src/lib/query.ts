@@ -1,6 +1,7 @@
 // Centralized query keys for TanStack Query cache consistency.
 export const keys = {
 	me: ['me'] as const,
+	notifications: ['notifications'] as const,
 	streams: ['streams'] as const,
 	stream: (id: string) => ['streams', id] as const,
 	sessions: (id: string) => ['streams', id, 'sessions'] as const,

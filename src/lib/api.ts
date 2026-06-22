@@ -22,7 +22,8 @@ import type {
 	Org,
 	AnalyticsOverview,
 	StreamAnalytics,
-	Paginated
+	Paginated,
+	Notification
 } from './types';
 
 // Build a query string from defined params (skips undefined/empty values).
@@ -89,6 +90,16 @@ export const api = {
 			body: { org_id }
 		}),
 	updateProfile: (name: string) => request<void>('/v1/me', { method: 'PATCH', body: { name } }),
+	setEmailNotifications: (enabled: boolean) =>
+		request<void>('/v1/me/email-notifications', { method: 'POST', body: { enabled } }),
+
+	// notifications
+	notifications: () =>
+		request<{ data: Notification[]; unread: number }>('/v1/notifications'),
+	markNotificationRead: (id: string) =>
+		request<void>(`/v1/notifications/${id}/read`, { method: 'POST' }),
+	markAllNotificationsRead: () =>
+		request<void>('/v1/notifications/read-all', { method: 'POST' }),
 	changePassword: (current_password: string, new_password: string) =>
 		request<void>('/v1/me/password', { method: 'POST', body: { current_password, new_password } }),
 

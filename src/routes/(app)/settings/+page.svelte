@@ -67,6 +67,11 @@
 		if (next !== confirm) return;
 		changePw.mutate();
 	}
+
+	const setEmail = createMutation(() => ({
+		mutationFn: (enabled: boolean) => api.setEmailNotifications(enabled),
+		onSuccess: () => qc.invalidateQueries({ queryKey: keys.me })
+	}));
 </script>
 
 <PageHeader icon={Settings} title="Settings" subtitle="Manage your account" />
@@ -123,6 +128,36 @@
 				{changePw.isPending ? 'Updating…' : 'Update password'}
 			</button>
 		</form>
+	</section>
+
+	<!-- Notifications -->
+	<section class="card p-5 lg:col-span-2">
+		<h2 class="mb-1 text-[15px] font-semibold">Notifications</h2>
+		<p class="mb-4 text-sm text-[var(--color-muted)]">
+			In-app alerts always appear in the bell. Optionally also receive them by email.
+		</p>
+		<div class="flex items-center justify-between">
+			<div class="text-sm">
+				<p class="font-medium">Email notifications</p>
+				<p class="text-xs text-[var(--color-muted)]">
+					Stream live/offline, recordings & transcodes, health alerts
+				</p>
+			</div>
+			<button
+				class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors {user?.email_notifications
+					? 'bg-[#ff5b3e]'
+					: 'bg-[var(--color-border)]'}"
+				onclick={() => setEmail.mutate(!user?.email_notifications)}
+				disabled={setEmail.isPending}
+				aria-label="Toggle email notifications"
+			>
+				<span
+					class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform {user?.email_notifications
+						? 'translate-x-5'
+						: 'translate-x-0.5'}"
+				></span>
+			</button>
+		</div>
 	</section>
 
 	<!-- Connected accounts -->

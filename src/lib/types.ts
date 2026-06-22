@@ -8,6 +8,17 @@ export interface User {
 	id: string;
 	email: string;
 	name: string;
+	email_notifications?: boolean;
+}
+
+export interface Notification {
+	id: string;
+	type: string;
+	title: string;
+	body: string;
+	stream_id?: string;
+	read: boolean;
+	created_at: string;
 }
 
 export interface Org {

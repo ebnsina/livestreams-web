@@ -6,6 +6,7 @@
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	import NotificationsBell from '$lib/components/NotificationsBell.svelte';
 	import {
 		LayoutDashboard,
 		Radio,
@@ -131,7 +132,10 @@
 							{auth.role || auth.user?.email}
 						</p>
 					</div>
-					<ThemeToggle />
+					<div class="flex items-center gap-1">
+						<NotificationsBell />
+						<ThemeToggle />
+					</div>
 				</div>
 				<button class="btn-ghost w-full text-sm" onclick={logout}>Sign out</button>
 			</div>
@@ -151,6 +155,7 @@
 					<span class="font-semibold">Livestreams</span>
 				</div>
 				<div class="flex items-center gap-2">
+					<NotificationsBell />
 					<ThemeToggle />
 					<button class="btn-ghost text-sm" onclick={logout}>Sign out</button>
 				</div>
