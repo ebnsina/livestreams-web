@@ -7,6 +7,7 @@
 	import { keys } from '$lib/query';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import NotificationsBell from '$lib/components/NotificationsBell.svelte';
+	import EmailBanner from '$lib/components/EmailBanner.svelte';
 	import {
 		LayoutDashboard,
 		Radio,
@@ -182,6 +183,7 @@
 					class="min-h-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm"
 				>
 					<div class="mx-auto w-full max-w-6xl px-5 py-6 sm:px-8 sm:py-8">
+						<EmailBanner />
 						{@render children()}
 					</div>
 				</div>

@@ -96,6 +96,14 @@ export const api = {
 			body: { token, new_password },
 			auth: false
 		}),
+	verifyEmail: (token: string) =>
+		request<{ status: string }>('/v1/auth/verify-email', {
+			method: 'POST',
+			body: { token },
+			auth: false
+		}),
+	resendVerification: () =>
+		request<{ status: string }>('/v1/me/resend-verification', { method: 'POST' }),
 	me: () => request<{ user: User; orgs: Org[]; role: string; org_id: string }>('/v1/me'),
 	switchOrg: (org_id: string) =>
 		request<{ access_token: string; refresh_token: string }>('/v1/me/switch-org', {

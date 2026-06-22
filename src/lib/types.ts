@@ -9,6 +9,7 @@ export interface User {
 	email: string;
 	name: string;
 	email_notifications?: boolean;
+	email_verified?: boolean;
 }
 
 export interface Notification {
