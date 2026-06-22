@@ -6,24 +6,46 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import AnimatedNumber from '$lib/components/AnimatedNumber.svelte';
 	import InsightsPanel from '$lib/components/InsightsPanel.svelte';
-	import { BarChart3 } from '@lucide/svelte';
+	import ContentPicker from '$lib/components/ContentPicker.svelte';
+	import { BarChart3, ArrowRight } from '@lucide/svelte';
 
 	let range = $state<'24h' | '7d' | '30d'>('24h');
+	let scope = $state(''); // '' = all content, else a stream id
+	const isAll = $derived(scope === '');
 
+	const streamList = createQuery(() => ({ queryKey: keys.streams, queryFn: () => api.listStreams() }));
+	const pickerItems = $derived((streamList.data?.data ?? []).map((s) => ({ id: s.id, name: s.name })));
+
+	// org-wide
 	const overview = createQuery(() => ({
 		queryKey: keys.analytics(range),
 		queryFn: () => api.analyticsOverview(range),
 		refetchInterval: 15000
 	}));
-
 	const insights = createQuery(() => ({
 		queryKey: ['insights', range],
 		queryFn: () => api.insights(range),
 		refetchInterval: 30000
 	}));
 
-	const data = $derived(overview.data);
-	const series = $derived(data?.series ?? []);
+	// per-stream (only fetched when a specific video is picked)
+	const streamOverview = createQuery(() => ({
+		queryKey: ['streams', scope, 'analytics', range],
+		queryFn: () => api.streamAnalytics(scope, range),
+		enabled: !isAll,
+		refetchInterval: 15000
+	}));
+	const streamInsights = createQuery(() => ({
+		queryKey: ['streams', scope, 'insights', range],
+		queryFn: () => api.streamInsights(scope, range),
+		enabled: !isAll,
+		refetchInterval: 30000
+	}));
+
+	const activeInsights = $derived(isAll ? insights.data : streamInsights.data);
+	const series = $derived((isAll ? overview.data?.series : streamOverview.data?.series) ?? []);
+	const topContent = $derived(insights.data?.top_content ?? []);
+	const scopeName = $derived(pickerItems.find((i) => i.id === scope)?.name ?? '');
 
 	const viewers = $derived(series.map((p) => ({ t: p.t, v: p.viewers })));
 	const bitrate = $derived(series.map((p) => ({ t: p.t, v: p.bitrate_kbps })));
@@ -44,8 +66,16 @@
 	function ms(n: number) {
 		return n >= 1000 ? `${(n / 1000).toFixed(1)}s` : `${n}ms`;
 	}
+	function dur(msNum: number) {
+		const sec = Math.round(msNum / 1000);
+		if (sec < 60) return `${sec}s`;
+		const m = Math.floor(sec / 60);
+		if (m < 60) return `${m}m`;
+		return `${Math.floor(m / 60)}h ${m % 60}m`;
+	}
 
 	const int = (n: number) => Math.round(n).toLocaleString();
+	const data = $derived(overview.data);
 	const cards = $derived([
 		{ label: 'Peak viewers', value: data?.summary.peak_viewers ?? 0, format: int },
 		{ label: 'Live now', value: data?.summary.live_now ?? 0, format: int },
@@ -64,37 +94,47 @@
 	subtitle="Audience and playback quality across your organization"
 >
 	{#snippet actions()}
-		<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">
-			{#each ranges as r (r.id)}
-				<button
-					class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {range === r.id
-						? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
-						: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
-					onclick={() => (range = r.id)}
-				>
-					{r.label}
-				</button>
-			{/each}
+		<div class="flex flex-wrap items-center gap-2">
+			<ContentPicker items={pickerItems} bind:value={scope} />
+			<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">
+				{#each ranges as r (r.id)}
+					<button
+						class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {range === r.id
+							? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
+							: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
+						onclick={() => (range = r.id)}
+					>
+						{r.label}
+					</button>
+				{/each}
+			</div>
 		</div>
 	{/snippet}
 </PageHeader>
 
-<!-- summary cards -->
-<div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-	{#each cards as c (c.label)}
-		<div class="card p-4">
-			<p class="text-xs text-[var(--color-muted)]">{c.label}</p>
-			<p class="mt-1 text-2xl font-semibold">
-				<AnimatedNumber value={c.value} format={c.format} />
-			</p>
-		</div>
-	{/each}
-</div>
+{#if isAll}
+	<!-- org summary cards -->
+	<div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+		{#each cards as c (c.label)}
+			<div class="card p-4">
+				<p class="text-xs text-[var(--color-muted)]">{c.label}</p>
+				<p class="mt-1 text-2xl font-semibold">
+					<AnimatedNumber value={c.value} format={c.format} />
+				</p>
+			</div>
+		{/each}
+	</div>
+{:else}
+	<div class="mb-4 flex items-center gap-2">
+		<a href="/streams/{scope}" class="text-lg font-semibold hover:underline">{scopeName}</a>
+		<span class="badge">video</span>
+	</div>
+{/if}
 
-<!-- audience & engagement -->
+<!-- audience & engagement (scope-aware) -->
 <section class="mb-6">
 	<h2 class="mb-3 text-sm font-semibold">Audience &amp; engagement</h2>
-	<InsightsPanel insights={insights.data} />
+	<InsightsPanel insights={activeInsights} />
 </section>
 
 <!-- charts -->
@@ -112,6 +152,40 @@
 		<Chart points={rebuffers} color="#f59e0b" height={140} />
 	</section>
 </div>
+
+<!-- top content (all-content only) -->
+{#if isAll && topContent.length > 0}
+	<section class="mt-6">
+		<h2 class="mb-3 text-sm font-semibold">Top content</h2>
+		<div class="card overflow-hidden">
+			<table class="w-full text-sm">
+				<thead class="bg-[var(--color-surface-2)] text-left text-[var(--color-muted)]">
+					<tr>
+						<th class="px-4 py-2 font-medium">Video</th>
+						<th class="px-4 py-2 text-right font-medium">Views</th>
+						<th class="px-4 py-2 text-right font-medium">Unique</th>
+						<th class="px-4 py-2 text-right font-medium">Watch time</th>
+						<th class="w-8"></th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-[var(--color-border)]">
+					{#each topContent as c (c.stream_id)}
+						<tr
+							class="cursor-pointer transition-colors hover:bg-[var(--color-surface-2)]"
+							onclick={() => (scope = c.stream_id)}
+						>
+							<td class="truncate px-4 py-2.5 font-medium">{c.name}</td>
+							<td class="px-4 py-2.5 text-right tabular-nums">{c.views.toLocaleString()}</td>
+							<td class="px-4 py-2.5 text-right tabular-nums">{c.unique_viewers.toLocaleString()}</td>
+							<td class="px-4 py-2.5 text-right tabular-nums">{dur(c.total_watch_ms)}</td>
+							<td class="px-2 text-[var(--color-muted)]"><ArrowRight size={14} /></td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</section>
+{/if}
 
 {#if overview.isPending}
 	<p class="mt-4 text-sm text-[var(--color-muted)]">Loading…</p>

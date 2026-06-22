@@ -1,7 +1,15 @@
 <script lang="ts">
 	import type { Insights, Breakdown } from '$lib/types';
 	import AnimatedNumber from '$lib/components/AnimatedNumber.svelte';
-	import { Globe, MonitorSmartphone, AppWindow, Cpu } from '@lucide/svelte';
+	import {
+		Globe,
+		MonitorSmartphone,
+		AppWindow,
+		Cpu,
+		Clapperboard,
+		MonitorPlay,
+		Gauge
+	} from '@lucide/svelte';
 
 	let { insights }: { insights?: Insights } = $props();
 	const s = $derived(insights?.summary);
@@ -20,7 +28,10 @@
 		{ label: 'Top countries', icon: Globe, rows: insights?.countries ?? [] },
 		{ label: 'Devices', icon: MonitorSmartphone, rows: insights?.devices ?? [] },
 		{ label: 'Browsers', icon: AppWindow, rows: insights?.browsers ?? [] },
-		{ label: 'Operating systems', icon: Cpu, rows: insights?.oses ?? [] }
+		{ label: 'Operating systems', icon: Cpu, rows: insights?.oses ?? [] },
+		{ label: 'Content type', icon: Clapperboard, rows: insights?.stream_types ?? [] },
+		{ label: 'Player', icon: MonitorPlay, rows: insights?.players ?? [] },
+		{ label: 'Resolution', icon: Gauge, rows: insights?.resolutions ?? [] }
 	]);
 
 	function withMax(rows: Breakdown[]) {
@@ -50,8 +61,11 @@
 <!-- quality strip -->
 <div class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-[var(--color-muted)]">
 	<span>Avg startup <span class="font-medium text-[var(--color-text)]">{s?.avg_startup_ms ?? 0}ms</span></span>
+	<span>Avg bitrate <span class="font-medium text-[var(--color-text)]">{(s?.avg_bitrate_kbps ?? 0).toLocaleString()}k</span></span>
 	<span>Rebuffers <span class="font-medium text-[var(--color-text)]">{(s?.total_rebuffers ?? 0).toLocaleString()}</span></span>
+	<span>Rebuffer time <span class="font-medium text-[var(--color-text)]">{pct(s?.rebuffer_pct ?? 0)}</span></span>
 	<span>Playback errors <span class="font-medium text-[var(--color-text)]">{pct(s?.error_rate ?? 0)}</span></span>
+	<span>Exits before start <span class="font-medium text-[var(--color-text)]">{pct(s?.exit_rate ?? 0)}</span></span>
 </div>
 
 <!-- dimension breakdowns -->

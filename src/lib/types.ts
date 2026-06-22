@@ -125,6 +125,14 @@ export interface Breakdown {
 	views: number;
 }
 
+export interface TopContent {
+	stream_id: string;
+	name: string;
+	views: number;
+	unique_viewers: number;
+	total_watch_ms: number;
+}
+
 // Per-view engagement + QoE insights (Mux-Data / Vimeo style), org-wide or
 // per-stream depending on the endpoint.
 export interface Insights {
@@ -135,15 +143,22 @@ export interface Insights {
 		total_watch_ms: number;
 		avg_watch_ms: number;
 		avg_startup_ms: number;
+		avg_bitrate_kbps: number;
 		total_rebuffers: number;
-		rebuffer_rate: number; // 0..1
+		rebuffer_rate: number; // 0..1 — views with any rebuffering
+		rebuffer_pct: number; // 0..1 — rebuffer time / total time
 		error_rate: number; // 0..1
+		exit_rate: number; // 0..1 — views that never started playing
 		completion_rate: number; // 0..1
 	};
 	countries: Breakdown[];
 	devices: Breakdown[];
 	browsers: Breakdown[];
 	oses: Breakdown[];
+	stream_types: Breakdown[];
+	players: Breakdown[];
+	resolutions: Breakdown[];
+	top_content?: TopContent[]; // org-wide only
 }
 
 export interface Asset {
