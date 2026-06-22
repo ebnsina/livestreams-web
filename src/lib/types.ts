@@ -39,6 +39,7 @@ export interface Ingest {
 	protocol: string;
 	rtmp_url?: string;
 	srt_host?: string;
+	whip_url?: string;
 	stream_key: string;
 }
 

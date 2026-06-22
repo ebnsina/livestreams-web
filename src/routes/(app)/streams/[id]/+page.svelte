@@ -9,6 +9,7 @@
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import ScheduleBadge from '$lib/components/ScheduleBadge.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
+	import BrowserGoLive from '$lib/components/BrowserGoLive.svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Recordings from '$lib/components/Recordings.svelte';
@@ -227,6 +228,10 @@
 		<!-- Player -->
 		<div class="min-w-0 space-y-4">
 			<Player src={s.playback_url} live={isLive} reload={playerReload} streamId={id} />
+
+			{#if auth.canWrite && s.ingest?.whip_url && !isLive}
+				<BrowserGoLive whipUrl={s.ingest.whip_url} />
+			{/if}
 
 			<!-- Playback QoS (from viewer beacons) -->
 			<div class="card grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-4">
