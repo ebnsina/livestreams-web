@@ -7,6 +7,7 @@
 	import BrowserGoLive from '$lib/components/BrowserGoLive.svelte';
 	import ChatPanel from '$lib/components/ChatPanel.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
+	import ErrorState from '$lib/components/ErrorState.svelte';
 	import { ArrowLeft, Radio } from '@lucide/svelte';
 
 	const id = $derived(page.params.id ?? '');
@@ -45,7 +46,9 @@
 	{/if}
 </div>
 
-{#if !s}
+{#if stream.isError}
+	<ErrorState error={stream.error} title="Stream not found" onRetry={() => stream.refetch()} />
+{:else if !s}
 	<div class="card aspect-video animate-pulse"></div>
 {:else if !auth.canWrite}
 	<div class="card p-8 text-center text-sm text-[var(--color-muted)]">

@@ -11,6 +11,7 @@
 	import CopyField from '$lib/components/CopyField.svelte';
 	import ChatPanel from '$lib/components/ChatPanel.svelte';
 	import SecureLinkDialog from '$lib/components/SecureLinkDialog.svelte';
+	import ErrorState from '$lib/components/ErrorState.svelte';
 	import { Radio } from '@lucide/svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
@@ -194,9 +195,13 @@
 >
 
 {#if stream.isPending}
-	<p class="text-sm text-[var(--color-muted)]">Loading…</p>
+	<div class="card aspect-[3/1] animate-pulse"></div>
 {:else if stream.isError || !s}
-	<p class="text-sm text-red-400">Could not load this stream.</p>
+	<ErrorState
+		error={stream.error}
+		title="Stream not found"
+		onRetry={() => stream.refetch()}
+	/>
 {:else}
 	<header class="mb-6 flex items-start justify-between gap-4">
 		<div>

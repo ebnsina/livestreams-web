@@ -54,25 +54,51 @@ interface RequestOpts {
 	auth?: boolean; // attach bearer token (default true)
 }
 
+// Friendly fallback messages by status when the server gives no detail.
+function friendlyMessage(status: number): string {
+	if (status === 0) return 'Network error — check your connection and try again.';
+	if (status === 400) return 'That request looked off. Please check your input.';
+	if (status === 401) return 'Your session expired — please sign in again.';
+	if (status === 403) return "You don't have permission to do that.";
+	if (status === 404) return "We couldn't find what you were looking for.";
+	if (status === 409) return 'That conflicts with the current state — refresh and retry.';
+	if (status === 422) return 'Some fields need fixing before we can continue.';
+	if (status === 429) return "You're going a bit fast — wait a moment and try again.";
+	if (status >= 500) return 'Something went wrong on our side. Please try again shortly.';
+	return 'Something went wrong. Please try again.';
+}
+
 async function request<T>(path: string, opts: RequestOpts = {}): Promise<T> {
 	const { method = 'GET', body, auth: withAuth = true } = opts;
 	const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 	if (withAuth && auth.token) headers['Authorization'] = `Bearer ${auth.token}`;
 
-	const res = await fetch(`${BASE}${path}`, {
-		method,
-		headers,
-		body: body === undefined ? undefined : JSON.stringify(body)
-	});
+	let res: Response;
+	try {
+		res = await fetch(`${BASE}${path}`, {
+			method,
+			headers,
+			body: body === undefined ? undefined : JSON.stringify(body)
+		});
+	} catch {
+		// fetch rejects on network/DNS/CORS failures
+		throw new ApiError(0, friendlyMessage(0));
+	}
 
 	if (res.status === 204) return undefined as T;
 
-	const text = await res.text();
-	const data = text ? JSON.parse(text) : null;
+	const text = await res.text().catch(() => '');
+	let data: { detail?: string; title?: string } | null = null;
+	try {
+		data = text ? JSON.parse(text) : null;
+	} catch {
+		// non-JSON body (e.g. a plain-text 502 or an HTML error page)
+		data = text && text.length < 200 ? { detail: text } : null;
+	}
 
 	if (!res.ok) {
-		const detail = data?.detail || data?.title || res.statusText;
 		if (res.status === 401) auth.clear();
+		const detail = data?.detail || data?.title || friendlyMessage(res.status);
 		throw new ApiError(res.status, detail);
 	}
 	return data as T;
