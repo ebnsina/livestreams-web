@@ -12,7 +12,7 @@
 		Film,
 		Server,
 		Sparkles,
-		Check,
+		BadgeCheck,
 		ArrowRight,
 		MonitorPlay,
 		KeyRound
@@ -69,17 +69,18 @@
 		}
 	];
 
-	// bento spans (lg, 4-col grid) per feature index — a big 2×2 hero tile + mix
+	// bento spans (lg, 4-col grid): varied widths, equal height/prominence so
+	// every feature reads as important (one wide + two narrow per row).
 	const spans = [
-		'col-span-2 lg:row-span-2', // Go live (featured, big)
-		'col-span-2', // encoder
-		'', // multistream
-		'', // recording
-		'col-span-2', // captions
-		'col-span-2', // chat
-		'', // secure
-		'', // analytics
-		'col-span-2' // webhooks
+		'col-span-2', // 0
+		'', // 1
+		'', // 2
+		'', // 3
+		'', // 4
+		'col-span-2', // 5
+		'', // 6
+		'col-span-2', // 7
+		'' // 8
 	];
 
 	const steps = [
@@ -191,32 +192,18 @@
 				One platform for ingest, delivery, engagement and monetization.
 			</p>
 		</div>
-		<div class="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:auto-rows-[182px]">
+		<div class="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:auto-rows-[200px]">
 			{#each features as f, i (f.title)}
 				{@const Icon = f.icon}
-				{@const featured = i === 0}
-				<div
-					class="card flex flex-col p-6 {spans[i]} {featured
-						? 'bg-gradient-to-br from-[var(--color-accent-2)] to-[var(--color-accent)] text-white'
-						: ''}"
-					style={featured ? 'box-shadow: var(--shadow-accent)' : ''}
-				>
+				<div class="card flex flex-col p-6 {spans[i]}">
 					<div
-						class="squircle flex items-center justify-center rounded-xl {featured
-							? 'h-14 w-14 bg-white/15 text-white'
-							: 'h-11 w-11 bg-[var(--color-accent)]/12 text-[var(--color-accent)]'}"
+						class="squircle flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--color-accent)]/12 text-[var(--color-accent)]"
 					>
-						<Icon size={featured ? 26 : 20} />
+						<Icon size={20} />
 					</div>
 					<div class="mt-auto pt-4">
-						<h3 class="font-semibold {featured ? 'text-2xl tracking-tight' : ''}">{f.title}</h3>
-						<p
-							class="mt-1.5 leading-relaxed {featured
-								? 'text-white/85'
-								: 'text-sm text-[var(--color-muted)]'}"
-						>
-							{f.body}
-						</p>
+						<h3 class="font-semibold">{f.title}</h3>
+						<p class="mt-1.5 text-sm leading-relaxed text-[var(--color-muted)]">{f.body}</p>
 					</div>
 				</div>
 			{/each}
@@ -261,11 +248,7 @@
 			<ul class="grid gap-3">
 				{#each ['Managed ingest, transcoding & global delivery', 'Connect YouTube, Twitch & your AI provider', 'Signed, expiring, domain-locked delivery', 'Teams, roles & organizations built in', 'Open REST API, webhooks & embeddable player'] as point (point)}
 					<li class="flex items-start gap-3">
-						<span
-							class="squircle mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-[var(--color-accent)] text-white"
-						>
-							<Check size={13} />
-						</span>
+						<BadgeCheck size={20} class="mt-0.5 shrink-0 text-[var(--color-accent)]" />
 						<span class="text-sm">{point}</span>
 					</li>
 				{/each}
