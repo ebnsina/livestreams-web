@@ -24,7 +24,7 @@
 		href={embedUrl}
 		target="_blank"
 		rel="noopener"
-		class="inline-block text-xs font-medium text-[#ff5b3e] hover:underline"
+		class="inline-block text-xs font-medium text-[var(--color-accent)] hover:underline"
 	>
 		Open player in a new tab ↗
 	</a>

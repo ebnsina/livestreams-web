@@ -63,7 +63,7 @@
 	const typeLabel: Record<string, string> = { vod: 'VOD', clip: 'Clip', upload: 'Upload' };
 	const statusColor: Record<string, string> = {
 		ready: 'bg-emerald-500/12 text-emerald-600',
-		processing: 'bg-[#ff5b3e]/12 text-[#ff5b3e]',
+		processing: 'bg-[var(--color-accent)]/12 text-[var(--color-accent)]',
 		uploading: 'bg-amber-500/12 text-amber-600',
 		pending: 'bg-slate-500/12 text-slate-500',
 		errored: 'bg-red-500/12 text-red-600'
@@ -101,7 +101,8 @@
 	<input class="input sm:max-w-xs" bind:value={q} placeholder="Search…" />
 </div>
 
-<div class="card overflow-x-auto">
+<div class="card overflow-hidden">
+	<div class="overflow-x-auto">
 	{#if list.isPending}
 		<div class="p-6 text-sm text-[var(--color-muted)]">Loading…</div>
 	{:else if items.length === 0}
@@ -178,6 +179,7 @@
 			</tbody>
 		</table>
 	{/if}
+	</div>
 </div>
 
 <Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />

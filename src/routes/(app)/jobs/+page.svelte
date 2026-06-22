@@ -61,7 +61,8 @@
 	</label>
 </div>
 
-<div class="card overflow-x-auto">
+<div class="card overflow-hidden">
+	<div class="overflow-x-auto">
 	{#if jobs.isPending}
 		<div class="p-6 text-sm text-[var(--color-muted)]">Loading…</div>
 	{:else if jobList.length === 0}
@@ -97,6 +98,7 @@
 			</tbody>
 		</table>
 	{/if}
+	</div>
 </div>
 
 <Modal open={!!selected} title={selected ? `Job #${selected.id}` : ''} onClose={() => (selected = null)}>
@@ -119,7 +121,7 @@
 				<div class="flex justify-between gap-4">
 					<dt class="text-[var(--color-muted)]">Stream</dt>
 					<dd>
-						<a class="font-mono text-xs text-[#ff5b3e] hover:underline" href="/streams/{j.stream_id}"
+						<a class="font-mono text-xs text-[var(--color-accent)] hover:underline" href="/streams/{j.stream_id}"
 							>{j.stream_id}</a
 						>
 					</dd>

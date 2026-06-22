@@ -66,9 +66,9 @@
 			{#each steps as s, i (s.id)}
 				<span
 					class="h-1.5 w-1.5 rounded-full transition-colors {i < idx
-						? 'bg-[#ff5b3e]'
+						? 'bg-[var(--color-accent)]'
 						: i === idx
-							? 'animate-pulse bg-[#ff5b3e]'
+							? 'animate-pulse bg-[var(--color-accent)]'
 							: 'bg-[var(--color-border)]'}"
 					title={s.label}
 				></span>
@@ -76,7 +76,7 @@
 		</div>
 		{#if stage === 'transcoding'}
 			<div class="h-1 w-24 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
-				<div class="h-full bg-[#ff5b3e] transition-all" style="width: {pct}%"></div>
+				<div class="h-full bg-[var(--color-accent)] transition-all" style="width: {pct}%"></div>
 			</div>
 			<span class="font-mono text-[11px] tabular-nums text-[var(--color-muted)]">{pct}%</span>
 		{:else}

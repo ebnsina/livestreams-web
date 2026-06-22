@@ -5,8 +5,11 @@
 	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
 	import { toast } from '$lib/toast.svelte';
-	import { Webhook } from '@lucide/svelte';
+	import { Webhook, Plus } from '@lucide/svelte';
+
+	let createOpen = $state(false);
 
 	const qc = useQueryClient();
 
@@ -31,6 +34,7 @@
 		onSuccess: (ep) => {
 			newSecret = ep.secret ?? null;
 			url = '';
+			createOpen = false;
 			qc.invalidateQueries({ queryKey: keys.webhooks });
 			toast.success('Webhook added');
 		},
@@ -65,33 +69,55 @@
 	}
 </script>
 
-<PageHeader icon={Webhook} title="Webhooks" subtitle="Signed HTTP callbacks for stream events (verify the X-LS-Signature HMAC-SHA256 header)" />
+<PageHeader
+	icon={Webhook}
+	title="Webhooks"
+	subtitle="Signed HTTP callbacks for stream events (verify the X-LS-Signature HMAC-SHA256 header)"
+>
+	{#snippet actions()}
+		{#if auth.canWrite}
+			<button class="btn-primary" onclick={() => (createOpen = true)}>
+				<Plus size={16} /> Add endpoint
+			</button>
+		{/if}
+	{/snippet}
+</PageHeader>
 
 {#if newSecret}
-	<div class="card mb-6 border-[#ff5b3e]/40 bg-[#ff5b3e]/5 p-5">
-		<p class="mb-2 text-sm font-medium text-[#ff5b3e]">Signing secret — copy it now, shown only once</p>
+	<div class="card mb-6 bg-[var(--color-accent)]/5 p-5">
+		<p class="mb-2 text-sm font-medium text-[var(--color-accent)]">
+			Signing secret — copy it now, shown only once
+		</p>
 		<CopyField label="Secret" value={newSecret} secret />
 	</div>
 {/if}
 
-<!-- create -->
-{#if auth.canWrite}
+<Dialog bind:open={createOpen} title="Add endpoint" subtitle="Receive signed event callbacks">
 	<form
-		class="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
+		class="space-y-4"
 		onsubmit={(e) => {
 			e.preventDefault();
 			create.mutate();
 		}}
 	>
-		<div class="flex-1">
+		<div>
 			<label class="label" for="url">Endpoint URL</label>
-			<input id="url" class="input" bind:value={url} placeholder="https://example.com/webhooks" required />
+			<input
+				id="url"
+				class="input"
+				bind:value={url}
+				placeholder="https://example.com/webhooks"
+				required
+			/>
 		</div>
-		<button class="btn-primary" type="submit" disabled={create.isPending}>
-			{create.isPending ? 'Adding…' : 'Add endpoint'}
-		</button>
+		<div class="flex justify-end gap-2 pt-2">
+			<button type="button" class="btn-ghost" onclick={() => (createOpen = false)}>Cancel</button>
+			<button class="btn-primary" type="submit" disabled={create.isPending}>
+				{create.isPending ? 'Adding…' : 'Add endpoint'}
+			</button>
+		</div>
 	</form>
-{/if}
+</Dialog>
 
 <!-- endpoints -->
 <section class="mb-8">
@@ -120,7 +146,8 @@
 <!-- deliveries -->
 <section>
 	<h2 class="mb-3 text-lg font-medium">Recent deliveries</h2>
-	<div class="card overflow-x-auto">
+	<div class="card overflow-hidden">
+		<div class="overflow-x-auto">
 		{#if dels.length === 0}
 			<div class="p-8 text-center text-sm text-[var(--color-muted)]">No deliveries yet.</div>
 		{:else}
@@ -148,7 +175,7 @@
 							<td class="px-4 py-2.5 text-right">
 								{#if auth.canWrite}
 									<button
-										class="text-[12px] font-medium text-[#ff5b3e] hover:text-[#ff5b3e] disabled:opacity-50"
+										class="text-[12px] font-medium text-[var(--color-accent)] hover:text-[var(--color-accent)] disabled:opacity-50"
 										onclick={() => redeliver.mutate(d.id)}
 										disabled={redeliver.isPending}>Redeliver</button
 									>
@@ -159,5 +186,6 @@
 				</tbody>
 			</table>
 		{/if}
+		</div>
 	</div>
 </section>

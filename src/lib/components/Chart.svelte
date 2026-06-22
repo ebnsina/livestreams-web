@@ -3,7 +3,7 @@
 	// and scales to the container width (non-scaling stroke keeps lines crisp).
 	let {
 		points,
-		color = '#ff5b3e',
+		color = 'var(--color-accent)',
 		height = 160,
 		format = (n: number) => `${n}`
 	}: {

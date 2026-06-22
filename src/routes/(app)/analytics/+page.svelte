@@ -84,7 +84,7 @@
 <div class="grid gap-4 lg:grid-cols-2">
 	<section class="card p-5">
 		<h2 class="mb-3 text-sm font-semibold">Concurrent viewers</h2>
-		<Chart points={viewers} color="#ff5b3e" />
+		<Chart points={viewers} color="var(--color-accent)" />
 	</section>
 	<section class="card p-5">
 		<h2 class="mb-3 text-sm font-semibold">Average bitrate (kbps)</h2>

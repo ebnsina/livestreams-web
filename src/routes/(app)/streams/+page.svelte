@@ -7,7 +7,8 @@
 	import ScheduleBadge from '$lib/components/ScheduleBadge.svelte';
 	import Pager from '$lib/components/Pager.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { Radio } from '@lucide/svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
+	import { Radio, Plus } from '@lucide/svelte';
 	import { toast } from '$lib/toast.svelte';
 	import type { LatencyMode } from '$lib/types';
 
@@ -58,16 +59,16 @@
 <PageHeader icon={Radio} title="Streams" subtitle="Create and manage your channels">
 	{#snippet actions()}
 		{#if auth.canWrite}
-			<button class="btn-primary" onclick={() => (showForm = !showForm)}>
-				{showForm ? 'Cancel' : '+ New stream'}
+			<button class="btn-primary" onclick={() => (showForm = true)}>
+				<Plus size={16} /> New stream
 			</button>
 		{/if}
 	{/snippet}
 </PageHeader>
 
-{#if showForm}
+<Dialog bind:open={showForm} title="New stream" subtitle="Create a channel to start streaming">
 	<form
-		class="card mb-6 grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_auto_auto]"
+		class="space-y-4"
 		onsubmit={(e) => {
 			e.preventDefault();
 			create.mutate();
@@ -78,7 +79,7 @@
 			<input id="name" class="input" bind:value={name} placeholder="Main channel" required />
 		</div>
 		<div>
-			<label class="label" for="latency">Latency</label>
+			<label class="label" for="latency">Latency mode</label>
 			<select id="latency" class="input" bind:value={latency}>
 				<option value="standard">Standard</option>
 				<option value="low">Low</option>
@@ -89,17 +90,18 @@
 			<label class="label" for="schedule">Schedule (optional)</label>
 			<input id="schedule" class="input" type="datetime-local" bind:value={schedule} />
 		</div>
-		<label class="flex items-end gap-2 pb-2 text-sm">
+		<label class="flex items-center gap-2 text-sm">
 			<input type="checkbox" bind:checked={recording} class="rounded" />
-			Record
+			Record this stream
 		</label>
-		<div class="flex items-end">
+		<div class="flex justify-end gap-2 pt-2">
+			<button type="button" class="btn-ghost" onclick={() => (showForm = false)}>Cancel</button>
 			<button class="btn-primary" type="submit" disabled={create.isPending}>
-				{create.isPending ? 'Creating…' : 'Create'}
+				{create.isPending ? 'Creating…' : 'Create stream'}
 			</button>
 		</div>
 	</form>
-{/if}
+</Dialog>
 
 <div class="mb-5">
 	<input class="input sm:max-w-xs" bind:value={search} placeholder="Search streams…" />

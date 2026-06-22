@@ -19,7 +19,7 @@
 		{#if icon}
 			{@const Icon = icon}
 			<span
-				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ff5b3e]/12 text-[#ff5b3e]"
+				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent)]/12 text-[var(--color-accent)]"
 			>
 				<Icon size={20} />
 			</span>

@@ -5,7 +5,12 @@
 	import { toast } from '$lib/toast.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
-	import { Settings } from '@lucide/svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
+	import { theme } from '$lib/theme.svelte';
+	import { Settings, Pencil, Sun, Moon } from '@lucide/svelte';
+
+	let profileOpen = $state(false);
+	let pwOpen = $state(false);
 
 	const qc = useQueryClient();
 	const me = createQuery(() => ({ queryKey: keys.me, queryFn: () => api.me() }));
@@ -96,6 +101,7 @@
 		onSuccess: () => {
 			qc.invalidateQueries({ queryKey: keys.me });
 			toast.success('Profile updated');
+			profileOpen = false;
 		},
 		onError: () => toast.error('Could not update profile')
 	}));
@@ -103,15 +109,13 @@
 	let current = $state('');
 	let next = $state('');
 	let confirm = $state('');
-	let pwDone = $state(false);
 
 	const changePw = createMutation(() => ({
 		mutationFn: () => api.changePassword(current, next),
 		onSuccess: () => {
-			pwDone = true;
 			current = next = confirm = '';
-			setTimeout(() => (pwDone = false), 3000);
 			toast.success('Password updated');
+			pwOpen = false;
 		},
 		onError: () => toast.error("Couldn't update password — check your current one")
 	}));
@@ -135,56 +139,62 @@
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 	<!-- Profile -->
-	<section class="card p-5">
-		<h2 class="mb-4 text-[15px] font-semibold">Profile</h2>
-		<div class="mb-4 text-sm">
-			<p class="text-[var(--color-muted)]">Email</p>
-			<p class="font-medium">{user?.email ?? '—'}</p>
-		</div>
-		<form
-			class="space-y-3"
-			onsubmit={(e) => {
-				e.preventDefault();
-				saveName.mutate();
-			}}
-		>
-			<div>
-				<label class="label" for="name">Display name</label>
-				<input id="name" class="input" bind:value={name} required />
-			</div>
-			<button class="btn-primary" type="submit" disabled={saveName.isPending}>
-				{saveName.isPending ? 'Saving…' : 'Save'}
+	<section class="card p-6">
+		<div class="mb-4 flex items-center justify-between">
+			<h2 class="text-base font-semibold">Profile</h2>
+			<button class="btn-ghost px-4 py-2 text-sm" onclick={() => (profileOpen = true)}>
+				<Pencil size={15} /> Edit
 			</button>
-		</form>
+		</div>
+		<dl class="space-y-3 text-sm">
+			<div>
+				<dt class="text-[var(--color-muted)]">Email</dt>
+				<dd class="font-medium">{user?.email ?? '—'}</dd>
+			</div>
+			<div>
+				<dt class="text-[var(--color-muted)]">Display name</dt>
+				<dd class="font-medium">{user?.name ?? '—'}</dd>
+			</div>
+		</dl>
 	</section>
 
 	<!-- Password -->
-	<section class="card p-5">
-		<h2 class="mb-4 text-[15px] font-semibold">Change password</h2>
-		<form class="space-y-3" onsubmit={submitPw}>
-			<div>
-				<label class="label" for="cur">Current password</label>
-				<input id="cur" class="input" type="password" bind:value={current} required />
-			</div>
-			<div>
-				<label class="label" for="new">New password</label>
-				<input id="new" class="input" type="password" bind:value={next} minlength="8" required />
-			</div>
-			<div>
-				<label class="label" for="conf">Confirm new password</label>
-				<input id="conf" class="input" type="password" bind:value={confirm} required />
-			</div>
-			{#if next && confirm && next !== confirm}
-				<p class="text-sm text-red-500">Passwords don't match</p>
-			{/if}
-			{#if changePw.isError}
-				<p class="text-sm text-red-500">{(changePw.error as ApiError)?.message ?? 'Failed'}</p>
-			{/if}
-			{#if pwDone}<p class="text-sm text-emerald-500">Password updated</p>{/if}
-			<button class="btn-primary" type="submit" disabled={changePw.isPending}>
-				{changePw.isPending ? 'Updating…' : 'Update password'}
+	<section class="card flex flex-col p-6">
+		<div class="mb-2 flex items-center justify-between">
+			<h2 class="text-base font-semibold">Password</h2>
+		</div>
+		<p class="mb-4 flex-1 text-sm text-[var(--color-muted)]">
+			Keep your account secure with a strong, unique password.
+		</p>
+		<button class="btn-ghost w-fit px-4 py-2 text-sm" onclick={() => (pwOpen = true)}>
+			Change password
+		</button>
+	</section>
+
+	<!-- Appearance -->
+	<section class="card p-6 lg:col-span-2">
+		<h2 class="mb-1 text-base font-semibold">Appearance</h2>
+		<p class="mb-4 text-sm text-[var(--color-muted)]">Choose how the dashboard looks.</p>
+		<div class="squircle inline-flex gap-1 rounded-xl bg-[var(--color-surface-2)] p-1">
+			<button
+				class="squircle flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors {theme.mode ===
+				'light'
+					? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
+					: 'text-[var(--color-muted)]'}"
+				onclick={() => theme.mode === 'dark' && theme.toggle()}
+			>
+				<Sun size={15} /> Light
 			</button>
-		</form>
+			<button
+				class="squircle flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors {theme.mode ===
+				'dark'
+					? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
+					: 'text-[var(--color-muted)]'}"
+				onclick={() => theme.mode === 'light' && theme.toggle()}
+			>
+				<Moon size={15} /> Dark
+			</button>
+		</div>
 	</section>
 
 	<!-- Notifications -->
@@ -202,7 +212,7 @@
 			</div>
 			<button
 				class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors {user?.email_notifications
-					? 'bg-[#ff5b3e]'
+					? 'bg-[var(--color-accent)]'
 					: 'bg-[var(--color-border)]'}"
 				onclick={() => setEmail.mutate(!user?.email_notifications)}
 				disabled={setEmail.isPending}
@@ -310,11 +320,11 @@
 	</section>
 
 	<!-- Organizations -->
-	<section class="card p-5 lg:col-span-2">
-		<h2 class="mb-4 text-[15px] font-semibold">Organizations</h2>
+	<section class="card p-6 lg:col-span-2">
+		<h2 class="mb-4 text-base font-semibold">Organizations</h2>
 		<ul class="divide-y divide-[var(--color-border)]">
 			{#each orgs as o (o.id)}
-				<li class="flex items-center justify-between py-2 text-sm">
+				<li class="flex items-center justify-between py-2.5 text-sm">
 					<span class="font-medium">{o.name}</span>
 					<span class="font-mono text-xs text-[var(--color-muted)]">{o.role}</span>
 				</li>
@@ -322,3 +332,55 @@
 		</ul>
 	</section>
 </div>
+
+<!-- Edit profile dialog -->
+<Dialog bind:open={profileOpen} title="Edit profile" subtitle="Update your display name">
+	<form
+		class="space-y-4"
+		onsubmit={(e) => {
+			e.preventDefault();
+			saveName.mutate();
+		}}
+	>
+		<div>
+			<label class="label" for="name">Display name</label>
+			<input id="name" class="input" bind:value={name} required />
+		</div>
+		<div class="flex justify-end gap-2 pt-2">
+			<button type="button" class="btn-ghost" onclick={() => (profileOpen = false)}>Cancel</button>
+			<button class="btn-primary" type="submit" disabled={saveName.isPending}>
+				{saveName.isPending ? 'Saving…' : 'Save changes'}
+			</button>
+		</div>
+	</form>
+</Dialog>
+
+<!-- Change password dialog -->
+<Dialog bind:open={pwOpen} title="Change password" subtitle="Choose a new password">
+	<form class="space-y-4" onsubmit={submitPw}>
+		<div>
+			<label class="label" for="cur">Current password</label>
+			<input id="cur" class="input" type="password" bind:value={current} required />
+		</div>
+		<div>
+			<label class="label" for="new">New password</label>
+			<input id="new" class="input" type="password" bind:value={next} minlength="8" required />
+		</div>
+		<div>
+			<label class="label" for="conf">Confirm new password</label>
+			<input id="conf" class="input" type="password" bind:value={confirm} required />
+		</div>
+		{#if next && confirm && next !== confirm}
+			<p class="text-sm text-red-500">Passwords don't match</p>
+		{/if}
+		{#if changePw.isError}
+			<p class="text-sm text-red-500">{(changePw.error as ApiError)?.message ?? 'Failed'}</p>
+		{/if}
+		<div class="flex justify-end gap-2 pt-2">
+			<button type="button" class="btn-ghost" onclick={() => (pwOpen = false)}>Cancel</button>
+			<button class="btn-primary" type="submit" disabled={changePw.isPending}>
+				{changePw.isPending ? 'Updating…' : 'Update password'}
+			</button>
+		</div>
+	</form>
+</Dialog>

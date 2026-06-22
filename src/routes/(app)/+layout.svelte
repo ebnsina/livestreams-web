@@ -5,9 +5,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import NotificationsBell from '$lib/components/NotificationsBell.svelte';
-	import EmailBanner from '$lib/components/EmailBanner.svelte';
 	import {
 		LayoutDashboard,
 		Radio,
@@ -19,7 +17,9 @@
 		Webhook,
 		KeyRound,
 		Users,
-		Settings
+		Settings,
+		LogOut,
+		Plus
 	} from '@lucide/svelte';
 
 	let { children } = $props();
@@ -51,7 +51,11 @@
 		location.reload(); // reload all data under the new org
 	}
 
-	const nav = [
+	const nav: {
+		href: string;
+		label: string;
+		icon: typeof LayoutDashboard;
+	}[] = [
 		{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 		{ href: '/streams', label: 'Streams', icon: Radio },
 		{ href: '/recordings', label: 'Recordings', icon: Film },
@@ -70,124 +74,145 @@
 		goto('/login');
 	}
 
-	// Derive the page title from the longest matching nav entry (sub-routes like
-	// /streams/[id] inherit the parent label).
-	const pageTitle = $derived.by(() => {
-		const match = [...nav]
+	// Derive the active nav entry (sub-routes like /streams/[id] inherit parent).
+	const active = $derived(
+		[...nav]
 			.filter((n) => page.url.pathname.startsWith(n.href))
-			.sort((a, b) => b.href.length - a.href.length)[0];
-		return match ? `${match.label} · Livestreams` : 'Livestreams';
-	});
+			.sort((a, b) => b.href.length - a.href.length)[0]
+	);
+	const pageTitle = $derived(active ? `${active.label} · Livestreams` : 'Livestreams');
+
+	const initials = $derived(
+		(auth.user?.name ?? '?')
+			.split(' ')
+			.map((p) => p[0])
+			.slice(0, 2)
+			.join('')
+			.toUpperCase()
+	);
 </script>
 
 <svelte:head><title>{pageTitle}</title></svelte:head>
 
 {#if auth.isAuthenticated}
-	<div class="flex min-h-screen bg-[var(--color-surface-2)]">
-		<!-- Desktop sidebar (fixed: stays in place while main scrolls) -->
-		<aside
-			class="hidden w-60 shrink-0 flex-col bg-transparent p-4 md:flex md:sticky md:top-0 md:h-screen md:self-start md:overflow-y-auto"
-		>
-			<div class="mb-8 flex items-center gap-2 px-2">
-				<div
-					class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ff5b3e] text-sm font-bold text-white"
-				>
-					L
-				</div>
-				<span class="font-semibold">Livestreams</span>
-			</div>
-
-			<nav class="flex flex-1 flex-col gap-1">
-				{#each nav as item (item.href)}
-					{@const active = page.url.pathname.startsWith(item.href)}
-					{@const Icon = item.icon}
-					<a
-						href={item.href}
-						class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors
-							{active
-							? 'bg-[#ff5b3e]/15 text-[#ff5b3e]'
-							: 'text-[var(--color-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text)]'}"
-					>
-						<Icon size={16} />
-						{item.label}
-					</a>
-				{/each}
-			</nav>
-
-			<div class="pt-4">
-				{#if orgs.length > 1}
-					<select
-						class="input mb-3 text-sm"
-						value={auth.activeOrgId}
-						onchange={(e) => switchOrg(e.currentTarget.value)}
-					>
-						{#each orgs as o (o.id)}
-							<option value={o.id}>{o.name}</option>
-						{/each}
-					</select>
-				{/if}
-				<div class="mb-3 flex items-center justify-between gap-2">
-					<div class="min-w-0 px-2 text-sm">
-						<p class="truncate font-medium">{auth.user?.name ?? '—'}</p>
-						<p class="truncate text-xs text-[var(--color-muted)]">
-							{auth.role || auth.user?.email}
-						</p>
-					</div>
-					<div class="flex items-center gap-1">
-						<NotificationsBell />
-						<ThemeToggle />
-					</div>
-				</div>
-				<button class="btn-ghost w-full text-sm" onclick={logout}>Sign out</button>
-			</div>
-		</aside>
-
-		<div class="flex min-w-0 flex-1 flex-col">
-			<!-- Mobile top bar (sticky) -->
-			<header
-				class="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 md:hidden"
-			>
-				<div class="flex items-center gap-2">
+	<div class="flex min-h-screen bg-[var(--color-bg)]">
+		<!-- Sidebar (desktop) — borderless, icon + label, white hover -->
+		<aside class="sticky top-0 hidden h-screen w-64 shrink-0 p-3 md:block">
+			<div class="flex h-full flex-col px-2 py-2 text-[var(--color-text)]">
+				<!-- logo -->
+				<a href="/dashboard" class="mb-6 flex items-center gap-2.5 px-2 pt-1">
 					<div
-						class="flex h-7 w-7 items-center justify-center rounded-lg bg-[#ff5b3e] text-xs font-bold text-white"
+						class="squircle flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent)] text-base font-bold text-white"
+						style="box-shadow: var(--shadow-accent)"
 					>
 						L
 					</div>
-					<span class="font-semibold">Livestreams</span>
-				</div>
-				<div class="flex items-center gap-2">
-					<NotificationsBell />
-					<ThemeToggle />
-					<button class="btn-ghost text-sm" onclick={logout}>Sign out</button>
-				</div>
-			</header>
+					<span class="text-lg font-semibold">Livestreams</span>
+				</a>
 
-			<!-- Mobile nav -->
-			<nav
-				class="flex gap-1 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-2 md:hidden"
-			>
-				{#each nav as item (item.href)}
-					{@const active = page.url.pathname.startsWith(item.href)}
-					<a
-						href={item.href}
-						class="rounded-lg px-3 py-1.5 text-sm font-medium {active
-							? 'bg-[#ff5b3e]/15 text-[#ff5b3e]'
-							: 'text-[var(--color-muted)]'}">{item.label}</a
-					>
-				{/each}
-			</nav>
+				<!-- nav -->
+				<nav class="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+					{#each nav as item (item.href)}
+						{@const isActive = page.url.pathname.startsWith(item.href)}
+						{@const Icon = item.icon}
+						<a
+							href={item.href}
+							class="squircle flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors
+								{isActive
+								? 'bg-[var(--color-accent)] text-white'
+								: 'text-[var(--color-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]'}"
+							style={isActive ? 'box-shadow: var(--shadow-accent)' : ''}
+						>
+							<Icon size={18} class="shrink-0" />
+							<span class="flex-1">{item.label}</span>
+						</a>
+					{/each}
+				</nav>
 
-			<!-- Main content — floating white panel on the gray app background -->
-			<main class="min-w-0 flex-1 p-3 sm:p-4 md:pl-0">
-				<div
-					class="min-h-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm"
-				>
-					<div class="mx-auto w-full max-w-6xl px-5 py-6 sm:px-8 sm:py-8">
-						<EmailBanner />
-						{@render children()}
+				<!-- user + logout -->
+				<div class="mt-3 border-t border-[var(--color-border)] pt-3">
+					<div class="flex items-center gap-2.5 px-1">
+						<div
+							class="squircle flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-surface)] text-xs font-semibold"
+						>
+							{initials}
+						</div>
+						<div class="min-w-0 flex-1">
+							<p class="truncate text-sm font-medium">{auth.user?.name ?? '—'}</p>
+							<p class="truncate text-xs text-[var(--color-muted)]">
+								{auth.role || auth.user?.email}
+							</p>
+						</div>
+						<button
+							class="squircle flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--color-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+							onclick={logout}
+							aria-label="Sign out"
+						>
+							<LogOut size={16} />
+						</button>
 					</div>
 				</div>
-			</main>
+			</div>
+		</aside>
+
+		<!-- Content area — one full white squircle panel -->
+		<div class="flex min-w-0 flex-1 flex-col p-3 md:pl-0">
+			<div
+				class="squircle flex h-[calc(100vh-1.5rem)] flex-col overflow-hidden rounded-[26px] bg-[var(--color-surface)]"
+				style="box-shadow: var(--shadow-panel)"
+			>
+				<!-- Top bar -->
+				<header class="flex shrink-0 items-center gap-3 px-5 py-4 sm:px-8">
+					<!-- mobile logo -->
+					<a
+						href="/dashboard"
+						class="squircle flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent)] text-sm font-bold text-white md:hidden"
+					>
+						L
+					</a>
+					<div class="min-w-0 flex-1"></div>
+
+					{#if orgs.length > 1}
+						<select
+							class="input hidden w-auto py-2 sm:block"
+							value={auth.activeOrgId}
+							onchange={(e) => switchOrg(e.currentTarget.value)}
+						>
+							{#each orgs as o (o.id)}
+								<option value={o.id}>{o.name}</option>
+							{/each}
+						</select>
+					{/if}
+
+					<div class="squircle flex items-center rounded-xl bg-[var(--color-surface-2)] px-1 py-1">
+						<NotificationsBell />
+					</div>
+
+					<a href="/streams" class="btn-accent hidden sm:inline-flex">
+						<Plus size={16} /> New stream
+					</a>
+				</header>
+
+				<!-- Mobile nav (scrollable pills) -->
+				<nav class="flex gap-1.5 overflow-x-auto px-5 pb-2 md:hidden">
+					{#each nav as item (item.href)}
+						{@const isActive = page.url.pathname.startsWith(item.href)}
+						<a
+							href={item.href}
+							class="squircle shrink-0 rounded-xl px-3 py-1.5 text-sm font-medium {isActive
+								? 'bg-[var(--color-accent)] text-white'
+								: 'bg-[var(--color-surface-2)] text-[var(--color-muted)]'}">{item.label}</a
+						>
+					{/each}
+				</nav>
+
+				<!-- Scrollable content -->
+				<main class="min-w-0 flex-1 overflow-y-auto px-5 pb-12 pt-2 sm:px-8">
+					<div class="mx-auto w-full max-w-6xl">
+						{@render children()}
+					</div>
+				</main>
+			</div>
 		</div>
 	</div>
 {/if}

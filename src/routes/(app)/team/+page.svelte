@@ -5,8 +5,11 @@
 	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
 	import { toast } from '$lib/toast.svelte';
-	import { Users } from '@lucide/svelte';
+	import { Users, Plus } from '@lucide/svelte';
+
+	let inviteOpen = $state(false);
 
 	const qc = useQueryClient();
 	const members = createQuery(() => ({ queryKey: keys.teamMembers, queryFn: () => api.teamMembers() }));
@@ -28,6 +31,7 @@
 				? `${location.origin}/invite?token=${encodeURIComponent(inv.token)}`
 				: null;
 			email = '';
+			inviteOpen = false;
 			qc.invalidateQueries({ queryKey: keys.teamInvitations });
 			toast.success('Invite sent');
 		},
@@ -44,47 +48,65 @@
 	}));
 
 	const roleColor: Record<string, string> = {
-		owner: 'bg-[#ff5b3e]/12 text-[#ff5b3e]',
+		owner: 'bg-[var(--color-accent)]/12 text-[var(--color-accent)]',
 		admin: 'bg-sky-500/12 text-sky-500',
 		member: 'bg-slate-500/12 text-slate-400'
 	};
 </script>
 
-<PageHeader icon={Users} title="Team" subtitle="Members of your organization and pending invites" />
+<PageHeader icon={Users} title="Team" subtitle="Members of your organization and pending invites">
+	{#snippet actions()}
+		{#if auth.isAdmin}
+			<button class="btn-primary" onclick={() => (inviteOpen = true)}>
+				<Plus size={16} /> Invite member
+			</button>
+		{/if}
+	{/snippet}
+</PageHeader>
 
 {#if inviteLink}
-	<div class="card mb-6 border-[#ff5b3e]/40 bg-[#ff5b3e]/5 p-5">
-		<p class="mb-2 text-sm font-medium text-[#ff5b3e]">Invite created — share this link</p>
+	<div class="card mb-6 bg-[var(--color-accent)]/5 p-5">
+		<p class="mb-2 text-sm font-medium text-[var(--color-accent)]">Invite created — share this link</p>
 		<CopyField label="Invite link" value={inviteLink} />
 	</div>
 {/if}
 
-<!-- invite form (owners/admins only) -->
-{#if auth.isAdmin}
-<form
-	class="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
-	onsubmit={(e) => {
-		e.preventDefault();
-		create.mutate();
-	}}
->
-	<div class="flex-1">
-		<label class="label" for="email">Invite by email</label>
-		<input id="email" class="input" type="email" bind:value={email} placeholder="teammate@example.com" required />
-	</div>
-	<div>
-		<label class="label" for="role">Role</label>
-		<select id="role" class="input w-auto" bind:value={role}>
-			<option value="member">Member</option>
-			<option value="admin">Admin</option>
-			<option value="viewer">Viewer (read-only)</option>
-		</select>
-	</div>
-	<button class="btn-primary" type="submit" disabled={create.isPending}>
-		{create.isPending ? 'Inviting…' : 'Send invite'}
-	</button>
-</form>
-{/if}
+<!-- invite dialog (owners/admins only) -->
+<Dialog bind:open={inviteOpen} title="Invite member" subtitle="Send an invite link by email">
+	<form
+		class="space-y-4"
+		onsubmit={(e) => {
+			e.preventDefault();
+			create.mutate();
+		}}
+	>
+		<div>
+			<label class="label" for="email">Email</label>
+			<input
+				id="email"
+				class="input"
+				type="email"
+				bind:value={email}
+				placeholder="teammate@example.com"
+				required
+			/>
+		</div>
+		<div>
+			<label class="label" for="role">Role</label>
+			<select id="role" class="input" bind:value={role}>
+				<option value="member">Member</option>
+				<option value="admin">Admin</option>
+				<option value="viewer">Viewer (read-only)</option>
+			</select>
+		</div>
+		<div class="flex justify-end gap-2 pt-2">
+			<button type="button" class="btn-ghost" onclick={() => (inviteOpen = false)}>Cancel</button>
+			<button class="btn-primary" type="submit" disabled={create.isPending}>
+				{create.isPending ? 'Inviting…' : 'Send invite'}
+			</button>
+		</div>
+	</form>
+</Dialog>
 
 <!-- members -->
 <section class="mb-8">

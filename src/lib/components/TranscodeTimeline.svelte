@@ -128,12 +128,12 @@
 
 	const stageColor: Record<string, string> = {
 		probing: 'bg-sky-500/15 text-sky-400',
-		transcoding: 'bg-[#ff5b3e]/15 text-[#ff5b3e]',
+		transcoding: 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]',
 		uploading: 'bg-amber-500/15 text-amber-400',
 		ready: 'bg-emerald-500/15 text-emerald-400',
 		failed: 'bg-red-500/15 text-red-400',
 		loading: 'bg-white/10 text-white/60',
-		processing: 'bg-[#ff5b3e]/15 text-[#ff5b3e]'
+		processing: 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]'
 	};
 </script>
 
@@ -143,15 +143,17 @@
 	</span>
 	<div class="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-[var(--color-muted)]">
 		<span>{pct}%</span>
-		<span>fps {metrics ? metrics.fps.toFixed(0) : '—'}</span>
-		<span>speed {metrics?.speed || '—'}</span>
-		<span>frame {metrics?.frame ?? '—'}</span>
-		<span>out {metrics ? clock(metrics.time_sec) : '—'}</span>
+		{#if metrics}
+			<span>fps {metrics.fps.toFixed(0)}</span>
+			<span>speed {metrics.speed || '—'}</span>
+			<span>frame {metrics.frame}</span>
+			<span>out {clock(metrics.time_sec)}</span>
+		{/if}
 	</div>
 </div>
 
 <div class="mb-2 h-1 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
-	<div class="h-full rounded-full bg-[#ff5b3e] transition-all" style="width: {pct}%"></div>
+	<div class="h-full rounded-full bg-[var(--color-accent)] transition-all" style="width: {pct}%"></div>
 </div>
 
 <div
@@ -179,7 +181,7 @@
 						: r.text.startsWith('✖')
 							? 'text-red-400'
 							: r.text.startsWith('▶')
-								? 'text-[#ff7a63]'
+								? 'text-[var(--color-accent-2)]'
 								: 'text-white/55'}>{r.text}</span
 			>
 		</div>

@@ -67,7 +67,7 @@
 <Modal {open} title="Upload video" onClose={close}>
 	<div class="space-y-4">
 		<label
-			class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--color-border)] px-6 py-10 text-center transition-colors hover:border-[#ff5b3e]"
+			class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--color-border)] px-6 py-10 text-center transition-colors hover:border-[var(--color-accent)]"
 		>
 			<UploadCloud size={28} class="text-[var(--color-muted)]" />
 			{#if file}
@@ -98,7 +98,7 @@
 					<span class="font-mono tabular-nums">{progress}%</span>
 				</div>
 				<div class="h-2 overflow-hidden rounded-full bg-[var(--color-surface-2)]">
-					<div class="h-full bg-[#ff5b3e] transition-all" style="width: {progress}%"></div>
+					<div class="h-full bg-[var(--color-accent)] transition-all" style="width: {progress}%"></div>
 				</div>
 			</div>
 		{:else if phase === 'processing'}

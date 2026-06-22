@@ -3,37 +3,55 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-/* Brand kit (fontpair "Geometric"): white surfaces, near-black text + primary,
-   coral accent, yellow highlight. Light is default; `.dark` swaps surfaces.
-   Fonts: Space Grotesk (headlines) + DM Sans (body), loaded in app.html. */
+/* Brand kit: soft lavender app background, white cards, indigo-violet accent.
+   Light is default; `.dark` swaps surfaces. Generous rounding + soft shadows.
+   Fonts: Sora (headlines) + DM Sans (body), Geist Mono (code). */
 @theme {
-	--color-bg: #ffffff;
+	--color-bg: #f4f5ef;
 	--color-surface: #ffffff;
-	--color-surface-2: #f4f4f5;
-	--color-border: #dedede;
-	--color-muted: #6b7280;
-	--color-text: #111111;
-	--color-accent: #ff5b3e;
+	--color-surface-2: #eef0e7;
+	--color-sidebar: #e6e8dd;
+	--color-border: #e4e6da;
+	--color-muted: #6d7064;
+	--color-text: #232518;
+	--color-accent: #4d5a27;
+	--color-accent-2: #6f8043;
+	--color-accent-soft: #eef1e2;
 	--color-highlight: #ffd84d;
-	--color-primary-bg: #111111;
+	--color-primary-bg: #1b1d2e;
 	--color-primary-fg: #ffffff;
 	--color-live: #ef4444;
 	--color-success: #16a34a;
 	--font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 	--font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
 	--font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+	--radius-card: 1.25rem;
+	/* soft, modern, layered shadows (replace hard borders) */
+	--shadow-card: 0 2px 6px rgba(20, 20, 43, 0.04), 0 14px 36px -14px rgba(20, 20, 43, 0.1);
+	--shadow-pop: 0 24px 80px -24px rgba(20, 20, 43, 0.18);
+	--shadow-accent: 0 24px 60px -30px rgba(77, 90, 39, 0.3);
+	/* borderless soft shadow for the main content panel */
+	--shadow-panel: 0 4px 12px rgba(20, 20, 43, 0.02), 0 40px 80px -40px rgba(20, 20, 43, 0.06);
 }
 
-/* Dark mode — near-black surfaces; primary inverts to a light button. */
+/* Dark mode — deep indigo-charcoal surfaces; accent brightens for contrast. */
 html.dark {
-	--color-bg: #0f0f10;
-	--color-surface: #18181b;
-	--color-surface-2: #232327;
-	--color-border: #2e2e33;
-	--color-muted: #a1a1aa;
-	--color-text: #fafafa;
+	--color-bg: #0f1018;
+	--color-surface: #181a24;
+	--color-surface-2: #232634;
+	--color-border: #2c2f3d;
+	--color-muted: #9ea1b8;
+	--color-text: #f4f5fa;
+	--color-accent: #9aad5f;
+	--color-accent-2: #b3c47e;
+	--color-accent-soft: #2a3017;
+	--color-sidebar: #14161e;
 	--color-primary-bg: #ffffff;
-	--color-primary-fg: #111111;
+	--color-primary-fg: #18181b;
+	--shadow-card: 0 2px 6px rgba(0, 0, 0, 0.25), 0 14px 36px -14px rgba(0, 0, 0, 0.55);
+	--shadow-pop: 0 24px 80px -24px rgba(0, 0, 0, 0.7);
+	--shadow-accent: 0 24px 60px -30px rgba(154, 173, 95, 0.3);
+	--shadow-panel: 0 24px 70px -36px rgba(0, 0, 0, 0.5);
 	color-scheme: dark;
 }
 
@@ -41,7 +59,10 @@ html {
 	background-color: var(--color-bg);
 	color: var(--color-text);
 	font-family: var(--font-sans);
+	font-size: 15px;
+	line-height: 1.55;
 	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
 	color-scheme: light;
 }
 
@@ -50,34 +71,71 @@ body {
 	min-height: 100vh;
 }
 
-/* Headlines use the display font (Space Grotesk). */
+/* Headlines use the display font (Sora) — tighter leading + tracking. */
 h1,
 h2,
-h3 {
+h3,
+h4 {
 	font-family: var(--font-display);
-	letter-spacing: -0.01em;
+	letter-spacing: -0.02em;
+	line-height: 1.15;
+}
+
+/* Squircle corner shaping (progressive enhancement: browsers without
+   `corner-shape` keep the border-radius). `superellipse(k)`: k=2 is a plain
+   round corner, higher k squares it off into a smoother squircle.
+   - panels: full squircle (large radius, most visible)
+   - controls: a gentle superellipse so buttons/inputs don't look boxy */
+@utility squircle {
+	corner-shape: squircle;
+}
+@utility squircle-soft {
+	corner-shape: superellipse(2.4);
 }
 
 /* Reusable component classes. */
 @utility btn {
-	@apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5b3e]/50 disabled:cursor-not-allowed disabled:opacity-50;
+	@apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]/50 disabled:cursor-not-allowed disabled:opacity-50;
+	corner-shape: squircle;
 }
 
 @layer components {
+	/* primary = brand (indigo) everywhere */
 	.btn-primary {
+		@apply btn bg-[var(--color-accent)] text-white hover:-translate-y-px hover:opacity-95;
+		box-shadow: var(--shadow-accent);
+	}
+	.btn-accent {
+		@apply btn bg-[var(--color-accent)] text-white hover:-translate-y-px hover:opacity-95;
+		box-shadow: var(--shadow-accent);
+	}
+	.btn-dark {
 		@apply btn bg-[var(--color-primary-bg)] text-[var(--color-primary-fg)] hover:opacity-90;
 	}
 	.btn-ghost {
-		@apply btn border border-[var(--color-border)] bg-transparent text-[var(--color-text)] hover:bg-[var(--color-surface-2)];
+		@apply btn bg-[var(--color-surface)] text-[var(--color-text)] hover:bg-[var(--color-surface-2)];
+		box-shadow: var(--shadow-card);
 	}
 	.btn-danger {
-		@apply btn border border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20;
+		@apply btn bg-red-500/10 text-red-600 hover:bg-red-500/20;
 	}
 	.card {
-		@apply rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm;
+		@apply rounded-3xl bg-[var(--color-surface)];
+		corner-shape: squircle;
+		box-shadow: var(--shadow-card);
 	}
+	/* borderless filled inputs (overrides the @tailwindcss/forms default border) */
 	.input {
-		@apply w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:border-[#ff5b3e] focus:ring-1 focus:ring-[#ff5b3e];
+		@apply w-full rounded-xl bg-[var(--color-surface)] px-3.5 py-2.5 text-sm text-[var(--color-text)] placeholder:text-[var(--color-muted)];
+		border: 1px solid var(--color-border);
+		corner-shape: squircle;
+	}
+	/* explicit ring-2 + offset-2 on focus (beats the @tailwindcss/forms ring) */
+	.input:focus {
+		border-color: var(--color-border);
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+		box-shadow: none;
 	}
 	.label {
 		@apply mb-1.5 block text-sm font-medium text-[var(--color-muted)];

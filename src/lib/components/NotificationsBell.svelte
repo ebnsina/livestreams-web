@@ -31,7 +31,9 @@
 	function place() {
 		if (!btn) return;
 		const r = btn.getBoundingClientRect();
-		style = `top:${Math.round(r.bottom + 8)}px; left:${Math.round(r.left)}px`;
+		const width = 320; // w-80
+		const left = Math.max(8, Math.round(r.right - width)); // right-align to the bell
+		style = `top:${Math.round(r.bottom + 8)}px; left:${left}px`;
 	}
 	function toggle(e: MouseEvent) {
 		e.stopPropagation();
@@ -76,7 +78,7 @@
 	<Bell size={18} />
 	{#if unread > 0}
 		<span
-			class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#ff5b3e] px-1 text-[10px] font-semibold text-white"
+			class="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--color-accent)] px-1 text-[10px] font-semibold text-white"
 		>
 			{unread > 9 ? '9+' : unread}
 		</span>
@@ -86,8 +88,8 @@
 {#if open}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
-		class="fixed z-50 max-h-[70vh] w-80 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg"
-		style={style}
+		class="squircle fixed z-50 max-h-[70vh] w-80 overflow-hidden rounded-2xl bg-[var(--color-surface)]"
+		style="{style}; box-shadow: var(--shadow-pop)"
 		role="menu"
 		tabindex="-1"
 		onclick={(e) => e.stopPropagation()}
@@ -96,7 +98,7 @@
 			<span class="text-[13px] font-semibold">Notifications</span>
 			{#if unread > 0}
 				<button
-					class="inline-flex items-center gap-1 text-xs font-medium text-[#ff5b3e] hover:underline"
+					class="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent)] hover:underline"
 					onclick={() => markAll.mutate()}
 				>
 					<CheckCheck size={13} /> Mark all read
@@ -117,7 +119,7 @@
 								<span
 									class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full {n.read
 										? 'bg-transparent'
-										: 'bg-[#ff5b3e]'}"
+										: 'bg-[var(--color-accent)]'}"
 								></span>
 								<div class="min-w-0">
 									<p class="text-sm font-medium {n.read ? 'text-[var(--color-muted)]' : ''}">

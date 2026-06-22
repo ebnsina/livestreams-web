@@ -1,7 +1,7 @@
 <script lang="ts">
 	let {
 		value = 0,
-		color = '#ff5b3e',
+		color = 'var(--color-accent)',
 		size = 76,
 		stroke = 8,
 		label = '',

@@ -5,8 +5,11 @@
 	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
 	import { toast } from '$lib/toast.svelte';
-	import { KeyRound } from '@lucide/svelte';
+	import { KeyRound, Plus } from '@lucide/svelte';
+
+	let createOpen = $state(false);
 
 	const qc = useQueryClient();
 
@@ -22,6 +25,7 @@
 		onSuccess: (k) => {
 			newKey = k.key ?? null;
 			name = '';
+			createOpen = false;
 			qc.invalidateQueries({ queryKey: keys.apiKeys });
 			toast.success('API key created');
 		},
@@ -46,39 +50,56 @@
 	}
 </script>
 
-<PageHeader icon={KeyRound} title="API Keys" subtitle="Use a key as Authorization: Bearer lsk_… to call the API programmatically" />
+<PageHeader
+	icon={KeyRound}
+	title="API Keys"
+	subtitle="Use a key as Authorization: Bearer lsk_… to call the API programmatically"
+>
+	{#snippet actions()}
+		{#if auth.canWrite}
+			<button class="btn-primary" onclick={() => (createOpen = true)}>
+				<Plus size={16} /> Create key
+			</button>
+		{/if}
+	{/snippet}
+</PageHeader>
 
 {#if newKey}
-	<div class="card mb-6 border-[#ff5b3e]/40 bg-[#ff5b3e]/5 p-5">
-		<p class="mb-2 text-sm font-medium text-[#ff5b3e]">API key created — copy it now, shown only once</p>
+	<div class="card mb-6 bg-[var(--color-accent)]/5 p-5">
+		<p class="mb-2 text-sm font-medium text-[var(--color-accent)]">
+			API key created — copy it now, shown only once
+		</p>
 		<CopyField label="Key" value={newKey} secret />
 	</div>
 {/if}
 
-{#if auth.canWrite}
+<Dialog bind:open={createOpen} title="Create API key" subtitle="Generate a key to call the API">
 	<form
-		class="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end"
+		class="space-y-4"
 		onsubmit={(e) => {
 			e.preventDefault();
 			create.mutate();
 		}}
 	>
-		<div class="flex-1">
+		<div>
 			<label class="label" for="name">Key name</label>
 			<input id="name" class="input" bind:value={name} placeholder="CI pipeline" required />
 		</div>
 		<div>
 			<label class="label" for="access">Access</label>
-			<select id="access" class="input w-auto" bind:value={access}>
+			<select id="access" class="input" bind:value={access}>
 				<option value="full">Read &amp; write</option>
 				<option value="read">Read only</option>
 			</select>
 		</div>
-		<button class="btn-primary" type="submit" disabled={create.isPending}>
-			{create.isPending ? 'Creating…' : 'Create key'}
-		</button>
+		<div class="flex justify-end gap-2 pt-2">
+			<button type="button" class="btn-ghost" onclick={() => (createOpen = false)}>Cancel</button>
+			<button class="btn-primary" type="submit" disabled={create.isPending}>
+				{create.isPending ? 'Creating…' : 'Create key'}
+			</button>
+		</div>
 	</form>
-{/if}
+</Dialog>
 
 <div class="card divide-y divide-[var(--color-border)] overflow-hidden">
 	{#if items.length === 0}
@@ -92,7 +113,7 @@
 						<span
 							class="rounded px-1.5 py-0.5 text-[10px] font-medium {isReadOnly(k.scopes)
 								? 'bg-sky-500/12 text-sky-500'
-								: 'bg-[#ff5b3e]/12 text-[#ff5b3e]'}"
+								: 'bg-[var(--color-accent)]/12 text-[var(--color-accent)]'}"
 						>
 							{isReadOnly(k.scopes) ? 'read-only' : 'read & write'}
 						</span>

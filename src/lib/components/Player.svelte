@@ -417,7 +417,11 @@
 			{#if live}
 				<p class="text-xs">Start publishing from OBS to this stream's ingest URL.</p>
 			{:else}
-				<button class="btn-ghost border-white/20 text-white" onclick={init}>
+				<button
+					class="btn bg-white/15 text-white hover:bg-white/25"
+					style="box-shadow: none"
+					onclick={init}
+				>
 					<RotateCcw size={14} /> Retry
 				</button>
 			{/if}
@@ -538,7 +542,7 @@
 								<button
 									class="block w-full px-3 py-1.5 text-left font-mono text-[11px] hover:bg-white/10 {selected ===
 									-1
-										? 'text-[#ff5b3e]'
+										? 'text-[var(--color-accent)]'
 										: 'text-white'}"
 									onclick={() => pick(-1)}>Auto</button
 								>
@@ -546,7 +550,7 @@
 									<button
 										class="flex w-full items-center justify-between px-3 py-1.5 text-left font-mono text-[11px] hover:bg-white/10 {selected ===
 										l.index
-											? 'text-[#ff5b3e]'
+											? 'text-[var(--color-accent)]'
 											: 'text-white'}"
 										onclick={() => pick(l.index)}
 									>
@@ -590,13 +594,13 @@
 		border-radius: 9999px;
 		background: linear-gradient(
 			to right,
-			#ff5b3e var(--v, 0%),
+			var(--color-accent) var(--v, 0%),
 			rgba(255, 255, 255, 0.28) var(--v, 0%)
 		);
 	}
 	/* Seek leaves the unplayed part transparent so the buffered bar shows through. */
 	.range.seek::-webkit-slider-runnable-track {
-		background: linear-gradient(to right, #ff5b3e var(--v, 0%), transparent var(--v, 0%));
+		background: linear-gradient(to right, var(--color-accent) var(--v, 0%), transparent var(--v, 0%));
 	}
 	.range::-webkit-slider-thumb {
 		-webkit-appearance: none;
@@ -604,7 +608,7 @@
 		height: 12px;
 		width: 12px;
 		border-radius: 9999px;
-		background: #ff5b3e;
+		background: var(--color-accent);
 		box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
 		transition: transform 0.1s;
 	}
@@ -624,19 +628,19 @@
 	.range::-moz-range-progress {
 		height: 4px;
 		border-radius: 9999px;
-		background: #ff5b3e;
+		background: var(--color-accent);
 	}
 	.range::-moz-range-thumb {
 		height: 12px;
 		width: 12px;
 		border: none;
 		border-radius: 9999px;
-		background: #ff5b3e;
+		background: var(--color-accent);
 		box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25);
 	}
 
 	.player:focus-visible {
-		outline: 2px solid #ff5b3e;
+		outline: 2px solid var(--color-accent);
 		outline-offset: 2px;
 	}
 </style>

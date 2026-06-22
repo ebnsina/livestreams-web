@@ -296,7 +296,7 @@
 						{/if}
 						{#if auth.canWrite}
 							<button
-								class="text-xs font-medium text-[#ff5b3e] hover:underline"
+								class="text-xs font-medium text-[var(--color-accent)] hover:underline"
 								onclick={() => {
 									scheduleVal = s.scheduled_at
 										? new Date(s.scheduled_at).toISOString().slice(0, 16)
@@ -371,7 +371,7 @@
 		<div class="grid gap-4 lg:grid-cols-2">
 			<div class="card p-5">
 				<h3 class="mb-3 text-sm font-semibold">Concurrent viewers</h3>
-				<Chart points={anSeries.map((p) => ({ t: p.t, v: p.viewers }))} color="#ff5b3e" height={140} />
+				<Chart points={anSeries.map((p) => ({ t: p.t, v: p.viewers }))} color="var(--color-accent)" height={140} />
 			</div>
 			<div class="card p-5">
 				<h3 class="mb-3 text-sm font-semibold">Average bitrate (kbps)</h3>
@@ -388,7 +388,8 @@
 	<!-- Sessions -->
 	<section class="mt-8">
 		<h2 class="mb-3 text-lg font-medium">Session history</h2>
-		<div class="card overflow-x-auto">
+		<div class="card overflow-hidden">
+			<div class="overflow-x-auto">
 			{#if (sessions.data?.data ?? []).length === 0}
 				<div class="p-6 text-sm text-[var(--color-muted)]">No sessions yet.</div>
 			{:else}
@@ -413,6 +414,7 @@
 					</tbody>
 				</table>
 			{/if}
+			</div>
 		</div>
 	</section>
 {/if}

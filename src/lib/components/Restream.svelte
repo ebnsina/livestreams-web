@@ -122,7 +122,7 @@
 					class="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-2)] py-0.5 pl-2 pr-1"
 				>
 					<button
-						class="font-medium hover:text-[#ff5b3e]"
+						class="font-medium hover:text-[var(--color-accent)]"
 						title="Apply {p.destination_ids.length} destinations"
 						onclick={() => applyPreset.mutate(p.id)}>{p.name}</button
 					>
@@ -155,7 +155,7 @@
 						>
 					</form>
 				{:else}
-					<button class="font-medium text-[#ff5b3e] hover:underline" onclick={() => (savingPreset = true)}
+					<button class="font-medium text-[var(--color-accent)] hover:underline" onclick={() => (savingPreset = true)}
 						>+ Save current</button
 					>
 				{/if}
@@ -240,7 +240,7 @@
 					{#if auth.canWrite}
 						<button
 							class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors {d.enabled
-								? 'bg-[#ff5b3e]'
+								? 'bg-[var(--color-accent)]'
 								: 'bg-[var(--color-border)]'}"
 							onclick={() => toggle.mutate({ destId: d.id, enabled: !d.enabled })}
 							disabled={toggle.isPending}
