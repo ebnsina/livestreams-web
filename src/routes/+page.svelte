@@ -69,6 +69,19 @@
 		}
 	];
 
+	// bento spans (lg, 4-col grid) per feature index — a big 2×2 hero tile + mix
+	const spans = [
+		'col-span-2 lg:row-span-2', // Go live (featured, big)
+		'col-span-2', // encoder
+		'', // multistream
+		'', // recording
+		'col-span-2', // captions
+		'col-span-2', // chat
+		'', // secure
+		'', // analytics
+		'col-span-2' // webhooks
+	];
+
 	const steps = [
 		{ n: '1', title: 'Create a stream', body: 'Pick webcam or encoder. Get an ingest URL, key, and a player instantly.' },
 		{ n: '2', title: 'Go live', body: 'Publish from the browser or your encoder. Adaptive HLS, recording and multistream kick in automatically.' },
@@ -77,10 +90,10 @@
 </script>
 
 <svelte:head>
-	<title>Livestreams — your own live & video platform</title>
+	<title>Livestreams — all-in-one live & video platform</title>
 	<meta
 		name="description"
-		content="Self-hosted live streaming and video platform: browser go-live, multistream, recording, AI captions, live chat, secure delivery, analytics and an API."
+		content="The all-in-one live streaming and video platform: browser go-live, multistream, recording, AI captions, live chat, secure delivery, analytics and an API."
 	/>
 </svelte:head>
 
@@ -117,18 +130,31 @@
 	</header>
 
 	<!-- Hero -->
-	<section class="mx-auto max-w-6xl px-5 pb-10 pt-14 text-center sm:px-8 sm:pt-24">
-		<span
-			class="squircle inline-flex items-center gap-1.5 rounded-full bg-[var(--color-accent)]/10 px-3 py-1 text-xs font-medium text-[var(--color-accent)]"
-		>
-			<Sparkles size={13} /> Self-hosted · own your audience &amp; data
-		</span>
-		<h1 class="mx-auto mt-5 max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
-			Your own live streaming &amp; video platform
+	<section class="mx-auto max-w-6xl px-5 pb-10 pt-16 text-center sm:px-8 sm:pt-28">
+		<h1 class="mx-auto max-w-3xl text-4xl font-semibold leading-[1.12] tracking-tight sm:text-6xl">
+			The all-in-one live
+			<span class="relative whitespace-nowrap">
+				streaming &amp; video
+				<svg
+					aria-hidden="true"
+					viewBox="0 0 320 14"
+					preserveAspectRatio="none"
+					class="absolute -bottom-2 left-0 h-3 w-full text-[var(--color-accent)]"
+				>
+					<path
+						d="M3 9 C 80 3, 150 3, 220 6 S 300 9, 317 5"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="4"
+						stroke-linecap="round"
+					/>
+				</svg>
+			</span>
+			platform
 		</h1>
 		<p class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-[var(--color-muted)]">
 			Go live from the browser or any encoder, multistream everywhere, record, caption, secure and
-			analyze — all on infrastructure you control.
+			analyze — all from one platform. No infrastructure to manage.
 		</p>
 		<div class="mt-8 flex items-center justify-center gap-3">
 			<a href={cta} class="btn-primary px-6 py-3 text-base">
@@ -165,17 +191,33 @@
 				One platform for ingest, delivery, engagement and monetization.
 			</p>
 		</div>
-		<div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-			{#each features as f (f.title)}
+		<div class="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:auto-rows-[182px]">
+			{#each features as f, i (f.title)}
 				{@const Icon = f.icon}
-				<div class="card p-6">
+				{@const featured = i === 0}
+				<div
+					class="card flex flex-col p-6 {spans[i]} {featured
+						? 'bg-gradient-to-br from-[var(--color-accent-2)] to-[var(--color-accent)] text-white'
+						: ''}"
+					style={featured ? 'box-shadow: var(--shadow-accent)' : ''}
+				>
 					<div
-						class="squircle flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--color-accent)]/12 text-[var(--color-accent)]"
+						class="squircle flex items-center justify-center rounded-xl {featured
+							? 'h-14 w-14 bg-white/15 text-white'
+							: 'h-11 w-11 bg-[var(--color-accent)]/12 text-[var(--color-accent)]'}"
 					>
-						<Icon size={20} />
+						<Icon size={featured ? 26 : 20} />
 					</div>
-					<h3 class="mt-4 font-semibold">{f.title}</h3>
-					<p class="mt-1.5 text-sm leading-relaxed text-[var(--color-muted)]">{f.body}</p>
+					<div class="mt-auto pt-4">
+						<h3 class="font-semibold {featured ? 'text-2xl tracking-tight' : ''}">{f.title}</h3>
+						<p
+							class="mt-1.5 leading-relaxed {featured
+								? 'text-white/85'
+								: 'text-sm text-[var(--color-muted)]'}"
+						>
+							{f.body}
+						</p>
+					</div>
 				</div>
 			{/each}
 		</div>
@@ -201,7 +243,7 @@
 		</div>
 	</section>
 
-	<!-- Own it -->
+	<!-- Managed -->
 	<section class="mx-auto max-w-6xl px-5 py-16 sm:px-8">
 		<div class="card grid grid-cols-1 items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
 			<div>
@@ -210,14 +252,14 @@
 				>
 					<Server size={20} />
 				</div>
-				<h2 class="mt-4 text-3xl font-semibold tracking-tight">Own your platform</h2>
+				<h2 class="mt-4 text-3xl font-semibold tracking-tight">Fully managed, scales with you</h2>
 				<p class="mt-3 text-[var(--color-muted)]">
-					No per-viewer fees, no vendor lock-in, no algorithm in the middle. Run it on your own
-					servers and storage, keep 100% of your audience relationship, and extend it with the API.
+					No servers to run, no media stack to babysit. We handle ingest, transcoding, storage and
+					delivery — you just go live. Start free and upgrade as you grow.
 				</p>
 			</div>
 			<ul class="grid gap-3">
-				{#each ['Self-hosted — your servers, your S3/MinIO storage', 'Bring-your-own AI provider & OAuth apps', 'Signed, expiring, domain-locked delivery', 'Teams, roles & multi-tenant organizations', 'Open REST API, webhooks & embeddable player'] as point (point)}
+				{#each ['Managed ingest, transcoding & global delivery', 'Connect YouTube, Twitch & your AI provider', 'Signed, expiring, domain-locked delivery', 'Teams, roles & organizations built in', 'Open REST API, webhooks & embeddable player'] as point (point)}
 					<li class="flex items-start gap-3">
 						<span
 							class="squircle mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-[var(--color-accent)] text-white"
@@ -260,7 +302,7 @@
 		>
 			<div class="flex items-center gap-2">
 				<KeyRound size={14} />
-				<span>Livestreams — self-hosted live &amp; video</span>
+				<span>Livestreams — live &amp; video platform</span>
 			</div>
 			<div class="flex gap-5">
 				<a href="/login" class="hover:text-[var(--color-text)]">Sign in</a>
