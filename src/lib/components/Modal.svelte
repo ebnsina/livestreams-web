@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { fade, scale } from 'svelte/transition';
 	import { X } from '@lucide/svelte';
 
 	let {
@@ -18,13 +19,18 @@
 
 {#if open}
 	<div class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-8">
-		<button class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick={onClose} aria-label="Close"
+		<button
+			class="fixed inset-0 bg-black/40 backdrop-blur-sm"
+			onclick={onClose}
+			aria-label="Close"
+			transition:fade={{ duration: 150 }}
 		></button>
 		<div
 			class="card relative z-10 my-auto w-full max-w-2xl"
 			role="dialog"
 			aria-modal="true"
 			aria-label={title}
+			transition:scale={{ start: 0.96, opacity: 0, duration: 180 }}
 		>
 			<header
 				class="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3.5"

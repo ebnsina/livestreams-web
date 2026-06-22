@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { fade, scale } from 'svelte/transition';
 	import { X } from '@lucide/svelte';
 
 	let {
@@ -41,6 +42,7 @@
 			onclick={close}
 			aria-label="Close dialog"
 			tabindex="-1"
+			transition:fade={{ duration: 150 }}
 		></button>
 
 		<!-- panel -->
@@ -49,6 +51,7 @@
 			style="box-shadow: var(--shadow-pop)"
 			role="dialog"
 			aria-modal="true"
+			transition:scale={{ start: 0.96, opacity: 0, duration: 180 }}
 		>
 			<div class="mb-5 flex items-start justify-between gap-4">
 				<div>

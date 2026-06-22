@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { fly } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 	import { toasts } from '$lib/toast.svelte';
 	import { CheckCircle2, XCircle, Info, X } from '@lucide/svelte';
 
@@ -16,6 +18,9 @@
 		<div
 			class="pointer-events-auto flex items-start gap-2.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-lg"
 			role="status"
+			in:fly={{ x: 28, duration: 220 }}
+			out:fly={{ x: 28, duration: 160 }}
+			animate:flip={{ duration: 200 }}
 		>
 			<Icon size={18} class="mt-0.5 shrink-0 {accent[t.kind]}" />
 			<p class="flex-1 text-sm">{t.message}</p>

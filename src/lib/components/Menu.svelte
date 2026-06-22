@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { scale } from 'svelte/transition';
 	import { MoreHorizontal } from '@lucide/svelte';
 
 	let { children, label = 'Actions' }: { children: Snippet; label?: string } = $props();
@@ -51,9 +52,10 @@
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
 		class="fixed z-50 min-w-[160px] overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-lg"
-		style={style}
+		style="{style}; transform-origin: top right"
 		role="menu"
 		tabindex="-1"
+		transition:scale={{ start: 0.9, opacity: 0, duration: 130 }}
 		onclick={() => (open = false)}
 	>
 		{@render children()}
