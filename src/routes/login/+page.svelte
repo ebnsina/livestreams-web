@@ -41,7 +41,10 @@
 				<input id="email" class="input" type="email" bind:value={email} required />
 			</div>
 			<div>
-				<label class="label" for="password">Password</label>
+				<div class="mb-1.5 flex items-center justify-between">
+					<label class="label mb-0" for="password">Password</label>
+					<a class="text-xs font-medium text-[#ff5b3e] hover:underline" href="/forgot">Forgot?</a>
+				</div>
 				<input id="password" class="input" type="password" bind:value={password} required />
 			</div>
 

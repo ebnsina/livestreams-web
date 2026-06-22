@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 	import { theme } from '$lib/theme.svelte';
+	import Toaster from '$lib/components/Toaster.svelte';
 
 	let { children } = $props();
 
@@ -20,3 +21,4 @@
 <QueryClientProvider client={queryClient}>
 	{@render children()}
 </QueryClientProvider>
+<Toaster />

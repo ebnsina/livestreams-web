@@ -84,6 +84,18 @@ export const api = {
 		request<AuthResponse>('/v1/auth/register', { method: 'POST', body: input, auth: false }),
 	login: (input: { email: string; password: string }) =>
 		request<AuthResponse>('/v1/auth/login', { method: 'POST', body: input, auth: false }),
+	forgotPassword: (email: string) =>
+		request<{ status: string }>('/v1/auth/forgot-password', {
+			method: 'POST',
+			body: { email },
+			auth: false
+		}),
+	resetPassword: (token: string, new_password: string) =>
+		request<{ status: string }>('/v1/auth/reset-password', {
+			method: 'POST',
+			body: { token, new_password },
+			auth: false
+		}),
 	me: () => request<{ user: User; orgs: Org[]; role: string; org_id: string }>('/v1/me'),
 	switchOrg: (org_id: string) =>
 		request<{ access_token: string; refresh_token: string }>('/v1/me/switch-org', {

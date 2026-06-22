@@ -2,6 +2,7 @@
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api, ApiError } from '$lib/api';
 	import { keys } from '$lib/query';
+	import { toast } from '$lib/toast.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { Settings } from '@lucide/svelte';
 
@@ -45,7 +46,11 @@
 
 	const saveName = createMutation(() => ({
 		mutationFn: () => api.updateProfile(name),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.me })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.me });
+			toast.success('Profile updated');
+		},
+		onError: () => toast.error('Could not update profile')
 	}));
 
 	let current = $state('');
@@ -70,7 +75,10 @@
 
 	const setEmail = createMutation(() => ({
 		mutationFn: (enabled: boolean) => api.setEmailNotifications(enabled),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.me })
+		onSuccess: (_d, enabled) => {
+			qc.invalidateQueries({ queryKey: keys.me });
+			toast.success(enabled ? 'Email notifications on' : 'Email notifications off');
+		}
 	}));
 </script>
 
