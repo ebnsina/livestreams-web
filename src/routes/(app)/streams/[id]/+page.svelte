@@ -10,6 +10,7 @@
 	import ScheduleBadge from '$lib/components/ScheduleBadge.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 	import BrowserGoLive from '$lib/components/BrowserGoLive.svelte';
+	import ChatPanel from '$lib/components/ChatPanel.svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Recordings from '$lib/components/Recordings.svelte';
@@ -329,6 +330,10 @@
 			</div>
 
 			<Restream streamId={id} />
+
+			{#if auth.canWrite}
+				<ChatPanel />
+			{/if}
 
 			<Recordings assets={recordings.data?.data ?? []} />
 		</div>

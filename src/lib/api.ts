@@ -163,6 +163,11 @@ export const api = {
 	// SSE URL for live transcode-progress of an asset
 	assetEventStreamUrl: (id: string) =>
 		`${BASE}/v1/assets/${id}/events/stream?access_token=${encodeURIComponent(auth.token ?? '')}`,
+	// unified live chat (YouTube + Twitch)
+	chatStreamUrl: () =>
+		`${BASE}/v1/chat/stream?access_token=${encodeURIComponent(auth.token ?? '')}`,
+	sendChat: (text: string) =>
+		request<{ sent: string[] }>('/v1/chat/send', { method: 'POST', body: { text } }),
 
 	// analytics
 	analyticsOverview: (range: '24h' | '7d' | '30d') =>
