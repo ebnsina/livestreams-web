@@ -120,6 +120,32 @@ export interface StreamAnalytics {
 	series: AnalyticsPoint[];
 }
 
+export interface Breakdown {
+	name: string;
+	views: number;
+}
+
+// Per-view engagement + QoE insights (Mux-Data / Vimeo style), org-wide or
+// per-stream depending on the endpoint.
+export interface Insights {
+	range: string;
+	summary: {
+		views: number;
+		unique_viewers: number;
+		total_watch_ms: number;
+		avg_watch_ms: number;
+		avg_startup_ms: number;
+		total_rebuffers: number;
+		rebuffer_rate: number; // 0..1
+		error_rate: number; // 0..1
+		completion_rate: number; // 0..1
+	};
+	countries: Breakdown[];
+	devices: Breakdown[];
+	browsers: Breakdown[];
+	oses: Breakdown[];
+}
+
 export interface Asset {
 	id: string;
 	title: string;

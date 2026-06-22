@@ -22,6 +22,7 @@ import type {
 	Org,
 	AnalyticsOverview,
 	StreamAnalytics,
+	Insights,
 	Paginated,
 	Notification,
 	SimulcastPreset
@@ -180,6 +181,22 @@ export const api = {
 			keepalive: true
 		}).catch(() => {});
 	},
+	// rich per-view playback tracking (no auth). `beacon` uses navigator.sendBeacon
+	// so the final flush survives page unload.
+	track: (body: unknown, beacon = false) => {
+		const url = `${BASE}/v1/playback/track`;
+		const json = JSON.stringify(body);
+		if (beacon && typeof navigator !== 'undefined' && navigator.sendBeacon) {
+			navigator.sendBeacon(url, new Blob([json], { type: 'application/json' }));
+			return;
+		}
+		fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: json,
+			keepalive: true
+		}).catch(() => {});
+	},
 
 	// activity log (history)
 	events: (id: string) => request<{ data: StreamEvent[] }>(`/v1/streams/${id}/events`),
@@ -202,6 +219,10 @@ export const api = {
 		request<AnalyticsOverview>(`/v1/analytics/overview?range=${range}`),
 	streamAnalytics: (id: string, range: '24h' | '7d' | '30d') =>
 		request<StreamAnalytics>(`/v1/analytics/stream?stream_id=${id}&range=${range}`),
+	insights: (range: '24h' | '7d' | '30d') =>
+		request<Insights>(`/v1/analytics/insights?range=${range}`),
+	streamInsights: (id: string, range: '24h' | '7d' | '30d') =>
+		request<Insights>(`/v1/analytics/stream/insights?stream_id=${id}&range=${range}`),
 
 	// jobs & org-wide activity
 	jobs: () => request<{ data: Job[] }>('/v1/jobs'),

@@ -5,6 +5,7 @@
 	import Chart from '$lib/components/Chart.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import AnimatedNumber from '$lib/components/AnimatedNumber.svelte';
+	import InsightsPanel from '$lib/components/InsightsPanel.svelte';
 	import { BarChart3 } from '@lucide/svelte';
 
 	let range = $state<'24h' | '7d' | '30d'>('24h');
@@ -13,6 +14,12 @@
 		queryKey: keys.analytics(range),
 		queryFn: () => api.analyticsOverview(range),
 		refetchInterval: 15000
+	}));
+
+	const insights = createQuery(() => ({
+		queryKey: ['insights', range],
+		queryFn: () => api.insights(range),
+		refetchInterval: 30000
 	}));
 
 	const data = $derived(overview.data);
@@ -83,6 +90,12 @@
 		</div>
 	{/each}
 </div>
+
+<!-- audience & engagement -->
+<section class="mb-6">
+	<h2 class="mb-3 text-sm font-semibold">Audience &amp; engagement</h2>
+	<InsightsPanel insights={insights.data} />
+</section>
 
 <!-- charts -->
 <div class="grid gap-4 lg:grid-cols-2">

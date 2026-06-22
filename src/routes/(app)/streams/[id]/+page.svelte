@@ -20,6 +20,7 @@
 	import Chart from '$lib/components/Chart.svelte';
 	import EmbedSnippet from '$lib/components/EmbedSnippet.svelte';
 	import AnimatedNumber from '$lib/components/AnimatedNumber.svelte';
+	import InsightsPanel from '$lib/components/InsightsPanel.svelte';
 	import { toast } from '$lib/toast.svelte';
 
 	const qc = useQueryClient();
@@ -32,6 +33,11 @@
 		refetchInterval: 15000
 	}));
 	const anSeries = $derived(analytics.data?.series ?? []);
+	const insights = createQuery(() => ({
+		queryKey: ['streams', id, 'insights', anRange],
+		queryFn: () => api.streamInsights(id, anRange),
+		refetchInterval: 30000
+	}));
 	const anRanges: { id: '24h' | '7d' | '30d'; label: string }[] = [
 		{ id: '24h', label: '24h' },
 		{ id: '7d', label: '7d' },
@@ -431,6 +437,9 @@
 					<AnimatedNumber value={analytics.data?.summary.total_rebuffers ?? 0} />
 				</p>
 			</div>
+		</div>
+		<div class="mb-4">
+			<InsightsPanel insights={insights.data} />
 		</div>
 		<div class="grid gap-4 lg:grid-cols-2">
 			<div class="card p-5">

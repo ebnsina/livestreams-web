@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Hls from 'hls.js';
 	import { onDestroy } from 'svelte';
-	import { api } from '$lib/api';
+	import { PlaybackTracker } from '$lib/tracker';
 	import {
 		Play,
 		Pause,
@@ -14,7 +14,8 @@
 		Settings2,
 		RotateCcw,
 		Lock,
-		Loader2
+		Loader2,
+		Radio
 	} from '@lucide/svelte';
 
 	let {
@@ -71,35 +72,18 @@
 
 	const isHls = $derived(/\.m3u8(\?|$)/i.test(src));
 
-	// --- QoS tracking ---
-	const viewerId = typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(36);
-	let startedAt = 0;
-	let startupMs = 0;
-	let rebufferStart = 0;
-	let rebufferMs = 0;
-	let beaconTimer: ReturnType<typeof setInterval> | null = null;
-
-	function beacon() {
-		if (!streamId) return;
-		const br =
-			playingLevel >= 0 && levels[playingLevel] ? Math.round(levels[playingLevel].bitrate / 1000) : 0;
-		api.sendBeacon({
-			stream_id: streamId,
-			viewer_id: viewerId,
-			startup_ms: Math.round(startupMs),
-			rebuffers,
-			rebuffer_ms: Math.round(rebufferMs),
-			bitrate_kbps: br
-		});
-	}
+	// --- playback tracking (per-view QoS + engagement) ---
+	let tracker: PlaybackTracker | null = null;
 
 	let wrap = $state<HTMLDivElement>();
 	let video = $state<HTMLVideoElement>();
 	let hls: Hls | null = null;
 	let error = $state(false);
 	let errorKind = $state<'generic' | 'protected' | 'notready'>('generic');
+	let ended = $state(false); // live stream has stopped publishing
 	let retries = $state(0);
 	let retry: ReturnType<typeof setTimeout> | null = null;
+	let endWatchdog: ReturnType<typeof setTimeout> | null = null;
 
 	// quality / rendition state
 	type Level = { name: string; index: number; bitrate: number };
@@ -117,7 +101,6 @@
 	let bufferedEnd = $state(0);
 	let isFs = $state(false);
 	let buffering = $state(false);
-	let rebuffers = $state(0);
 	let controlsShown = $state(true);
 	let hideTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -141,10 +124,38 @@
 	$effect(() => {
 		void reload;
 		void src;
-		void live;
 		restart();
 		return teardown;
 	});
+
+	// Detect a live stream ending: when the parent flips `live` true→false
+	// (owner stopped / status went offline), stop the spinner and show the
+	// ended overlay instead of buffering forever.
+	let prevLive = false;
+	$effect(() => {
+		const now = live;
+		if (prevLive && !now && !error) markEnded();
+		prevLive = now;
+	});
+
+	function clearWatchdog() {
+		if (endWatchdog) {
+			clearTimeout(endWatchdog);
+			endWatchdog = null;
+		}
+	}
+
+	// The stream stopped publishing: freeze on the last frame, surface a clean
+	// "ended" state, and stop the QoS beacon. A manual reload can recover if it
+	// was a false positive (e.g. a long network stall the watchdog tripped on).
+	function markEnded() {
+		if (ended) return;
+		ended = true;
+		buffering = false;
+		clearWatchdog();
+		tracker?.end();
+		hls?.stopLoad();
+	}
 
 	// restart resets retry/error state then (re)initializes — used on src change
 	// and the manual Retry button. Auto-retries call init() directly.
@@ -156,16 +167,22 @@
 
 	function init() {
 		error = false;
+		ended = false;
 		buffering = false;
+		clearWatchdog();
 		levels = [];
 		selected = -1;
-		startedAt = performance.now();
-		startupMs = 0;
-		rebufferMs = 0;
-		rebufferStart = 0;
 		teardown();
 		if (!video || !src) return;
-		beaconTimer = setInterval(beacon, 10000);
+		if (streamId) {
+			tracker = new PlaybackTracker({
+				streamId,
+				streamType: live ? 'live' : 'vod',
+				player: isHls && Hls.isSupported() ? 'hls.js' : 'native',
+				playerVersion: isHls ? Hls.version : ''
+			});
+			tracker.start();
+		}
 
 		if (isHls && Hls.isSupported()) {
 			// Standard HLS (4s segments) — not LL-HLS — so lowLatencyMode would stall.
@@ -180,7 +197,23 @@
 						bitrate: l.bitrate
 					})) ?? [];
 			});
-			hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => (playingLevel = data.level));
+			hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
+				playingLevel = data.level;
+				const l = hls?.levels[data.level];
+				if (l) tracker?.quality(Math.round(l.bitrate / 1000), l.height ?? 0);
+			});
+			// The publisher appended #EXT-X-ENDLIST — a live playlist became final,
+			// i.e. the stream stopped. Wait for playout to reach the end, then end.
+			hls.on(Hls.Events.LEVEL_UPDATED, (_e, data) => {
+				if (live && data.details && data.details.live === false) {
+					const remaining = data.details.totalduration - (video?.currentTime ?? 0);
+					clearWatchdog();
+					endWatchdog = setTimeout(markEnded, Math.max(0, remaining * 1000));
+				}
+			});
+			hls.on(Hls.Events.BUFFER_EOS, () => {
+				if (live) markEnded();
+			});
 			hls.on(Hls.Events.ERROR, (_e, data) => {
 				if (!data.fatal) return;
 				const code = data.response?.code;
@@ -197,6 +230,7 @@
 				} else {
 					errorKind = 'generic';
 					error = true;
+					tracker?.error(data.details || 'fatal playback error');
 				}
 			});
 		} else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -224,19 +258,20 @@
 
 	// --- video events ---
 	function onWaiting() {
+		if (ended) return;
 		buffering = true;
-		rebuffers += 1;
-		rebufferStart = performance.now();
+		tracker?.rebufferStarted();
+		// On a live stream, an indefinite stall almost always means the publisher
+		// went away. If we're still buffering after a grace period, call it ended.
+		if (live) {
+			clearWatchdog();
+			endWatchdog = setTimeout(() => buffering && markEnded(), 20000);
+		}
 	}
 	function onResume() {
-		if (rebufferStart) {
-			rebufferMs += performance.now() - rebufferStart;
-			rebufferStart = 0;
-		}
-		if (startupMs === 0 && startedAt) {
-			startupMs = performance.now() - startedAt;
-			beacon();
-		}
+		clearWatchdog();
+		tracker?.rebufferEnded();
+		tracker?.playing();
 		buffering = false;
 	}
 	function onTime() {
@@ -331,13 +366,14 @@
 	}
 
 	function teardown() {
-		if (beaconTimer) {
-			clearInterval(beaconTimer);
-			beaconTimer = null;
-		}
+		clearWatchdog();
 		if (retry) {
 			clearTimeout(retry);
 			retry = null;
+		}
+		if (tracker) {
+			tracker.end();
+			tracker = null;
 		}
 		if (hls) {
 			hls.destroy();
@@ -392,11 +428,19 @@
 		poster={poster || undefined}
 		bind:muted
 		bind:volume
-		onplay={() => (paused = false)}
-		onpause={() => (paused = true)}
+		onplay={() => {
+			paused = false;
+			tracker?.playing();
+		}}
+		onpause={() => {
+			paused = true;
+			tracker?.paused();
+		}}
+		onseeked={() => tracker?.seeked()}
 		onwaiting={onWaiting}
 		onplaying={onResume}
 		oncanplay={onResume}
+		onended={() => (live ? markEnded() : tracker?.end(true))}
 		ontimeupdate={onTime}
 		onprogress={onTime}
 		onloadedmetadata={onTime}
@@ -411,7 +455,7 @@
 	</video>
 
 	<!-- LIVE badge -->
-	{#if live}
+	{#if live && !ended}
 		<div class="pointer-events-none absolute left-3 top-3 z-10">
 			<span
 				class="inline-flex items-center gap-1.5 rounded-md bg-black/55 px-2 py-1 text-[11px] font-semibold tracking-wide text-white backdrop-blur"
@@ -422,11 +466,11 @@
 	{/if}
 
 	<!-- center play / buffering -->
-	{#if buffering && !error}
+	{#if buffering && !error && !ended}
 		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
 			<div class="h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
 		</div>
-	{:else if paused && !error}
+	{:else if paused && !error && !ended}
 		<button
 			class="absolute inset-0 z-10 flex items-center justify-center"
 			onclick={togglePlay}
@@ -440,8 +484,24 @@
 		</button>
 	{/if}
 
+	<!-- ended overlay -->
+	{#if ended}
+		<div
+			class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/75 px-6 text-center text-sm text-white/70"
+		>
+			<span class="flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
+				<Radio size={24} class="text-white/80" />
+			</span>
+			<p class="text-base font-medium text-white/90">This live stream has ended</p>
+			<p class="max-w-xs text-xs">Thanks for watching. A recording may appear here shortly.</p>
+			<button class="btn bg-white/15 text-white hover:bg-white/25" style="box-shadow:none" onclick={restart}>
+				<RotateCcw size={14} /> Reload
+			</button>
+		</div>
+	{/if}
+
 	<!-- error / waiting overlay -->
-	{#if error}
+	{#if error && !ended}
 		<div
 			class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/75 px-6 text-center text-sm text-white/70"
 		>
