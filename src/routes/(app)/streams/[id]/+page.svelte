@@ -230,7 +230,7 @@
 		<div class="min-w-0 space-y-4">
 			<Player src={s.playback_url} live={isLive} reload={playerReload} streamId={id} />
 
-			{#if auth.canWrite && s.ingest?.whip_url && !isLive}
+			{#if auth.canWrite && s.ingest?.whip_url}
 				<BrowserGoLive whipUrl={s.ingest.whip_url} />
 			{/if}
 
