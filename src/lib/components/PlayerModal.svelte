@@ -25,7 +25,11 @@
 	{#if asset}
 		{#if url}
 			{#key url}
-				<Player src={url} poster={asset.thumbnail ? api.thumbnailUrl(asset.id) : ''} />
+				<Player
+					src={url}
+					poster={asset.thumbnail ? api.thumbnailUrl(asset.id) : ''}
+					storyboard={asset.storyboard ? api.storyboardUrl(asset.id) : ''}
+				/>
 			{/key}
 		{:else if error}
 			<p class="py-6 text-center text-sm text-red-500">Could not load the video.</p>

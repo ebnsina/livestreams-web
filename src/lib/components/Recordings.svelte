@@ -72,9 +72,14 @@
 	</div>
 
 	{#if playingUrl}
+		{@const pa = assets.find((a) => a.id === playingId)}
 		<div class="border-b border-[var(--color-border)] bg-black p-3">
 			{#key playingUrl}
-				<Player src={playingUrl} />
+				<Player
+					src={playingUrl}
+					poster={pa?.thumbnail ? api.thumbnailUrl(pa.id) : ''}
+					storyboard={pa?.storyboard ? api.storyboardUrl(pa.id) : ''}
+				/>
 			{/key}
 		</div>
 	{/if}

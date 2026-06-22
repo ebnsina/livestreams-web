@@ -115,6 +115,7 @@ export interface Asset {
 	size_bytes: number;
 	error?: string;
 	thumbnail?: boolean;
+	storyboard?: boolean;
 	created_at: string;
 }
 

@@ -148,6 +148,8 @@ export const api = {
 		request<Paginated<Asset>>(`/v1/assets${qs(params)}`),
 	thumbnailUrl: (id: string) =>
 		`${BASE}/v1/assets/${id}/thumbnail?access_token=${encodeURIComponent(auth.token ?? '')}`,
+	storyboardUrl: (id: string) =>
+		`${BASE}/v1/assets/${id}/storyboard.vtt?access_token=${encodeURIComponent(auth.token ?? '')}`,
 	transcodeLogs: (id: string) =>
 		request<{ status: string; logs: { stage: string; line: string; at: string }[] }>(
 			`/v1/assets/${id}/transcode`

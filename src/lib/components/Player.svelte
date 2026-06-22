@@ -20,8 +20,50 @@
 		live = false,
 		reload = 0,
 		streamId = '',
-		poster = ''
-	}: { src: string; live?: boolean; reload?: number; streamId?: string; poster?: string } = $props();
+		poster = '',
+		storyboard = ''
+	}: {
+		src: string;
+		live?: boolean;
+		reload?: number;
+		streamId?: string;
+		poster?: string;
+		storyboard?: string;
+	} = $props();
+
+	// seek-preview storyboard (WebVTT sprite tiles)
+	type SBCue = { start: number; end: number; img: string; x: number; y: number; w: number; h: number };
+	let cues = $state<SBCue[]>([]);
+	let seekWrap = $state<HTMLDivElement>();
+	let hoverPct = $state(-1);
+
+	function tsec(s: string) {
+		const [h, m, rest] = s.trim().split(':');
+		return +h * 3600 + +m * 60 + parseFloat(rest);
+	}
+	function parseVtt(text: string): SBCue[] {
+		const out: SBCue[] = [];
+		for (const block of text.split(/\r?\n\r?\n/)) {
+			const lines = block.trim().split(/\r?\n/);
+			const tl = lines.find((l) => l.includes('-->'));
+			const ul = lines.find((l) => l.includes('#xywh='));
+			if (!tl || !ul) continue;
+			const [a, b] = tl.split('-->');
+			const [base, frag] = ul.trim().split('#xywh=');
+			const [x, y, w, h] = frag.split(',').map(Number);
+			out.push({ start: tsec(a), end: tsec(b), img: base, x, y, w, h });
+		}
+		return out;
+	}
+	$effect(() => {
+		cues = [];
+		if (storyboard) {
+			fetch(storyboard)
+				.then((r) => r.text())
+				.then((t) => (cues = parseVtt(t)))
+				.catch(() => (cues = []));
+		}
+	});
 
 	const isHls = $derived(/\.m3u8(\?|$)/i.test(src));
 
@@ -76,6 +118,18 @@
 	const hasDuration = $derived(duration > 0 && isFinite(duration));
 	const playedPct = $derived(hasDuration ? Math.min(100, (current / duration) * 100) : live ? 100 : 0);
 	const bufferedPct = $derived(hasDuration ? Math.min(100, (bufferedEnd / duration) * 100) : 0);
+
+	// seek-preview hover (depends on duration, declared above)
+	const hoverTime = $derived(hasDuration && hoverPct >= 0 ? (hoverPct / 100) * duration : -1);
+	const hoverCue = $derived.by(() => {
+		if (hoverTime < 0 || cues.length === 0) return null;
+		return cues.find((c) => hoverTime >= c.start && hoverTime < c.end) ?? cues[cues.length - 1];
+	});
+	function onSeekHover(e: PointerEvent) {
+		if (!seekWrap || !hasDuration) return;
+		const r = seekWrap.getBoundingClientRect();
+		hoverPct = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100));
+	}
 	const controlsVisible = $derived(controlsShown || paused);
 
 	$effect(() => {
@@ -377,7 +431,26 @@
 			: 'pointer-events-none opacity-0'}"
 	>
 		<!-- seek bar -->
-		<div class="relative mb-2 flex h-3.5 items-center">
+		<div
+			bind:this={seekWrap}
+			class="relative mb-2 flex h-3.5 items-center"
+			onpointermove={onSeekHover}
+			onpointerleave={() => (hoverPct = -1)}
+			role="presentation"
+		>
+			<!-- seek-preview thumbnail -->
+			{#if hoverCue && hoverPct >= 0}
+				<div
+					class="pointer-events-none absolute bottom-6 z-10 -translate-x-1/2"
+					style="left: {hoverPct}%"
+				>
+					<div
+						class="overflow-hidden rounded-md border border-white/25 shadow-lg"
+						style="width:{hoverCue.w}px;height:{hoverCue.h}px;background-image:url('{hoverCue.img}');background-position:-{hoverCue.x}px -{hoverCue.y}px;background-repeat:no-repeat"
+					></div>
+					<p class="mt-1 text-center font-mono text-[10px] text-white drop-shadow">{fmt(hoverTime)}</p>
+				</div>
+			{/if}
 			<!-- base + buffered track (behind the range, which has a transparent unplayed track) -->
 			<div class="pointer-events-none absolute h-1 w-full rounded-full bg-white/20"></div>
 			<div
