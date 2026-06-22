@@ -163,6 +163,8 @@ export const api = {
 	// SSE URL for live transcode-progress of an asset
 	assetEventStreamUrl: (id: string) =>
 		`${BASE}/v1/assets/${id}/events/stream?access_token=${encodeURIComponent(auth.token ?? '')}`,
+	// WebRTC browser publish — proxied through our API (same-origin, authed)
+	whipUrl: (streamId: string) => `${BASE}/v1/streams/${streamId}/whip`,
 	// unified live chat (YouTube + Twitch)
 	chatStreamUrl: () =>
 		`${BASE}/v1/chat/stream?access_token=${encodeURIComponent(auth.token ?? '')}`,

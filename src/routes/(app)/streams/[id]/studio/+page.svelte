@@ -58,7 +58,7 @@
 {:else}
 	<div class="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
 		<div class="space-y-4">
-			<BrowserGoLive whipUrl={s.ingest.whip_url} />
+			<BrowserGoLive whipUrl={api.whipUrl(id)} />
 			<div class="card space-y-3 p-5">
 				<h2 class="text-sm font-semibold text-[var(--color-muted)]">How viewers watch</h2>
 				<CopyField label="Playback URL (HLS)" value={s.playback_url} />

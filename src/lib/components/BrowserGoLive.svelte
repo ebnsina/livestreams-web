@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { toast } from '$lib/toast.svelte';
+	import { auth } from '$lib/auth.svelte';
 	import { Video, VideoOff, Mic, MicOff, MonitorUp, Radio, Loader2 } from '@lucide/svelte';
 
 	let { whipUrl }: { whipUrl: string } = $props();
@@ -11,6 +13,20 @@
 	let camOn = $state(true);
 	let micOn = $state(true);
 	let sharing = $state(false);
+
+	// Robustly attach the stream to the <video> whenever either changes, and
+	// force playback (autoplay can be flaky after a dynamic srcObject swap).
+	$effect(() => {
+		if (videoEl && stream) {
+			videoEl.srcObject = stream;
+			videoEl.play().catch(() => {});
+		}
+	});
+
+	// Start the camera preview as soon as the studio opens.
+	onMount(() => {
+		startPreview(false);
+	});
 
 	async function startPreview(screen = false) {
 		try {
@@ -24,7 +40,6 @@
 			sharing = screen;
 			camOn = true;
 			micOn = true;
-			if (videoEl) videoEl.srcObject = stream;
 			if (phase === 'idle') phase = 'preview';
 			// if we were already live, swap the outgoing tracks
 			if (pc && phase === 'live') await replaceTracks();
@@ -74,7 +89,10 @@
 
 			const res = await fetch(whipUrl, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/sdp' },
+				headers: {
+					'Content-Type': 'application/sdp',
+					Authorization: `Bearer ${auth.token ?? ''}`
+				},
 				body: offer.sdp ?? ''
 			});
 			if (!res.ok) throw new Error(`Ingest rejected the broadcast (${res.status})`);
