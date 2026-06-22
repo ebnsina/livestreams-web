@@ -1,7 +1,10 @@
 # livestreams-web — agent guide
 
-SvelteKit **SPA** dashboard for a self-hosted livestreaming SaaS. This repo is
-**independent**; it has no backend code and talks to the API **only over HTTP**.
+SvelteKit **SPA** for a self-hosted **live streaming & video platform** — a public
+marketing landing page plus the operator dashboard (go live from the browser or an
+encoder, multistream, recordings/VOD, transcodes, AI captions, unified live chat,
+secure delivery, analytics). This repo is **independent**; it has no backend code and
+talks to the API **only over HTTP**.
 
 - **Backend repo:** `../api` (Go REST API + media workers).
   It owns the API contract and the architecture docs:
@@ -64,5 +67,19 @@ pnpm format / lint       # Prettier
 ```
 
 ## Status
-Phase 1 dashboard complete: auth, dashboard, streams list/create, stream detail (hls.js
-player, ingest key reveal/rotate, live polling, session history). Backend billing is mocked.
+Full product UI, well beyond the original dashboard:
+
+- **Marketing landing page** at `/` (public), 2-column auth pages (`AuthShell`).
+- **Dashboard shell:** sidebar + topbar; pages for streams, recordings, transcodes,
+  analytics (custom charts w/ axes + hover), jobs, logs, webhooks, API keys, team,
+  settings (incl. theme + BYO OAuth/AI).
+- **Streams:** create (choose webcam vs encoder), detail (hls.js player, ingest
+  reveal/rotate, QoS, multistream, recordings, activity), and a dedicated **Studio**
+  (`/streams/[id]/studio`) for browser go-live (WebRTC/WHIP) + live chat.
+- **Player:** quality switching, seek-preview storyboards, **caption tracks**, and
+  graceful states (protected / not-ready-auto-retry / error).
+- **Cross-cutting:** create-forms-in-dialogs, secure-link generator, toasts, and a
+  friendly error system (`+error.svelte`, `ErrorState`, hardened API client).
+
+Design is **token-driven** (olive accent, squircle corners, soft shadows; light/dark)
+via CSS vars in `src/routes/layout.css`. Backend billing is deferred (free tier).
