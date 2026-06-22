@@ -6,8 +6,13 @@
 
 	let {
 		items = [],
-		value = $bindable('')
-	}: { items?: { id: string; name: string }[]; value?: string } = $props();
+		value = '',
+		onChange
+	}: {
+		items?: { id: string; name: string }[];
+		value?: string;
+		onChange: (id: string) => void;
+	} = $props();
 
 	let open = $state(false);
 	let q = $state('');
@@ -21,9 +26,9 @@
 	);
 
 	function choose(id: string) {
-		value = id;
 		open = false;
 		q = '';
+		if (id !== value) onChange(id);
 	}
 
 	$effect(() => {

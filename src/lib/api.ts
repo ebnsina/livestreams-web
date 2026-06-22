@@ -152,8 +152,13 @@ export const api = {
 		request<void>('/v1/me/password', { method: 'POST', body: { current_password, new_password } }),
 
 	// streams
-	listStreams: (params?: { q?: string; limit?: number; offset?: number }) =>
-		request<Paginated<Stream>>(`/v1/streams${qs(params)}`),
+	listStreams: (params?: {
+		q?: string;
+		status?: string;
+		protocol?: string;
+		limit?: number;
+		offset?: number;
+	}) => request<Paginated<Stream>>(`/v1/streams${qs(params)}`),
 	getStream: (id: string) => request<Stream>(`/v1/streams/${id}`),
 	createStream: (input: CreateStreamInput) =>
 		request<Stream>('/v1/streams', { method: 'POST', body: input }),
@@ -230,8 +235,13 @@ export const api = {
 		request<{ data: StreamEvent[] }>(`/v1/activity${level ? `?level=${level}` : ''}`),
 
 	// recordings / assets
-	assets: (params?: { q?: string; limit?: number; offset?: number; category?: 'recording' | 'transcode' }) =>
-		request<Paginated<Asset>>(`/v1/assets${qs(params)}`),
+	assets: (params?: {
+		q?: string;
+		limit?: number;
+		offset?: number;
+		category?: 'recording' | 'transcode';
+		status?: string;
+	}) => request<Paginated<Asset>>(`/v1/assets${qs(params)}`),
 	thumbnailUrl: (id: string) =>
 		`${BASE}/v1/assets/${id}/thumbnail?access_token=${encodeURIComponent(auth.token ?? '')}`,
 	storyboardUrl: (id: string) =>

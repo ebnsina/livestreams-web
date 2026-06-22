@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { setQuery } from '$lib/urlState';
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
@@ -17,17 +19,30 @@
 	const qc = useQueryClient();
 
 	const LIMIT = 20;
-	let search = $state('');
-	let offset = $state(0);
-	// reset to the first page whenever the search term changes
-	$effect(() => {
-		void search;
-		offset = 0;
-	});
+	// URL is the source of truth for search + filters + pagination
+	const sp = $derived(page.url.searchParams);
+	const search = $derived(sp.get('q') ?? '');
+	const status = $derived(sp.get('status') ?? '');
+	const protocol = $derived(sp.get('protocol') ?? '');
+	const offset = $derived(Number(sp.get('offset') ?? '0') || 0);
+	const hasFilters = $derived(!!(search || status || protocol));
+
+	// search box mirrors the URL but debounces writes back to it
+	let searchInput = $state(page.url.searchParams.get('q') ?? '');
+	let searchTimer: ReturnType<typeof setTimeout>;
+	function onSearch(v: string) {
+		searchInput = v;
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => setQuery({ q: v, offset: null }), 300);
+	}
+	function clearFilters() {
+		searchInput = '';
+		setQuery({ q: null, status: null, protocol: null, offset: null });
+	}
 
 	const streams = createQuery(() => ({
-		queryKey: [...keys.streams, search, offset],
-		queryFn: () => api.listStreams({ q: search, limit: LIMIT, offset }),
+		queryKey: [...keys.streams, search, status, protocol, offset],
+		queryFn: () => api.listStreams({ q: search, status, protocol, limit: LIMIT, offset }),
 		refetchInterval: 5000
 	}));
 	const list = $derived(streams.data?.data ?? []);
@@ -146,8 +161,28 @@
 	</form>
 </Dialog>
 
-<div class="mb-5">
-	<input class="input sm:max-w-xs" bind:value={search} placeholder="Search streams…" />
+<div class="mb-5 flex flex-wrap items-center gap-2">
+	<input
+		class="input sm:max-w-xs"
+		value={searchInput}
+		oninput={(e) => onSearch(e.currentTarget.value)}
+		placeholder="Search streams…"
+	/>
+	<select class="input w-auto" value={status} onchange={(e) => setQuery({ status: e.currentTarget.value, offset: null })}>
+		<option value="">All statuses</option>
+		<option value="live">Live</option>
+		<option value="idle">Idle</option>
+		<option value="errored">Errored</option>
+	</select>
+	<select class="input w-auto" value={protocol} onchange={(e) => setQuery({ protocol: e.currentTarget.value, offset: null })}>
+		<option value="">All protocols</option>
+		<option value="rtmp">RTMP</option>
+		<option value="srt">SRT</option>
+		<option value="whip">WebRTC</option>
+	</select>
+	{#if hasFilters}
+		<button class="btn-ghost text-sm" onclick={clearFilters}>Clear</button>
+	{/if}
 </div>
 
 <div class="card divide-y divide-[var(--color-border)] overflow-hidden">
@@ -155,7 +190,7 @@
 		<div class="p-6 text-sm text-[var(--color-muted)]">Loading…</div>
 	{:else if list.length === 0}
 		<div class="p-10 text-center text-sm text-[var(--color-muted)]">
-			{search ? 'No streams match your search.' : 'No streams yet. Create one to get started.'}
+			{hasFilters ? 'No streams match your filters.' : 'No streams yet. Create one to get started.'}
 		</div>
 	{:else}
 		{#each list as s (s.id)}
@@ -178,4 +213,4 @@
 	{/if}
 </div>
 
-<Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />
+<Pager {total} limit={LIMIT} {offset} onChange={(o) => setQuery({ offset: o || null })} />

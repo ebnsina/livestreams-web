@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { setQuery } from '$lib/urlState';
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { auth } from '$lib/auth.svelte';
@@ -27,10 +29,7 @@
 
 	const qc = useQueryClient();
 	const LIMIT = 20;
-	const key = (q: string, o: number) => ['transcodes', q, o];
 
-	let q = $state('');
-	let offset = $state(0);
 	let showUpload = $state(false);
 	let detail = $state<Asset | null>(null);
 	let playing = $state<Asset | null>(null);
@@ -39,14 +38,28 @@
 	let secureOpen = $state(false);
 	let secureId = $state('');
 
-	$effect(() => {
-		void q;
-		offset = 0;
-	});
+	// URL is the source of truth for search + filters + pagination
+	const sp = $derived(page.url.searchParams);
+	const q = $derived(sp.get('q') ?? '');
+	const status = $derived(sp.get('status') ?? '');
+	const offset = $derived(Number(sp.get('offset') ?? '0') || 0);
+	const hasFilters = $derived(!!(q || status));
+
+	let searchInput = $state(page.url.searchParams.get('q') ?? '');
+	let searchTimer: ReturnType<typeof setTimeout>;
+	function onSearch(v: string) {
+		searchInput = v;
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => setQuery({ q: v, offset: null }), 300);
+	}
+	function clearFilters() {
+		searchInput = '';
+		setQuery({ q: null, status: null, offset: null });
+	}
 
 	const list = createQuery(() => ({
-		queryKey: key(q, offset),
-		queryFn: () => api.assets({ q, limit: LIMIT, offset, category: 'transcode' }),
+		queryKey: ['transcodes', q, status, offset],
+		queryFn: () => api.assets({ q, status, limit: LIMIT, offset, category: 'transcode' }),
 		refetchInterval: 5000
 	}));
 	const items = $derived(list.data?.data ?? []);
@@ -125,8 +138,24 @@
 	{/snippet}
 </PageHeader>
 
-<div class="mb-5">
-	<input class="input sm:max-w-xs" bind:value={q} placeholder="Search…" />
+<div class="mb-5 flex flex-wrap items-center gap-2">
+	<input
+		class="input sm:max-w-xs"
+		value={searchInput}
+		oninput={(e) => onSearch(e.currentTarget.value)}
+		placeholder="Search…"
+	/>
+	<select class="input w-auto" value={status} onchange={(e) => setQuery({ status: e.currentTarget.value, offset: null })}>
+		<option value="">All statuses</option>
+		<option value="ready">Ready</option>
+		<option value="processing">Processing</option>
+		<option value="uploading">Uploading</option>
+		<option value="pending">Pending</option>
+		<option value="errored">Errored</option>
+	</select>
+	{#if hasFilters}
+		<button class="btn-ghost text-sm" onclick={clearFilters}>Clear</button>
+	{/if}
 </div>
 
 <div class="card overflow-hidden">
@@ -135,7 +164,7 @@
 		<div class="p-6 text-sm text-[var(--color-muted)]">Loading…</div>
 	{:else if items.length === 0}
 		<div class="p-10 text-center text-sm text-[var(--color-muted)]">
-			{q ? 'Nothing matches your search.' : 'No transcodes yet. Upload a video to get started.'}
+			{hasFilters ? 'Nothing matches your filters.' : 'No transcodes yet. Upload a video to get started.'}
 		</div>
 	{:else}
 		<table class="w-full min-w-[720px] text-sm">
@@ -236,7 +265,7 @@
 	</div>
 </div>
 
-<Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />
+<Pager {total} limit={LIMIT} {offset} onChange={(o) => setQuery({ offset: o || null })} />
 
 <PlayerModal asset={playing} onClose={() => (playing = null)} />
 <SecureLinkDialog bind:open={secureOpen} kind="vod" id={secureId} />

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { setQuery } from '$lib/urlState';
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
@@ -13,18 +15,30 @@
 
 	const qc = useQueryClient();
 	const LIMIT = 24;
-	let q = $state('');
-	let offset = $state(0);
 	let clipping = $state<Asset | null>(null);
 
-	$effect(() => {
-		void q;
-		offset = 0;
-	});
+	// URL is the source of truth for search + filters + pagination
+	const sp = $derived(page.url.searchParams);
+	const q = $derived(sp.get('q') ?? '');
+	const status = $derived(sp.get('status') ?? '');
+	const offset = $derived(Number(sp.get('offset') ?? '0') || 0);
+	const hasFilters = $derived(!!(q || status));
+
+	let searchInput = $state(page.url.searchParams.get('q') ?? '');
+	let searchTimer: ReturnType<typeof setTimeout>;
+	function onSearch(v: string) {
+		searchInput = v;
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => setQuery({ q: v, offset: null }), 300);
+	}
+	function clearFilters() {
+		searchInput = '';
+		setQuery({ q: null, status: null, offset: null });
+	}
 
 	const assets = createQuery(() => ({
-		queryKey: [...keys.assets, 'recording', q, offset],
-		queryFn: () => api.assets({ q, limit: LIMIT, offset, category: 'recording' })
+		queryKey: [...keys.assets, 'recording', q, status, offset],
+		queryFn: () => api.assets({ q, status, limit: LIMIT, offset, category: 'recording' })
 	}));
 	const list = $derived(assets.data?.data ?? []);
 	const total = $derived(assets.data?.total ?? 0);
@@ -45,15 +59,29 @@
 
 <PageHeader icon={Film} title="Recordings" subtitle="Recorded sessions from your live streams" />
 
-<div class="mb-5">
-	<input class="input sm:max-w-xs" bind:value={q} placeholder="Search…" />
+<div class="mb-5 flex flex-wrap items-center gap-2">
+	<input
+		class="input sm:max-w-xs"
+		value={searchInput}
+		oninput={(e) => onSearch(e.currentTarget.value)}
+		placeholder="Search…"
+	/>
+	<select class="input w-auto" value={status} onchange={(e) => setQuery({ status: e.currentTarget.value, offset: null })}>
+		<option value="">All statuses</option>
+		<option value="ready">Ready</option>
+		<option value="processing">Processing</option>
+		<option value="errored">Errored</option>
+	</select>
+	{#if hasFilters}
+		<button class="btn-ghost text-sm" onclick={clearFilters}>Clear</button>
+	{/if}
 </div>
 
 {#if assets.isPending}
 	<div class="card p-6 text-sm text-[var(--color-muted)]">Loading…</div>
 {:else if list.length === 0}
 	<div class="card p-10 text-center text-sm text-[var(--color-muted)]">
-		{q ? 'Nothing matches your search.' : 'No recordings yet. They appear after a stream ends.'}
+		{hasFilters ? 'Nothing matches your filters.' : 'No recordings yet. They appear after a stream ends.'}
 	</div>
 {:else}
 	<Recordings
@@ -61,7 +89,7 @@
 		onDelete={auth.canWrite ? (id) => remove.mutate(id) : undefined}
 		onClip={auth.canWrite ? (a) => (clipping = a) : undefined}
 	/>
-	<Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />
+	<Pager {total} limit={LIMIT} {offset} onChange={(o) => setQuery({ offset: o || null })} />
 {/if}
 
 <ClipModal asset={clipping} onClose={() => (clipping = null)} onDone={refresh} />

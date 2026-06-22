@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { setQuery } from '$lib/urlState';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
@@ -9,8 +11,10 @@
 	import ContentPicker from '$lib/components/ContentPicker.svelte';
 	import { BarChart3, ArrowRight } from '@lucide/svelte';
 
-	let range = $state<'24h' | '7d' | '30d'>('24h');
-	let scope = $state(''); // '' = all content, else a stream id
+	// URL is the source of truth for range + scope (so deep links from a stream work)
+	const sp = $derived(page.url.searchParams);
+	const range = $derived(((sp.get('range') as '24h' | '7d' | '30d') || '24h') as '24h' | '7d' | '30d');
+	const scope = $derived(sp.get('stream') ?? ''); // '' = all content, else a stream id
 	const isAll = $derived(scope === '');
 
 	const streamList = createQuery(() => ({ queryKey: keys.streams, queryFn: () => api.listStreams() }));
@@ -95,14 +99,18 @@
 >
 	{#snippet actions()}
 		<div class="flex flex-wrap items-center gap-2">
-			<ContentPicker items={pickerItems} bind:value={scope} />
+			<ContentPicker
+				items={pickerItems}
+				value={scope}
+				onChange={(id) => setQuery({ stream: id || null })}
+			/>
 			<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">
 				{#each ranges as r (r.id)}
 					<button
 						class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {range === r.id
 							? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
 							: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
-						onclick={() => (range = r.id)}
+						onclick={() => setQuery({ range: r.id })}
 					>
 						{r.label}
 					</button>
@@ -172,7 +180,7 @@
 					{#each topContent as c (c.stream_id)}
 						<tr
 							class="cursor-pointer transition-colors hover:bg-[var(--color-surface-2)]"
-							onclick={() => (scope = c.stream_id)}
+							onclick={() => setQuery({ stream: c.stream_id })}
 						>
 							<td class="truncate px-4 py-2.5 font-medium">{c.name}</td>
 							<td class="px-4 py-2.5 text-right tabular-nums">{c.views.toLocaleString()}</td>

@@ -12,37 +12,17 @@
 	import ChatPanel from '$lib/components/ChatPanel.svelte';
 	import SecureLinkDialog from '$lib/components/SecureLinkDialog.svelte';
 	import ErrorState from '$lib/components/ErrorState.svelte';
-	import { Radio } from '@lucide/svelte';
+	import { Radio, ArrowRight } from '@lucide/svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Recordings from '$lib/components/Recordings.svelte';
 	import Restream from '$lib/components/Restream.svelte';
-	import Chart from '$lib/components/Chart.svelte';
 	import EmbedSnippet from '$lib/components/EmbedSnippet.svelte';
 	import AnimatedNumber from '$lib/components/AnimatedNumber.svelte';
-	import InsightsPanel from '$lib/components/InsightsPanel.svelte';
 	import { toast } from '$lib/toast.svelte';
 
 	const qc = useQueryClient();
 	const id = $derived(page.params.id as string);
-
-	let anRange = $state<'24h' | '7d' | '30d'>('24h');
-	const analytics = createQuery(() => ({
-		queryKey: ['streams', id, 'analytics', anRange],
-		queryFn: () => api.streamAnalytics(id, anRange),
-		refetchInterval: 15000
-	}));
-	const anSeries = $derived(analytics.data?.series ?? []);
-	const insights = createQuery(() => ({
-		queryKey: ['streams', id, 'insights', anRange],
-		queryFn: () => api.streamInsights(id, anRange),
-		refetchInterval: 30000
-	}));
-	const anRanges: { id: '24h' | '7d' | '30d'; label: string }[] = [
-		{ id: '24h', label: '24h' },
-		{ id: '7d', label: '7d' },
-		{ id: '30d', label: '30d' }
-	];
 
 	const stream = createQuery(() => ({
 		queryKey: keys.stream(id),
@@ -266,12 +246,23 @@
 				</a>
 			{/if}
 
-			<!-- Playback QoS (from viewer beacons) -->
-			<div class="card grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-4">
-				{@render qosStat('Viewers', qos.data ? qos.data.viewers : null)}
-				{@render qosStat('Avg startup', qos.data?.avg_startup_ms || null, ' ms')}
-				{@render qosStat('Rebuffers', qos.data ? qos.data.total_rebuffers : null)}
-				{@render qosStat('Avg bitrate', qos.data?.avg_bitrate_kbps || null, 'k')}
+			<!-- Live playback QoS (now). Historical analytics live on the Analytics page. -->
+			<div>
+				<div class="mb-1.5 flex items-center justify-between">
+					<span class="text-xs font-medium uppercase tracking-tight text-[var(--color-muted)]">Live now</span>
+					<a
+						href="/analytics?stream={id}"
+						class="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-accent)] hover:underline"
+					>
+						View analytics <ArrowRight size={13} />
+					</a>
+				</div>
+				<div class="card grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-4">
+					{@render qosStat('Viewers', qos.data ? qos.data.viewers : null)}
+					{@render qosStat('Avg startup', qos.data?.avg_startup_ms || null, ' ms')}
+					{@render qosStat('Rebuffers', qos.data ? qos.data.total_rebuffers : null)}
+					{@render qosStat('Avg bitrate', qos.data?.avg_bitrate_kbps || null, 'k')}
+				</div>
 			</div>
 
 			<div class="card space-y-3 p-4">
@@ -394,69 +385,6 @@
 		</div>
 	</div>
 
-	<!-- Analytics -->
-	<section class="mt-8">
-		<div class="mb-3 flex items-center justify-between gap-3">
-			<h2 class="text-lg font-medium">Analytics</h2>
-			<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">
-				{#each anRanges as r (r.id)}
-					<button
-						class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors {anRange === r.id
-							? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
-							: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
-						onclick={() => (anRange = r.id)}
-					>
-						{r.label}
-					</button>
-				{/each}
-			</div>
-		</div>
-		<div class="mb-4 grid grid-cols-3 gap-3">
-			<div class="card p-4">
-				<p class="text-xs text-[var(--color-muted)]">Peak viewers</p>
-				<p class="mt-1 text-2xl font-semibold tabular-nums">
-					<AnimatedNumber value={analytics.data?.summary.peak_viewers ?? 0} />
-				</p>
-			</div>
-			<div class="card p-4">
-				<p class="text-xs text-[var(--color-muted)]">Avg startup</p>
-				<p class="mt-1 text-2xl font-semibold tabular-nums">
-					{#if analytics.data?.summary.avg_startup_ms}
-						<AnimatedNumber
-							value={analytics.data.summary.avg_startup_ms}
-							format={(n) => `${Math.round(n)}ms`}
-						/>
-					{:else}
-						—
-					{/if}
-				</p>
-			</div>
-			<div class="card p-4">
-				<p class="text-xs text-[var(--color-muted)]">Total rebuffers</p>
-				<p class="mt-1 text-2xl font-semibold tabular-nums">
-					<AnimatedNumber value={analytics.data?.summary.total_rebuffers ?? 0} />
-				</p>
-			</div>
-		</div>
-		<div class="mb-4">
-			<InsightsPanel insights={insights.data} />
-		</div>
-		<div class="grid gap-4 lg:grid-cols-2">
-			<div class="card p-5">
-				<h3 class="mb-3 text-sm font-semibold">Concurrent viewers</h3>
-				<Chart points={anSeries.map((p) => ({ t: p.t, v: p.viewers }))} color="var(--color-accent)" height={140} />
-			</div>
-			<div class="card p-5">
-				<h3 class="mb-3 text-sm font-semibold">Average bitrate (kbps)</h3>
-				<Chart
-					points={anSeries.map((p) => ({ t: p.t, v: p.bitrate_kbps }))}
-					color="#0ea5e9"
-					height={140}
-					format={(n) => `${n}k`}
-				/>
-			</div>
-		</div>
-	</section>
 
 	<!-- Sessions -->
 	<section class="mt-8">
