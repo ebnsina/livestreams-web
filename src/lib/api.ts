@@ -274,7 +274,7 @@ export const api = {
 	oauthAuthorize: (platform: string) =>
 		request<{ redirect_url: string }>(`/v1/oauth/${platform}/authorize`),
 	importStreamKey: (id: string) =>
-		request<{ id: string; platform: string; name: string; url: string }>(
+		request<{ id: string; platform: string; name: string; url: string; updated: boolean }>(
 			`/v1/oauth/connections/${id}/import-key`,
 			{ method: 'POST' }
 		),

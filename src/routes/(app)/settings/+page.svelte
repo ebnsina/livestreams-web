@@ -32,7 +32,11 @@
 	const importKey = createMutation(() => ({
 		mutationFn: (id: string) => api.importStreamKey(id),
 		onSuccess: (dest) => {
-			toast.success(`Added “${dest.name}” to your destinations`);
+			toast.success(
+				dest.updated
+					? `Refreshed stream key for “${dest.name}”`
+					: `Added “${dest.name}” to your destinations`
+			);
 		},
 		onError: (e) =>
 			toast.error((e as ApiError)?.message ?? 'Could not fetch stream key from the platform')
