@@ -62,6 +62,13 @@
 	<div class="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
 		<div class="space-y-4">
 			<BrowserGoLive whipUrl={api.whipUrl(id)} />
+			<p class="px-1 text-xs text-[var(--color-muted)]">
+				Browser go-live uses WebRTC (UDP). It needs the media server reachable directly — it
+				works in production and on Linux hosts. If you're running locally via Docker Desktop
+				(macOS/Windows), use an encoder (OBS) with the RTMP details on the
+				<a href="/streams/{id}" class="text-[var(--color-accent)] hover:underline">stream page</a>
+				instead.
+			</p>
 			<div class="card space-y-3 p-5">
 				<h2 class="text-sm font-semibold text-[var(--color-muted)]">How viewers watch</h2>
 				<CopyField label="Playback URL (HLS)" value={s.playback_url} />
