@@ -7,6 +7,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import type { StreamEvent } from '$lib/types';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import ScheduleBadge from '$lib/components/ScheduleBadge.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
@@ -122,6 +123,18 @@
 		onSuccess: () => qc.invalidateQueries({ queryKey: keys.stream(id) })
 	}));
 
+	// schedule editor
+	let editingSchedule = $state(false);
+	let scheduleVal = $state('');
+	const saveSchedule = createMutation(() => ({
+		mutationFn: (iso: string | null) =>
+			api.updateStream(id, { name: s?.name ?? '', description: s?.description ?? '', scheduled_at: iso }),
+		onSuccess: () => {
+			editingSchedule = false;
+			qc.invalidateQueries({ queryKey: keys.stream(id) });
+		}
+	}));
+
 	const stop = createMutation(() => ({
 		mutationFn: () => api.stopStream(id),
 		onSuccess: () => qc.invalidateQueries({ queryKey: keys.stream(id) })
@@ -163,6 +176,7 @@
 			<div class="flex flex-wrap items-center gap-3">
 				<h1 class="text-2xl font-semibold">{s.name}</h1>
 				<StatusBadge status={s.status} />
+				{#if !isLive}<ScheduleBadge at={s.scheduled_at} />{/if}
 				{#if isLive}
 					{#if healthIssues.length > 0}
 						<span
@@ -257,6 +271,43 @@
 				<div class="flex justify-between">
 					<span class="text-[var(--color-muted)]">Created</span><span>{fmtDate(s.created_at)}</span>
 				</div>
+				<!-- schedule -->
+				<div class="flex items-center justify-between gap-2 border-t border-[var(--color-border)] pt-2">
+					<span class="text-[var(--color-muted)]">Scheduled</span>
+					<div class="flex items-center gap-2">
+						{#if s.scheduled_at}
+							<ScheduleBadge at={s.scheduled_at} />
+							<span class="text-xs">{fmtDate(s.scheduled_at)}</span>
+						{:else}
+							<span class="text-xs text-[var(--color-muted)]">—</span>
+						{/if}
+						{#if auth.canWrite}
+							<button
+								class="text-xs font-medium text-[#ff5b3e] hover:underline"
+								onclick={() => {
+									scheduleVal = s.scheduled_at
+										? new Date(s.scheduled_at).toISOString().slice(0, 16)
+										: '';
+									editingSchedule = !editingSchedule;
+								}}>{editingSchedule ? 'Close' : 'Edit'}</button
+							>
+						{/if}
+					</div>
+				</div>
+				{#if editingSchedule}
+					<div class="flex flex-wrap items-center gap-2 pt-1">
+						<input class="input flex-1" type="datetime-local" bind:value={scheduleVal} />
+						<button
+							class="btn-primary text-sm"
+							disabled={saveSchedule.isPending}
+							onclick={() => saveSchedule.mutate(scheduleVal ? new Date(scheduleVal).toISOString() : null)}
+							>Save</button
+						>
+						{#if s.scheduled_at}
+							<button class="btn-ghost text-sm" onclick={() => saveSchedule.mutate(null)}>Clear</button>
+						{/if}
+					</div>
+				{/if}
 			</div>
 
 			<Restream streamId={id} />

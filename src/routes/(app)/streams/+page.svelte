@@ -4,6 +4,7 @@
 	import { keys } from '$lib/query';
 	import { auth } from '$lib/auth.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
+	import ScheduleBadge from '$lib/components/ScheduleBadge.svelte';
 	import Pager from '$lib/components/Pager.svelte';
 	import type { LatencyMode } from '$lib/types';
 
@@ -30,14 +31,21 @@
 	let name = $state('');
 	let latency = $state<LatencyMode>('low');
 	let recording = $state(true);
+	let schedule = $state(''); // datetime-local value
 
 	const create = createMutation(() => ({
 		mutationFn: () =>
-			api.createStream({ name, latency_mode: latency, recording_enabled: recording }),
+			api.createStream({
+				name,
+				latency_mode: latency,
+				recording_enabled: recording,
+				scheduled_at: schedule ? new Date(schedule).toISOString() : null
+			}),
 		onSuccess: () => {
 			qc.invalidateQueries({ queryKey: keys.streams });
 			showForm = false;
 			name = '';
+			schedule = '';
 		}
 	}));
 </script>
@@ -56,7 +64,7 @@
 
 {#if showForm}
 	<form
-		class="card mb-6 grid grid-cols-1 gap-4 p-5 sm:grid-cols-[1fr_auto_auto_auto]"
+		class="card mb-6 grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-[1fr_auto_1fr_auto_auto]"
 		onsubmit={(e) => {
 			e.preventDefault();
 			create.mutate();
@@ -73,6 +81,10 @@
 				<option value="low">Low</option>
 				<option value="ultra_low">Ultra low</option>
 			</select>
+		</div>
+		<div>
+			<label class="label" for="schedule">Schedule (optional)</label>
+			<input id="schedule" class="input" type="datetime-local" bind:value={schedule} />
 		</div>
 		<label class="flex items-end gap-2 pb-2 text-sm">
 			<input type="checkbox" bind:checked={recording} class="rounded" />
@@ -109,7 +121,10 @@
 						{s.ingest_protocol.toUpperCase()} · {s.latency_mode.replace('_', ' ')}
 					</p>
 				</div>
-				<StatusBadge status={s.status} />
+				<div class="flex items-center gap-2">
+					{#if s.status !== 'live'}<ScheduleBadge at={s.scheduled_at} />{/if}
+					<StatusBadge status={s.status} />
+				</div>
 			</a>
 		{/each}
 	{/if}

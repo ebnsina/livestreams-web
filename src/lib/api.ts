@@ -98,6 +98,8 @@ export const api = {
 	getStream: (id: string) => request<Stream>(`/v1/streams/${id}`),
 	createStream: (input: CreateStreamInput) =>
 		request<Stream>('/v1/streams', { method: 'POST', body: input }),
+	updateStream: (id: string, input: { name: string; description?: string; scheduled_at?: string | null }) =>
+		request<Stream>(`/v1/streams/${id}`, { method: 'PATCH', body: input }),
 	deleteStream: (id: string) => request<void>(`/v1/streams/${id}`, { method: 'DELETE' }),
 	stopStream: (id: string) => request<void>(`/v1/streams/${id}/stop`, { method: 'POST' }),
 	rotateKey: (id: string) => request<Stream>(`/v1/streams/${id}/key/rotate`, { method: 'POST' }),

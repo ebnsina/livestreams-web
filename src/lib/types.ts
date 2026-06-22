@@ -40,6 +40,7 @@ export interface Stream {
 	recording_enabled: boolean;
 	ingest?: Ingest;
 	playback_url: string;
+	scheduled_at?: string | null;
 	created_at: string;
 }
 
@@ -205,4 +206,5 @@ export interface CreateStreamInput {
 	ingest_protocol?: IngestProtocol;
 	latency_mode?: LatencyMode;
 	recording_enabled?: boolean;
+	scheduled_at?: string | null;
 }
