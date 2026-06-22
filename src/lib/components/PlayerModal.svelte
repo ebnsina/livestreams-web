@@ -29,6 +29,7 @@
 					src={url}
 					poster={asset.thumbnail ? api.thumbnailUrl(asset.id) : ''}
 					storyboard={asset.storyboard ? api.storyboardUrl(asset.id) : ''}
+					captions={asset.caption_status === 'ready' ? api.captionsUrl(asset.id) : ''}
 				/>
 			{/key}
 		{:else if error}

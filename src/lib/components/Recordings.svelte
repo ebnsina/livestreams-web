@@ -79,6 +79,7 @@
 					src={playingUrl}
 					poster={pa?.thumbnail ? api.thumbnailUrl(pa.id) : ''}
 					storyboard={pa?.storyboard ? api.storyboardUrl(pa.id) : ''}
+					captions={pa?.caption_status === 'ready' ? api.captionsUrl(pa.id) : ''}
 				/>
 			{/key}
 		</div>

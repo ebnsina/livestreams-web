@@ -129,6 +129,7 @@ export interface Asset {
 	error?: string;
 	thumbnail?: boolean;
 	storyboard?: boolean;
+	caption_status?: string; // none | processing | ready | errored
 	created_at: string;
 }
 

@@ -12,7 +12,7 @@
 	import Menu from '$lib/components/Menu.svelte';
 	import Pager from '$lib/components/Pager.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { UploadCloud, Play, ScrollText, RefreshCw, Trash2, FileVideo } from '@lucide/svelte';
+	import { UploadCloud, Play, ScrollText, RefreshCw, Trash2, FileVideo, Captions } from '@lucide/svelte';
 	import { toast } from '$lib/toast.svelte';
 
 	const qc = useQueryClient();
@@ -58,6 +58,14 @@
 			toast.success('Re-queued');
 		},
 		onError: () => toast.error("Couldn't re-queue — try again")
+	}));
+	const captions = createMutation(() => ({
+		mutationFn: (id: string) => api.generateCaptions(id),
+		onSuccess: () => {
+			refresh();
+			toast.success('Generating captions…');
+		},
+		onError: () => toast.error('Captions need an AI provider — set LS_AI_TRANSCRIBE_PROVIDER')
 	}));
 
 	const typeLabel: Record<string, string> = { vod: 'VOD', clip: 'Clip', upload: 'Upload' };
@@ -164,6 +172,12 @@
 										<button class="menu-item" onclick={() => retry.mutate(a.id)}>
 											<RefreshCw size={15} />
 											{a.status === 'errored' ? 'Retry' : 'Re-transcode'}
+										</button>
+									{/if}
+									{#if auth.canWrite && a.status === 'ready' && a.caption_status !== 'processing'}
+										<button class="menu-item" onclick={() => captions.mutate(a.id)}>
+											<Captions size={15} />
+											{a.caption_status === 'ready' ? 'Regenerate captions' : 'Generate captions'}
 										</button>
 									{/if}
 									{#if auth.canWrite}

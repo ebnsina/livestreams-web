@@ -187,6 +187,10 @@ export const api = {
 		`${BASE}/v1/assets/${id}/thumbnail?access_token=${encodeURIComponent(auth.token ?? '')}`,
 	storyboardUrl: (id: string) =>
 		`${BASE}/v1/assets/${id}/storyboard.vtt?access_token=${encodeURIComponent(auth.token ?? '')}`,
+	captionsUrl: (id: string) =>
+		`${BASE}/v1/assets/${id}/captions.vtt?access_token=${encodeURIComponent(auth.token ?? '')}`,
+	generateCaptions: (id: string) =>
+		request<{ caption_status: string }>(`/v1/assets/${id}/captions`, { method: 'POST' }),
 	transcodeLogs: (id: string) =>
 		request<{ status: string; logs: { stage: string; line: string; at: string }[] }>(
 			`/v1/assets/${id}/transcode`

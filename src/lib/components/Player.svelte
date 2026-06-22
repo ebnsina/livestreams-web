@@ -21,7 +21,8 @@
 		reload = 0,
 		streamId = '',
 		poster = '',
-		storyboard = ''
+		storyboard = '',
+		captions = ''
 	}: {
 		src: string;
 		live?: boolean;
@@ -29,6 +30,7 @@
 		streamId?: string;
 		poster?: string;
 		storyboard?: string;
+		captions?: string;
 	} = $props();
 
 	// seek-preview storyboard (WebVTT sprite tiles)
@@ -376,7 +378,11 @@
 		onclick={togglePlay}
 		ondblclick={toggleFs}
 		class="aspect-video w-full bg-black"
-	></video>
+	>
+		{#if captions}
+			<track kind="subtitles" label="Captions" srclang="en" src={captions} default />
+		{/if}
+	</video>
 
 	<!-- LIVE badge -->
 	{#if live}
