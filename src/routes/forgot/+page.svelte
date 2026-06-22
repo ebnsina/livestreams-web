@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { createMutation } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
+	import { toast } from '$lib/toast.svelte';
 
 	let email = $state('');
 	let sent = $state(false);
 
 	const forgot = createMutation(() => ({
 		mutationFn: () => api.forgotPassword(email),
-		onSuccess: () => (sent = true)
+		onSuccess: () => (sent = true),
+		onError: () => toast.error('Could not send reset link — try again')
 	}));
 
 	function submit(e: SubmitEvent) {

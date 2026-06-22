@@ -3,6 +3,7 @@
 	import { createMutation } from '@tanstack/svelte-query';
 	import { api, ApiError } from '$lib/api';
 	import { auth } from '$lib/auth.svelte';
+	import { toast } from '$lib/toast.svelte';
 
 	let name = $state('');
 	let orgName = $state('');
@@ -13,8 +14,10 @@
 		mutationFn: () => api.register({ email, password, name, org_name: orgName }),
 		onSuccess: (res) => {
 			auth.set(res.access_token, res.refresh_token, res.user);
+			toast.success('Account created — check your email to verify');
 			goto('/dashboard');
-		}
+		},
+		onError: (e) => toast.error((e as ApiError)?.message ?? 'Could not create account')
 	}));
 
 	function submit(e: SubmitEvent) {

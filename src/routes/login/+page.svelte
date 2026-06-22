@@ -3,6 +3,7 @@
 	import { createMutation } from '@tanstack/svelte-query';
 	import { api, ApiError } from '$lib/api';
 	import { auth } from '$lib/auth.svelte';
+	import { toast } from '$lib/toast.svelte';
 
 	let email = $state('');
 	let password = $state('');
@@ -11,8 +12,10 @@
 		mutationFn: () => api.login({ email, password }),
 		onSuccess: (res) => {
 			auth.set(res.access_token, res.refresh_token, res.user);
+			toast.success('Welcome back');
 			goto('/dashboard');
-		}
+		},
+		onError: (e) => toast.error((e as ApiError)?.message ?? 'Login failed')
 	}));
 
 	function submit(e: SubmitEvent) {
