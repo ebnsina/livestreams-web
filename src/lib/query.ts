@@ -18,6 +18,7 @@ export const keys = {
 	apiKeys: ['api-keys'] as const,
 	oauthProviders: ['oauth-providers'] as const,
 	oauthConnections: ['oauth-connections'] as const,
+	oauthProviderConfigs: ['oauth-provider-configs'] as const,
 	teamMembers: ['team-members'] as const,
 	teamInvitations: ['team-invitations'] as const
 };

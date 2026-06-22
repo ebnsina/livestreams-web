@@ -4,6 +4,7 @@
 	import { keys } from '$lib/query';
 	import { toast } from '$lib/toast.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import CopyField from '$lib/components/CopyField.svelte';
 	import { Settings } from '@lucide/svelte';
 
 	const qc = useQueryClient();
@@ -26,6 +27,39 @@
 	const disconnect = createMutation(() => ({
 		mutationFn: (id: string) => api.deleteOauthConnection(id),
 		onSuccess: () => qc.invalidateQueries({ queryKey: keys.oauthConnections })
+	}));
+
+	// BYO OAuth credentials (per-org)
+	const provConfigs = createQuery(() => ({
+		queryKey: keys.oauthProviderConfigs,
+		queryFn: () => api.oauthProviderConfigs()
+	}));
+	const provList = $derived(provConfigs.data?.data ?? []);
+	let creds = $state<Record<string, { id: string; secret: string }>>({});
+	$effect(() => {
+		for (const pc of provList) {
+			if (!creds[pc.platform]) creds[pc.platform] = { id: pc.client_id, secret: '' };
+		}
+	});
+
+	const saveCfg = createMutation(() => ({
+		mutationFn: (p: { platform: string; client_id: string; client_secret: string }) =>
+			api.setOauthProviderConfig(p),
+		onSuccess: () => {
+			toast.success('Credentials saved');
+			qc.invalidateQueries({ queryKey: keys.oauthProviderConfigs });
+			qc.invalidateQueries({ queryKey: keys.oauthProviders });
+		},
+		onError: () => toast.error('Could not save credentials')
+	}));
+	const delCfg = createMutation(() => ({
+		mutationFn: (platform: string) => api.deleteOauthProviderConfig(platform),
+		onSuccess: () => {
+			toast.success('Credentials removed');
+			qc.invalidateQueries({ queryKey: keys.oauthProviderConfigs });
+			qc.invalidateQueries({ queryKey: keys.oauthProviders });
+		},
+		onError: () => toast.error('Could not remove credentials')
 	}));
 
 	async function connect(platform: string) {
@@ -174,8 +208,50 @@
 	<section class="card p-5 lg:col-span-2">
 		<h2 class="mb-1 text-[15px] font-semibold">Connected accounts</h2>
 		<p class="mb-4 text-sm text-[var(--color-muted)]">
-			Link platform accounts for multistreaming.
+			Link platform accounts for multistreaming. Provide your own OAuth app credentials below —
+			register an app on the platform with the redirect URI shown, then paste the client ID/secret.
 		</p>
+
+		<!-- BYO OAuth credentials -->
+		<div class="mb-5 space-y-3">
+			{#each provList as pc (pc.platform)}
+				<div class="rounded-lg border border-[var(--color-border)] p-3">
+					<div class="mb-2 flex items-center justify-between">
+						<span class="text-sm font-medium">{platformLabel[pc.platform] ?? pc.platform}</span>
+						{#if pc.configured}<span class="text-xs text-emerald-500">credentials saved</span>{/if}
+					</div>
+					<CopyField label="Redirect URI (register this in the provider console)" value={pc.redirect_uri} />
+					{#if creds[pc.platform]}
+						<div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+							<input class="input" placeholder="Client ID" bind:value={creds[pc.platform].id} />
+							<input
+								class="input"
+								type="password"
+								placeholder={pc.configured ? '•••••• (set; re-enter to change)' : 'Client secret'}
+								bind:value={creds[pc.platform].secret}
+							/>
+						</div>
+						<div class="mt-2 flex gap-2">
+							<button
+								class="btn-primary text-sm"
+								disabled={saveCfg.isPending || !creds[pc.platform].id || !creds[pc.platform].secret}
+								onclick={() =>
+									saveCfg.mutate({
+										platform: pc.platform,
+										client_id: creds[pc.platform].id,
+										client_secret: creds[pc.platform].secret
+									})}
+							>
+								Save
+							</button>
+							{#if pc.configured}
+								<button class="btn-ghost text-sm" onclick={() => delCfg.mutate(pc.platform)}>Remove</button>
+							{/if}
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</div>
 
 		{#if connList.length > 0}
 			<ul class="mb-4 divide-y divide-[var(--color-border)]">

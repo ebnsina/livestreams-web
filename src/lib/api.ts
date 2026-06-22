@@ -262,6 +262,14 @@ export const api = {
 
 	// OAuth account linking
 	oauthProviders: () => request<{ providers: string[] }>('/v1/oauth/providers'),
+	oauthProviderConfigs: () =>
+		request<{
+			data: { platform: string; client_id: string; configured: boolean; redirect_uri: string }[];
+		}>('/v1/oauth/provider-configs'),
+	setOauthProviderConfig: (input: { platform: string; client_id: string; client_secret: string }) =>
+		request<void>('/v1/oauth/provider-configs', { method: 'POST', body: input }),
+	deleteOauthProviderConfig: (platform: string) =>
+		request<void>(`/v1/oauth/provider-configs/${platform}`, { method: 'DELETE' }),
 	oauthConnections: () => request<{ data: OAuthConnection[] }>('/v1/oauth/connections'),
 	oauthAuthorize: (platform: string) =>
 		request<{ redirect_url: string }>(`/v1/oauth/${platform}/authorize`),
