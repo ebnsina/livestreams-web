@@ -60,14 +60,16 @@
 			transition:scale={{ start: 0.92, opacity: 0, duration: 130 }}
 			role="listbox"
 		>
-			<div class="flex items-center gap-2 border-b border-[var(--color-border)] px-3 py-2">
-				<Search size={14} class="text-[var(--color-muted)]" />
+			<div
+				class="flex items-center gap-2 border-b border-[var(--color-border)] px-3 py-2.5 focus-within:border-[var(--color-accent)]"
+			>
+				<Search size={14} class="shrink-0 text-[var(--color-muted)]" />
 				<!-- svelte-ignore a11y_autofocus -->
 				<input
 					bind:value={q}
 					autofocus
 					placeholder="Search videos…"
-					class="w-full bg-transparent text-sm outline-none placeholder:text-[var(--color-muted)]"
+					class="w-full border-0 bg-transparent p-0 text-sm outline-none focus:ring-0 placeholder:text-[var(--color-muted)]"
 				/>
 			</div>
 			<ul class="max-h-72 overflow-y-auto py-1">
