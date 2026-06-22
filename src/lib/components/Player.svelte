@@ -12,7 +12,9 @@
 		Minimize,
 		PictureInPicture2,
 		Settings2,
-		RotateCcw
+		RotateCcw,
+		Lock,
+		Loader2
 	} from '@lucide/svelte';
 
 	let {
@@ -95,6 +97,8 @@
 	let video = $state<HTMLVideoElement>();
 	let hls: Hls | null = null;
 	let error = $state(false);
+	let errorKind = $state<'generic' | 'protected' | 'notready'>('generic');
+	let retries = $state(0);
 	let retry: ReturnType<typeof setTimeout> | null = null;
 
 	// quality / rendition state
@@ -138,9 +142,17 @@
 		void reload;
 		void src;
 		void live;
-		init();
+		restart();
 		return teardown;
 	});
+
+	// restart resets retry/error state then (re)initializes — used on src change
+	// and the manual Retry button. Auto-retries call init() directly.
+	function restart() {
+		retries = 0;
+		errorKind = 'generic';
+		init();
+	}
 
 	function init() {
 		error = false;
@@ -171,9 +183,21 @@
 			hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => (playingLevel = data.level));
 			hls.on(Hls.Events.ERROR, (_e, data) => {
 				if (!data.fatal) return;
-				if (live && data.type === Hls.ErrorTypes.NETWORK_ERROR) scheduleRetry();
-				else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls?.recoverMediaError();
-				else error = true;
+				const code = data.response?.code;
+				if (code === 403) {
+					errorKind = 'protected';
+					error = true;
+				} else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+					// 404/not-ready: live streams and freshly-transcoded VODs appear
+					// after a few seconds — keep retrying instead of dead-ending.
+					errorKind = 'notready';
+					scheduleRetry();
+				} else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+					hls?.recoverMediaError();
+				} else {
+					errorKind = 'generic';
+					error = true;
+				}
 			});
 		} else if (isHls && video.canPlayType('application/vnd.apple.mpegurl')) {
 			video.src = src; // Safari native HLS
@@ -192,8 +216,10 @@
 
 	function scheduleRetry() {
 		error = true;
+		if (retries >= 30) return; // give up after ~90s of polling
+		retries++;
 		if (retry) clearTimeout(retry);
-		retry = setTimeout(() => hls?.startLoad(), 2000);
+		retry = setTimeout(() => init(), 3000);
 	}
 
 	// --- video events ---
@@ -417,17 +443,28 @@
 	<!-- error / waiting overlay -->
 	{#if error}
 		<div
-			class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/75 text-center text-sm text-white/70"
+			class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/75 px-6 text-center text-sm text-white/70"
 		>
-			<p class="text-white/90">{live ? 'Waiting for the stream…' : 'Nothing to play yet.'}</p>
-			{#if live}
-				<p class="text-xs">Start publishing from OBS to this stream's ingest URL.</p>
+			{#if errorKind === 'protected'}
+				<Lock size={26} class="text-white/80" />
+				<p class="text-white/90">This content is protected.</p>
+				<p class="max-w-xs text-xs">
+					Open it with a signed link from the owner — a plain link won't play.
+				</p>
+				<button class="btn bg-white/15 text-white hover:bg-white/25" style="box-shadow:none" onclick={restart}>
+					<RotateCcw size={14} /> Retry
+				</button>
+			{:else if errorKind === 'notready'}
+				<Loader2 size={22} class="animate-spin text-white/80" />
+				<p class="text-white/90">{live ? 'Waiting for the stream…' : 'Getting this ready…'}</p>
+				<p class="max-w-xs text-xs">
+					{live
+						? "Start publishing to this stream's ingest URL."
+						: 'It was just published — this can take a few seconds.'}
+				</p>
 			{:else}
-				<button
-					class="btn bg-white/15 text-white hover:bg-white/25"
-					style="box-shadow: none"
-					onclick={init}
-				>
+				<p class="text-white/90">Couldn't play this.</p>
+				<button class="btn bg-white/15 text-white hover:bg-white/25" style="box-shadow:none" onclick={restart}>
 					<RotateCcw size={14} /> Retry
 				</button>
 			{/if}

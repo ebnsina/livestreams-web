@@ -18,8 +18,7 @@
 		KeyRound,
 		Users,
 		Settings,
-		LogOut,
-		Plus
+		LogOut
 	} from '@lucide/svelte';
 
 	let { children } = $props();
@@ -187,10 +186,6 @@
 					<div class="squircle flex items-center rounded-xl bg-[var(--color-surface-2)] px-1 py-1">
 						<NotificationsBell />
 					</div>
-
-					<a href="/streams" class="btn-accent hidden sm:inline-flex">
-						<Plus size={16} /> New stream
-					</a>
 				</header>
 
 				<!-- Mobile nav (scrollable pills) -->

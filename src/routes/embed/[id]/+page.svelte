@@ -8,7 +8,11 @@
 	// kind=live (default) plays the live HLS; kind=vod plays an on-demand asset.
 	const kind = $derived(page.url.searchParams.get('kind') === 'vod' ? 'vod' : 'live');
 	const isLive = $derived(kind === 'live');
-	const src = $derived(`${BASE.replace(/\/$/, '')}/${kind}/${id}/index.m3u8`);
+	// pass through a signed playback token (?t=) so protected content plays
+	const token = $derived(page.url.searchParams.get('t'));
+	const src = $derived(
+		`${BASE.replace(/\/$/, '')}/${kind}/${id}/index.m3u8${token ? `?t=${encodeURIComponent(token)}` : ''}`
+	);
 </script>
 
 <svelte:head>
