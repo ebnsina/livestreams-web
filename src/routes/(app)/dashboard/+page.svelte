@@ -7,6 +7,7 @@
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import Chart from '$lib/components/Chart.svelte';
 	import EmailBanner from '$lib/components/EmailBanner.svelte';
+	import AnimatedNumber from '$lib/components/AnimatedNumber.svelte';
 	import { LayoutDashboard, Users, HardDrive, Radio, Activity } from '@lucide/svelte';
 
 	const streams = createQuery(() => ({
@@ -33,11 +34,12 @@
 		return `${(b / Math.pow(1024, i)).toFixed(i ? 1 : 0)} ${u[i]}`;
 	}
 
+	const int = (n: number) => Math.round(n).toLocaleString();
 	const stats = $derived([
-		{ label: 'Live now', value: String(liveCount), icon: Radio, live: liveCount > 0 },
-		{ label: 'Total streams', value: String(list.length), icon: Activity },
-		{ label: 'Peak viewers · 24h', value: String(sum?.peak_viewers ?? 0), icon: Users },
-		{ label: 'Storage used', value: bytes(sum?.storage_bytes), icon: HardDrive }
+		{ label: 'Live now', value: liveCount, format: int, icon: Radio, live: liveCount > 0 },
+		{ label: 'Total streams', value: list.length, format: int, icon: Activity },
+		{ label: 'Peak viewers · 24h', value: sum?.peak_viewers ?? 0, format: int, icon: Users },
+		{ label: 'Storage used', value: sum?.storage_bytes ?? 0, format: bytes, icon: HardDrive }
 	]);
 </script>
 
@@ -58,7 +60,9 @@
 					<Icon size={16} />
 				</span>
 			</div>
-			<p class="mt-3 text-3xl font-semibold tracking-tight tabular-nums">{s.value}</p>
+			<p class="mt-3 text-3xl font-semibold tracking-tight">
+				<AnimatedNumber value={s.value} format={s.format} />
+			</p>
 		</div>
 	{/each}
 </div>
@@ -106,11 +110,15 @@
 		<div class="mt-5 grid grid-cols-2 gap-4">
 			<div>
 				<p class="text-sm text-[var(--color-muted)]">Avg startup</p>
-				<p class="mt-0.5 text-xl font-semibold tabular-nums">{sum?.avg_startup_ms ?? 0}ms</p>
+				<p class="mt-0.5 text-xl font-semibold">
+					<AnimatedNumber value={sum?.avg_startup_ms ?? 0} format={(n) => `${Math.round(n)}ms`} />
+				</p>
 			</div>
 			<div>
 				<p class="text-sm text-[var(--color-muted)]">Rebuffers</p>
-				<p class="mt-0.5 text-xl font-semibold tabular-nums">{sum?.total_rebuffers ?? 0}</p>
+				<p class="mt-0.5 text-xl font-semibold">
+					<AnimatedNumber value={sum?.total_rebuffers ?? 0} />
+				</p>
 			</div>
 		</div>
 	</section>

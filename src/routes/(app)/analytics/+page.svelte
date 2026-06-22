@@ -4,6 +4,7 @@
 	import { keys } from '$lib/query';
 	import Chart from '$lib/components/Chart.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import AnimatedNumber from '$lib/components/AnimatedNumber.svelte';
 	import { BarChart3 } from '@lucide/svelte';
 
 	let range = $state<'24h' | '7d' | '30d'>('24h');
@@ -37,15 +38,16 @@
 		return n >= 1000 ? `${(n / 1000).toFixed(1)}s` : `${n}ms`;
 	}
 
+	const int = (n: number) => Math.round(n).toLocaleString();
 	const cards = $derived([
-		{ label: 'Peak viewers', value: `${data?.summary.peak_viewers ?? 0}` },
-		{ label: 'Live now', value: `${data?.summary.live_now ?? 0}` },
-		{ label: 'Avg startup', value: ms(data?.summary.avg_startup_ms ?? 0) },
-		{ label: 'Total rebuffers', value: `${data?.summary.total_rebuffers ?? 0}` },
-		{ label: 'Streams', value: `${data?.summary.streams ?? 0}` },
-		{ label: 'Recordings', value: `${data?.summary.recordings ?? 0}` },
-		{ label: 'VOD & clips', value: `${data?.summary.vod ?? 0}` },
-		{ label: 'Storage used', value: bytes(data?.summary.storage_bytes ?? 0) }
+		{ label: 'Peak viewers', value: data?.summary.peak_viewers ?? 0, format: int },
+		{ label: 'Live now', value: data?.summary.live_now ?? 0, format: int },
+		{ label: 'Avg startup', value: data?.summary.avg_startup_ms ?? 0, format: (n: number) => ms(n) },
+		{ label: 'Total rebuffers', value: data?.summary.total_rebuffers ?? 0, format: int },
+		{ label: 'Streams', value: data?.summary.streams ?? 0, format: int },
+		{ label: 'Recordings', value: data?.summary.recordings ?? 0, format: int },
+		{ label: 'VOD & clips', value: data?.summary.vod ?? 0, format: int },
+		{ label: 'Storage used', value: data?.summary.storage_bytes ?? 0, format: bytes }
 	]);
 </script>
 
@@ -75,7 +77,9 @@
 	{#each cards as c (c.label)}
 		<div class="card p-4">
 			<p class="text-xs text-[var(--color-muted)]">{c.label}</p>
-			<p class="mt-1 text-2xl font-semibold tabular-nums">{c.value}</p>
+			<p class="mt-1 text-2xl font-semibold">
+				<AnimatedNumber value={c.value} format={c.format} />
+			</p>
 		</div>
 	{/each}
 </div>
