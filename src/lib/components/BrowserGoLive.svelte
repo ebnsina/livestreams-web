@@ -65,9 +65,9 @@
 				iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
 			});
 			pc = conn;
+			// addTrack creates the send-only transceivers; don't also addTransceiver
+			// or the m-line order won't match SRS's answer.
 			for (const track of stream.getTracks()) conn.addTrack(track, stream);
-			conn.addTransceiver('video', { direction: 'sendonly' });
-			conn.addTransceiver('audio', { direction: 'sendonly' });
 
 			const offer = await conn.createOffer();
 			await conn.setLocalDescription(offer);

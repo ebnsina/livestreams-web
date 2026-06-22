@@ -7,17 +7,32 @@
 		onSelect
 	}: { events: StreamEvent[]; live?: boolean; onSelect?: (e: StreamEvent) => void } = $props();
 
-	// Soft-tint level pills (single colors that read on both light and dark).
-	const pill: Record<string, string> = {
-		info: 'bg-sky-500/12 text-sky-500',
-		warn: 'bg-amber-500/12 text-amber-500',
-		error: 'bg-red-500/12 text-red-500'
+	// A varied palette keyed by event meaning — brand color for "went live",
+	// distinct hues per category so the timeline reads at a glance.
+	const palette: Record<string, { dot: string; pill: string }> = {
+		brand: {
+			dot: 'bg-[var(--color-accent)]',
+			pill: 'bg-[var(--color-accent)]/12 text-[var(--color-accent)]'
+		},
+		emerald: { dot: 'bg-emerald-500', pill: 'bg-emerald-500/12 text-emerald-600' },
+		sky: { dot: 'bg-sky-500', pill: 'bg-sky-500/12 text-sky-500' },
+		violet: { dot: 'bg-violet-500', pill: 'bg-violet-500/12 text-violet-500' },
+		amber: { dot: 'bg-amber-500', pill: 'bg-amber-500/12 text-amber-600' },
+		red: { dot: 'bg-red-500', pill: 'bg-red-500/12 text-red-500' },
+		slate: { dot: 'bg-slate-400', pill: 'bg-slate-500/12 text-slate-500' }
 	};
-	const dot: Record<string, string> = {
-		info: 'bg-sky-400',
-		warn: 'bg-amber-400',
-		error: 'bg-red-500'
-	};
+
+	// Map an event to a palette key by type/level.
+	function tone(e: StreamEvent): keyof typeof palette {
+		const t = (e.type ?? '').toLowerCase();
+		if (e.level === 'error' || t.endsWith('.error') || t.endsWith('.failed')) return 'red';
+		if (e.level === 'warn') return 'amber';
+		if (t.includes('publish') || t.includes('live') || t === 'session.started') return 'brand';
+		if (t.startsWith('transcode')) return t.includes('finish') ? 'emerald' : 'violet';
+		if (t.startsWith('recording')) return t.includes('finish') ? 'emerald' : 'sky';
+		if (t.startsWith('session')) return 'slate';
+		return 'sky';
+	}
 
 	function clock(s: string) {
 		return new Date(s).toLocaleTimeString([], {
@@ -63,7 +78,8 @@
 	</div>
 
 	{#snippet rowContent(e: StreamEvent)}
-		<span class="mt-[7px] h-2 w-2 shrink-0 rounded-full {dot[e.level] ?? 'bg-slate-400'}"></span>
+		{@const c = palette[tone(e)]}
+		<span class="mt-[7px] h-2 w-2 shrink-0 rounded-full {c.dot}"></span>
 		<div class="min-w-0">
 			<p
 				class="truncate text-[13px] font-medium {e.level === 'error'
@@ -74,8 +90,7 @@
 			</p>
 			<div class="mt-1 flex min-w-0 items-center gap-2">
 				<span
-					class="shrink-0 rounded px-1.5 py-px font-mono text-[10px] font-medium {pill[e.level] ??
-						'bg-slate-500/12 text-slate-400'}"
+					class="shrink-0 rounded px-1.5 py-px font-mono text-[10px] font-medium {c.pill}"
 				>
 					{e.type}
 				</span>
