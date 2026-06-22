@@ -29,6 +29,15 @@
 		onSuccess: () => qc.invalidateQueries({ queryKey: keys.oauthConnections })
 	}));
 
+	const importKey = createMutation(() => ({
+		mutationFn: (id: string) => api.importStreamKey(id),
+		onSuccess: (dest) => {
+			toast.success(`Added “${dest.name}” to your destinations`);
+		},
+		onError: (e) =>
+			toast.error((e as ApiError)?.message ?? 'Could not fetch stream key from the platform')
+	}));
+
 	// BYO OAuth credentials (per-org)
 	const provConfigs = createQuery(() => ({
 		queryKey: keys.oauthProviderConfigs,
@@ -261,7 +270,20 @@
 							<span class="font-medium">{platformLabel[c.platform] ?? c.platform}</span>
 							<span class="text-[var(--color-muted)]">· {c.account_name || 'connected'}</span>
 						</span>
-						<button class="btn-danger text-sm" onclick={() => disconnect.mutate(c.id)}>Disconnect</button>
+						<span class="flex gap-2">
+							{#if c.platform === 'youtube' || c.platform === 'twitch'}
+								<button
+									class="btn-ghost text-sm"
+									disabled={importKey.isPending}
+									onclick={() => importKey.mutate(c.id)}
+								>
+									{importKey.isPending && importKey.variables === c.id
+										? 'Fetching…'
+										: 'Import stream key'}
+								</button>
+							{/if}
+							<button class="btn-danger text-sm" onclick={() => disconnect.mutate(c.id)}>Disconnect</button>
+						</span>
 					</li>
 				{/each}
 			</ul>

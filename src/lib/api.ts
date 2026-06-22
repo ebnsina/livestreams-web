@@ -273,6 +273,11 @@ export const api = {
 	oauthConnections: () => request<{ data: OAuthConnection[] }>('/v1/oauth/connections'),
 	oauthAuthorize: (platform: string) =>
 		request<{ redirect_url: string }>(`/v1/oauth/${platform}/authorize`),
+	importStreamKey: (id: string) =>
+		request<{ id: string; platform: string; name: string; url: string }>(
+			`/v1/oauth/connections/${id}/import-key`,
+			{ method: 'POST' }
+		),
 	deleteOauthConnection: (id: string) =>
 		request<void>(`/v1/oauth/connections/${id}`, { method: 'DELETE' }),
 
