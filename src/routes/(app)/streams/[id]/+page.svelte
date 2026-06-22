@@ -15,6 +15,7 @@
 	import Restream from '$lib/components/Restream.svelte';
 	import Chart from '$lib/components/Chart.svelte';
 	import EmbedSnippet from '$lib/components/EmbedSnippet.svelte';
+	import { toast } from '$lib/toast.svelte';
 
 	const qc = useQueryClient();
 	const id = $derived(page.params.id as string);
@@ -120,7 +121,11 @@
 
 	const rotate = createMutation(() => ({
 		mutationFn: () => api.rotateKey(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.stream(id) })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.stream(id) });
+			toast.success('Stream key rotated');
+		},
+		onError: () => toast.error("Couldn't rotate stream key — try again")
 	}));
 
 	// schedule editor
@@ -132,12 +137,18 @@
 		onSuccess: () => {
 			editingSchedule = false;
 			qc.invalidateQueries({ queryKey: keys.stream(id) });
-		}
+			toast.success('Saved');
+		},
+		onError: () => toast.error("Couldn't save schedule — try again")
 	}));
 
 	const stop = createMutation(() => ({
 		mutationFn: () => api.stopStream(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.stream(id) })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.stream(id) });
+			toast.success('Stream stopped');
+		},
+		onError: () => toast.error("Couldn't stop stream — try again")
 	}));
 
 	const remove = createMutation(() => ({
@@ -145,7 +156,9 @@
 		onSuccess: () => {
 			qc.invalidateQueries({ queryKey: keys.streams });
 			goto('/streams');
-		}
+			toast.success('Deleted');
+		},
+		onError: () => toast.error("Couldn't delete stream — try again")
 	}));
 
 	function fmtDate(d: string | null) {

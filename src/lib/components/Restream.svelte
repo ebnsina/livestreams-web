@@ -3,6 +3,7 @@
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
 	import { auth } from '$lib/auth.svelte';
+	import { toast } from '$lib/toast.svelte';
 
 	let { streamId }: { streamId: string } = $props();
 	const qc = useQueryClient();
@@ -48,7 +49,9 @@
 			showForm = false;
 			name = '';
 			streamKey = '';
-		}
+			toast.success('Destination added');
+		},
+		onError: () => toast.error("Couldn't add destination — try again")
 	}));
 
 	const platformLabel: Record<string, string> = {
@@ -72,7 +75,11 @@
 
 	const applyPreset = createMutation(() => ({
 		mutationFn: (id: string) => api.applyPreset(id, streamId),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.streamDestinations(streamId) })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.streamDestinations(streamId) });
+			toast.success('Preset applied');
+		},
+		onError: () => toast.error("Couldn't apply preset — try again")
 	}));
 	const savePreset = createMutation(() => ({
 		mutationFn: () => api.createPreset({ name: presetName.trim(), destination_ids: enabledIds }),
@@ -80,11 +87,17 @@
 			savingPreset = false;
 			presetName = '';
 			qc.invalidateQueries({ queryKey: keys.simulcastPresets });
-		}
+			toast.success('Preset saved');
+		},
+		onError: () => toast.error("Couldn't save preset — try again")
 	}));
 	const delPreset = createMutation(() => ({
 		mutationFn: (id: string) => api.deletePreset(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.simulcastPresets })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.simulcastPresets });
+			toast.success('Preset deleted');
+		},
+		onError: () => toast.error("Couldn't delete preset — try again")
 	}));
 </script>
 

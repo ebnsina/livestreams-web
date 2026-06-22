@@ -8,6 +8,7 @@
 	import Pager from '$lib/components/Pager.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { Radio } from '@lucide/svelte';
+	import { toast } from '$lib/toast.svelte';
 	import type { LatencyMode } from '$lib/types';
 
 	const qc = useQueryClient();
@@ -48,7 +49,9 @@
 			showForm = false;
 			name = '';
 			schedule = '';
-		}
+			toast.success('Stream created');
+		},
+		onError: () => toast.error("Couldn't create stream — try again")
 	}));
 </script>
 

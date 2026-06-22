@@ -5,6 +5,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { toast } from '$lib/toast.svelte';
 	import { Webhook } from '@lucide/svelte';
 
 	const qc = useQueryClient();
@@ -31,17 +32,27 @@
 			newSecret = ep.secret ?? null;
 			url = '';
 			qc.invalidateQueries({ queryKey: keys.webhooks });
-		}
+			toast.success('Webhook added');
+		},
+		onError: () => toast.error("Couldn't add webhook — try again")
 	}));
 
 	const remove = createMutation(() => ({
 		mutationFn: (id: string) => api.deleteWebhook(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.webhooks })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.webhooks });
+			toast.success('Webhook deleted');
+		},
+		onError: () => toast.error("Couldn't delete webhook — try again")
 	}));
 
 	const redeliver = createMutation(() => ({
 		mutationFn: (id: string) => api.redeliverWebhook(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.webhookDeliveries })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.webhookDeliveries });
+			toast.success('Redelivery queued');
+		},
+		onError: () => toast.error("Couldn't queue redelivery — try again")
 	}));
 
 	const statusColor: Record<string, string> = {

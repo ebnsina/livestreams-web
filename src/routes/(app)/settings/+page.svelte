@@ -64,7 +64,9 @@
 			pwDone = true;
 			current = next = confirm = '';
 			setTimeout(() => (pwDone = false), 3000);
-		}
+			toast.success('Password updated');
+		},
+		onError: () => toast.error("Couldn't update password — check your current one")
 	}));
 
 	function submitPw(e: SubmitEvent) {

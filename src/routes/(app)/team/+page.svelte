@@ -5,6 +5,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { toast } from '$lib/toast.svelte';
 	import { Users } from '@lucide/svelte';
 
 	const qc = useQueryClient();
@@ -28,12 +29,18 @@
 				: null;
 			email = '';
 			qc.invalidateQueries({ queryKey: keys.teamInvitations });
-		}
+			toast.success('Invite sent');
+		},
+		onError: () => toast.error("Couldn't send invite — try again")
 	}));
 
 	const revoke = createMutation(() => ({
 		mutationFn: (id: string) => api.revokeInvitation(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.teamInvitations })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.teamInvitations });
+			toast.success('Invite revoked');
+		},
+		onError: () => toast.error("Couldn't revoke invite — try again")
 	}));
 
 	const roleColor: Record<string, string> = {

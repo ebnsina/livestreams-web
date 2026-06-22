@@ -2,6 +2,7 @@
 	import Hls from 'hls.js';
 	import { api } from '$lib/api';
 	import type { Asset } from '$lib/types';
+	import { toast } from '$lib/toast.svelte';
 	import Modal from './Modal.svelte';
 
 	let {
@@ -81,10 +82,12 @@
 				end_sec: Number(end.toFixed(2))
 			});
 			teardown();
+			toast.success('Clip queued');
 			onDone();
 			onClose();
 		} catch (e) {
 			submitError = e instanceof Error ? e.message : 'Could not create clip';
+			toast.error("Couldn't create clip — try again");
 		} finally {
 			saving = false;
 		}

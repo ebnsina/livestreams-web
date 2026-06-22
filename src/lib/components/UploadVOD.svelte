@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { api } from '$lib/api';
+	import { toast } from '$lib/toast.svelte';
 	import Modal from './Modal.svelte';
 	import { UploadCloud } from '@lucide/svelte';
 
@@ -46,12 +47,14 @@
 			await api.uploadToUrl(upload_url, file, (p) => (progress = p));
 			phase = 'processing';
 			await api.processUpload(asset_id);
+			toast.success('Upload started');
 			reset();
 			onDone();
 			onClose();
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Upload failed';
 			phase = 'idle';
+			toast.error("Couldn't upload — try again");
 		}
 	}
 

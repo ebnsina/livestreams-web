@@ -9,6 +9,7 @@
 	import Pager from '$lib/components/Pager.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { Film } from '@lucide/svelte';
+	import { toast } from '$lib/toast.svelte';
 
 	const qc = useQueryClient();
 	const LIMIT = 24;
@@ -30,7 +31,11 @@
 
 	const remove = createMutation(() => ({
 		mutationFn: (id: string) => api.deleteAsset(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.assets })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.assets });
+			toast.success('Deleted');
+		},
+		onError: () => toast.error("Couldn't delete recording — try again")
 	}));
 
 	function refresh() {

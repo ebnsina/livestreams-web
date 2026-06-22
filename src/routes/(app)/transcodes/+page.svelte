@@ -13,6 +13,7 @@
 	import Pager from '$lib/components/Pager.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { UploadCloud, Play, ScrollText, RefreshCw, Trash2, FileVideo } from '@lucide/svelte';
+	import { toast } from '$lib/toast.svelte';
 
 	const qc = useQueryClient();
 	const LIMIT = 20;
@@ -44,11 +45,19 @@
 	}
 	const remove = createMutation(() => ({
 		mutationFn: (id: string) => api.deleteAsset(id),
-		onSuccess: refresh
+		onSuccess: () => {
+			refresh();
+			toast.success('Deleted');
+		},
+		onError: () => toast.error("Couldn't delete — try again")
 	}));
 	const retry = createMutation(() => ({
 		mutationFn: (id: string) => api.retryAsset(id),
-		onSuccess: refresh
+		onSuccess: () => {
+			refresh();
+			toast.success('Re-queued');
+		},
+		onError: () => toast.error("Couldn't re-queue — try again")
 	}));
 
 	const typeLabel: Record<string, string> = { vod: 'VOD', clip: 'Clip', upload: 'Upload' };

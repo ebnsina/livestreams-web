@@ -5,6 +5,7 @@
 	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { toast } from '$lib/toast.svelte';
 	import { KeyRound } from '@lucide/svelte';
 
 	const qc = useQueryClient();
@@ -22,7 +23,9 @@
 			newKey = k.key ?? null;
 			name = '';
 			qc.invalidateQueries({ queryKey: keys.apiKeys });
-		}
+			toast.success('API key created');
+		},
+		onError: () => toast.error("Couldn't create API key — try again")
 	}));
 
 	function isReadOnly(scopes: string[]) {
@@ -31,7 +34,11 @@
 
 	const revoke = createMutation(() => ({
 		mutationFn: (id: string) => api.revokeApiKey(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: keys.apiKeys })
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: keys.apiKeys });
+			toast.success('Key revoked');
+		},
+		onError: () => toast.error("Couldn't revoke key — try again")
 	}));
 
 	function when(s?: string) {
