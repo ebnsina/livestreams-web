@@ -51,6 +51,7 @@ export interface Stream {
 	ingest_protocol: IngestProtocol;
 	latency_mode: LatencyMode;
 	recording_enabled: boolean;
+	protected?: boolean;
 	ingest?: Ingest;
 	playback_url: string;
 	scheduled_at?: string | null;
@@ -130,6 +131,7 @@ export interface Asset {
 	thumbnail?: boolean;
 	storyboard?: boolean;
 	caption_status?: string; // none | processing | ready | errored
+	protected?: boolean;
 	created_at: string;
 }
 

@@ -12,7 +12,17 @@
 	import Menu from '$lib/components/Menu.svelte';
 	import Pager from '$lib/components/Pager.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
-	import { UploadCloud, Play, ScrollText, RefreshCw, Trash2, FileVideo, Captions } from '@lucide/svelte';
+	import SecureLinkDialog from '$lib/components/SecureLinkDialog.svelte';
+	import {
+		UploadCloud,
+		Play,
+		ScrollText,
+		RefreshCw,
+		Trash2,
+		FileVideo,
+		Captions,
+		ShieldCheck
+	} from '@lucide/svelte';
 	import { toast } from '$lib/toast.svelte';
 
 	const qc = useQueryClient();
@@ -26,6 +36,8 @@
 	let playing = $state<Asset | null>(null);
 	let clipping = $state<Asset | null>(null);
 	let embedding = $state<Asset | null>(null);
+	let secureOpen = $state(false);
+	let secureId = $state('');
 
 	$effect(() => {
 		void q;
@@ -66,6 +78,14 @@
 			toast.success('Generating captions…');
 		},
 		onError: () => toast.error('Captions need an AI provider — set LS_AI_TRANSCRIBE_PROVIDER')
+	}));
+	const protect = createMutation(() => ({
+		mutationFn: (v: { id: string; on: boolean }) => api.setAssetProtected(v.id, v.on),
+		onSuccess: (_d, v) => {
+			refresh();
+			toast.success(v.on ? 'Playback now requires a signed link' : 'Playback is public');
+		},
+		onError: () => toast.error("Couldn't update protection — try again")
 	}));
 
 	const typeLabel: Record<string, string> = { vod: 'VOD', clip: 'Clip', upload: 'Upload' };
@@ -180,6 +200,26 @@
 											{a.caption_status === 'ready' ? 'Regenerate captions' : 'Generate captions'}
 										</button>
 									{/if}
+									{#if a.status === 'ready'}
+										<button
+											class="menu-item"
+											onclick={() => {
+												secureId = a.id;
+												secureOpen = true;
+											}}
+										>
+											<ShieldCheck size={15} /> Secure link
+										</button>
+									{/if}
+									{#if auth.canWrite && a.type === 'vod'}
+										<button
+											class="menu-item"
+											onclick={() => protect.mutate({ id: a.id, on: !a.protected })}
+										>
+											<ShieldCheck size={15} />
+											{a.protected ? 'Make public' : 'Protect playback'}
+										</button>
+									{/if}
 									{#if auth.canWrite}
 										<button class="menu-item text-red-600" onclick={() => remove.mutate(a.id)}>
 											<Trash2 size={15} /> Delete
@@ -199,6 +239,7 @@
 <Pager {total} limit={LIMIT} {offset} onChange={(o) => (offset = o)} />
 
 <PlayerModal asset={playing} onClose={() => (playing = null)} />
+<SecureLinkDialog bind:open={secureOpen} kind="vod" id={secureId} />
 <UploadVOD open={showUpload} onClose={() => (showUpload = false)} onDone={refresh} />
 <ClipModal asset={clipping} onClose={() => (clipping = null)} onDone={refresh} />
 <TranscodeDetail

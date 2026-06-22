@@ -191,6 +191,19 @@ export const api = {
 		`${BASE}/v1/assets/${id}/captions.vtt?access_token=${encodeURIComponent(auth.token ?? '')}`,
 	generateCaptions: (id: string) =>
 		request<{ caption_status: string }>(`/v1/assets/${id}/captions`, { method: 'POST' }),
+	// secure delivery: signed/expiring playback links + protected toggle
+	signPlayback: (input: { kind: 'live' | 'vod'; id: string; ttl_sec?: number; domain?: string }) =>
+		request<{ url: string; expires_at: string }>('/v1/playback/sign', { method: 'POST', body: input }),
+	setStreamProtected: (id: string, isProtected: boolean) =>
+		request<{ protected: boolean }>(`/v1/streams/${id}/protect`, {
+			method: 'POST',
+			body: { protected: isProtected }
+		}),
+	setAssetProtected: (id: string, isProtected: boolean) =>
+		request<{ protected: boolean }>(`/v1/assets/${id}/protect`, {
+			method: 'POST',
+			body: { protected: isProtected }
+		}),
 	transcodeLogs: (id: string) =>
 		request<{ status: string; logs: { stage: string; line: string; at: string }[] }>(
 			`/v1/assets/${id}/transcode`

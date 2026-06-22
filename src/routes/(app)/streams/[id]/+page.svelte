@@ -11,6 +11,7 @@
 	import CopyField from '$lib/components/CopyField.svelte';
 	import BrowserGoLive from '$lib/components/BrowserGoLive.svelte';
 	import ChatPanel from '$lib/components/ChatPanel.svelte';
+	import SecureLinkDialog from '$lib/components/SecureLinkDialog.svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Recordings from '$lib/components/Recordings.svelte';
@@ -128,6 +129,17 @@
 			toast.success('Stream key rotated');
 		},
 		onError: () => toast.error("Couldn't rotate stream key — try again")
+	}));
+
+	// secure delivery
+	let secureOpen = $state(false);
+	const setProtected = createMutation(() => ({
+		mutationFn: (v: boolean) => api.setStreamProtected(id, v),
+		onSuccess: (_d, v) => {
+			qc.invalidateQueries({ queryKey: keys.stream(id) });
+			toast.success(v ? 'Playback now requires a signed link' : 'Playback is public');
+		},
+		onError: () => toast.error("Couldn't update protection — try again")
 	}));
 
 	// schedule editor
@@ -249,7 +261,15 @@
 			</div>
 
 			<div class="card space-y-3 p-4">
-				<h2 class="text-sm font-semibold text-[var(--color-muted)]">Share &amp; embed</h2>
+				<div class="flex items-center justify-between">
+					<h2 class="text-sm font-semibold text-[var(--color-muted)]">Share &amp; embed</h2>
+					{#if auth.canWrite}
+						<button
+							class="text-xs font-medium text-[var(--color-accent)] hover:underline"
+							onclick={() => (secureOpen = true)}>Secure link</button
+						>
+					{/if}
+				</div>
 				<EmbedSnippet {id} kind="live" hlsUrl={s.playback_url} />
 			</div>
 			<Timeline events={timeline} live={isLive} />
@@ -286,6 +306,27 @@
 					<span class="text-[var(--color-muted)]">Recording</span><span
 						>{s.recording_enabled ? 'On' : 'Off'}</span
 					>
+				</div>
+				<div class="flex items-center justify-between gap-2">
+					<span class="text-[var(--color-muted)]">Protected playback</span>
+					{#if auth.canWrite}
+						<button
+							class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors {s.protected
+								? 'bg-[var(--color-accent)]'
+								: 'bg-[var(--color-border)]'}"
+							onclick={() => setProtected.mutate(!s.protected)}
+							disabled={setProtected.isPending}
+							aria-label="Toggle protected playback"
+						>
+							<span
+								class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform {s.protected
+									? 'translate-x-4'
+									: 'translate-x-0.5'}"
+							></span>
+						</button>
+					{:else}
+						<span>{s.protected ? 'On' : 'Off'}</span>
+					{/if}
 				</div>
 				<div class="flex justify-between">
 					<span class="text-[var(--color-muted)]">Created</span><span>{fmtDate(s.created_at)}</span>
@@ -427,4 +468,6 @@
 			</div>
 		</div>
 	</section>
+
+	<SecureLinkDialog bind:open={secureOpen} kind="live" {id} />
 {/if}
