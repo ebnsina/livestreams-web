@@ -1,7 +1,8 @@
 # livestreams-web — agent guide
 
-SvelteKit **SPA** for a self-hosted **live streaming & video platform** — a public
-marketing landing page plus the operator dashboard (go live from the browser or an
+SvelteKit **SPA** for a **live streaming & video SaaS** (sold as a subscription —
+not self-hosted) — a public marketing landing page plus the operator dashboard
+(go live from the browser or an
 encoder, multistream, recordings/VOD, transcodes, AI captions, unified live chat,
 secure delivery, analytics). This repo is **independent**; it has no backend code and
 talks to the API **only over HTTP**.
@@ -51,8 +52,17 @@ src/routes/
   `query.isError`) — NOT `$`-prefixed stores. Same for `createMutation`.
 - **Svelte 5 runes** everywhere: `$state`, `$derived`, `$props`, `$effect`. Reactive `.ts`
   modules use the `.svelte.ts` extension.
-- Build a **beautiful, professional UI**; reuse the `.btn-*`, `.card`, `.input`, `.label`
-  classes and CSS theme tokens in `layout.css`.
+- Build a **beautiful, professional UI**; reuse the `.btn-*`, `.card`, `.input`, `.label`,
+  `.badge` (uppercase, tight-tracking), `.squircle` classes and CSS theme tokens in
+  `layout.css`. Body sets `font-variant-numeric: tabular-nums`.
+- **Animation is Svelte built-ins only — no 3rd-party libs.** Use `svelte/transition`
+  (fade/fly/scale), `svelte/animate` (flip), `svelte/motion` (`Tween`) and `svelte/easing`.
+  Dialogs/modals/menus/toasts already animate; the scroll-reveal action lives in
+  `src/lib/actions/reveal.ts`. Numeric stats use the slot-machine odometer
+  `components/AnimatedNumber.svelte` (`value` + `format` props). Always respect
+  `prefers-reduced-motion`.
+- **Forms validate with Zod** (`src/lib/schemas.ts`, `fieldErrors()`): inline errors +
+  `novalidate` on the `<form>`.
 - When the API contract changes in `../api`, update `src/lib/types.ts` and
   `src/lib/api.ts` to match.
 
@@ -82,4 +92,5 @@ Full product UI, well beyond the original dashboard:
   friendly error system (`+error.svelte`, `ErrorState`, hardened API client).
 
 Design is **token-driven** (olive accent, squircle corners, soft shadows; light/dark)
-via CSS vars in `src/routes/layout.css`. Backend billing is deferred (free tier).
+via CSS vars in `src/routes/layout.css`, with a library-free animation layer throughout.
+Backend billing is deferred (free tier for now).
