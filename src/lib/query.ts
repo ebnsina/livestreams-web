@@ -12,6 +12,7 @@ export const keys = {
 	assets: ['assets'] as const,
 	recordings: (id: string) => ['streams', id, 'recordings'] as const,
 	streamDestinations: (id: string) => ['streams', id, 'destinations'] as const,
+	simulcastPresets: ['simulcast-presets'] as const,
 	webhooks: ['webhooks'] as const,
 	webhookDeliveries: ['webhook-deliveries'] as const,
 	apiKeys: ['api-keys'] as const,

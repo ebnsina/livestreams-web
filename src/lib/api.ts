@@ -23,7 +23,8 @@ import type {
 	AnalyticsOverview,
 	StreamAnalytics,
 	Paginated,
-	Notification
+	Notification,
+	SimulcastPreset
 } from './types';
 
 // Build a query string from defined params (skips undefined/empty values).
@@ -200,6 +201,16 @@ export const api = {
 	retryAsset: (id: string) => request<Asset>(`/v1/assets/${id}/retry`, { method: 'POST' }),
 	createClip: (id: string, input: { title?: string; start_sec: number; end_sec: number }) =>
 		request<Asset>(`/v1/assets/${id}/clip`, { method: 'POST', body: input }),
+
+	// simulcast presets
+	simulcastPresets: () => request<{ data: SimulcastPreset[] }>('/v1/simulcast-presets'),
+	createPreset: (input: { name: string; destination_ids: string[] }) =>
+		request<SimulcastPreset>('/v1/simulcast-presets', { method: 'POST', body: input }),
+	deletePreset: (id: string) => request<void>(`/v1/simulcast-presets/${id}`, { method: 'DELETE' }),
+	applyPreset: (id: string, streamId: string) =>
+		request<{ applied: number }>(`/v1/simulcast-presets/${id}/apply?stream_id=${streamId}`, {
+			method: 'POST'
+		}),
 
 	// multistream destinations
 	destinations: () => request<{ data: Destination[] }>('/v1/destinations'),

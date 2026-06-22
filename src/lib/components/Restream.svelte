@@ -58,6 +58,34 @@
 		kick: 'Kick',
 		custom: 'Custom'
 	};
+
+	// --- simulcast presets ---
+	const presetsQ = createQuery(() => ({
+		queryKey: keys.simulcastPresets,
+		queryFn: () => api.simulcastPresets()
+	}));
+	const presetList = $derived(presetsQ.data?.data ?? []);
+	const enabledIds = $derived(list.filter((d) => d.enabled).map((d) => d.id));
+
+	let savingPreset = $state(false);
+	let presetName = $state('');
+
+	const applyPreset = createMutation(() => ({
+		mutationFn: (id: string) => api.applyPreset(id, streamId),
+		onSuccess: () => qc.invalidateQueries({ queryKey: keys.streamDestinations(streamId) })
+	}));
+	const savePreset = createMutation(() => ({
+		mutationFn: () => api.createPreset({ name: presetName.trim(), destination_ids: enabledIds }),
+		onSuccess: () => {
+			savingPreset = false;
+			presetName = '';
+			qc.invalidateQueries({ queryKey: keys.simulcastPresets });
+		}
+	}));
+	const delPreset = createMutation(() => ({
+		mutationFn: (id: string) => api.deletePreset(id),
+		onSuccess: () => qc.invalidateQueries({ queryKey: keys.simulcastPresets })
+	}));
 </script>
 
 <section class="card overflow-hidden">
@@ -69,6 +97,58 @@
 			</button>
 		{/if}
 	</div>
+
+	<!-- presets -->
+	{#if auth.canWrite && (presetList.length > 0 || enabledIds.length > 0)}
+		<div
+			class="flex flex-wrap items-center gap-2 border-b border-[var(--color-border)] px-5 py-2.5 text-xs"
+		>
+			<span class="text-[var(--color-muted)]">Presets:</span>
+			{#each presetList as p (p.id)}
+				<span
+					class="inline-flex items-center gap-1 rounded-full bg-[var(--color-surface-2)] py-0.5 pl-2 pr-1"
+				>
+					<button
+						class="font-medium hover:text-[#ff5b3e]"
+						title="Apply {p.destination_ids.length} destinations"
+						onclick={() => applyPreset.mutate(p.id)}>{p.name}</button
+					>
+					<button
+						class="rounded-full px-1 text-[var(--color-muted)] hover:text-red-500"
+						aria-label="Delete preset"
+						onclick={() => delPreset.mutate(p.id)}>×</button
+					>
+				</span>
+			{/each}
+			{#if enabledIds.length > 0}
+				{#if savingPreset}
+					<form
+						class="inline-flex items-center gap-1"
+						onsubmit={(e) => {
+							e.preventDefault();
+							if (presetName.trim()) savePreset.mutate();
+						}}
+					>
+						<input
+							class="input w-auto py-1 text-xs"
+							bind:value={presetName}
+							placeholder="Preset name"
+						/>
+						<button class="btn-primary px-2 py-1 text-xs" type="submit">Save</button>
+						<button
+							type="button"
+							class="px-1 text-[var(--color-muted)]"
+							onclick={() => (savingPreset = false)}>×</button
+						>
+					</form>
+				{:else}
+					<button class="font-medium text-[#ff5b3e] hover:underline" onclick={() => (savingPreset = true)}
+						>+ Save current</button
+					>
+				{/if}
+			{/if}
+		</div>
+	{/if}
 
 	{#if showForm}
 		<form

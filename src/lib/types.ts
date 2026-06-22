@@ -130,6 +130,12 @@ export interface Asset {
 	created_at: string;
 }
 
+export interface SimulcastPreset {
+	id: string;
+	name: string;
+	destination_ids: string[];
+}
+
 export interface Destination {
 	id: string;
 	platform: string;
