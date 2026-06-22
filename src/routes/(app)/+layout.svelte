@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { fly } from 'svelte/transition';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { auth } from '$lib/auth.svelte';
 	import { api } from '$lib/api';
@@ -201,11 +202,13 @@
 					{/each}
 				</nav>
 
-				<!-- Scrollable content -->
+				<!-- Scrollable content (animates on route change) -->
 				<main class="min-w-0 flex-1 overflow-y-auto px-5 pb-12 pt-2 sm:px-8">
-					<div class="mx-auto w-full max-w-6xl">
-						{@render children()}
-					</div>
+					{#key page.url.pathname}
+						<div in:fly={{ y: 8, duration: 220 }} class="mx-auto w-full max-w-6xl">
+							{@render children()}
+						</div>
+					{/key}
 				</main>
 			</div>
 		</div>

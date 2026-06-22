@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
+	import { reveal } from '$lib/actions/reveal';
 	import { auth } from '$lib/auth.svelte';
 	import {
 		Radio,
@@ -71,6 +72,34 @@
 
 	let active = $state(0); // selected feature in the interactive showcase
 
+	// Pricing tiers (placeholder prices — edit to taste).
+	const tiers = [
+		{
+			name: 'Free',
+			price: '$0',
+			period: '/mo',
+			tagline: 'Get started',
+			featured: false,
+			features: ['1 live stream', 'Browser go-live & RTMP', 'Recording & VOD', '1 multistream target', 'Community support']
+		},
+		{
+			name: 'Pro',
+			price: '$19',
+			period: '/mo',
+			tagline: 'For creators',
+			featured: true,
+			features: ['Unlimited streams', 'Multistream everywhere', 'AI captions', 'Analytics & QoS', 'Secure links', '5 team members']
+		},
+		{
+			name: 'Business',
+			price: '$99',
+			period: '/mo',
+			tagline: 'For teams',
+			featured: false,
+			features: ['Everything in Pro', 'Domain-locked delivery', 'Webhooks & full API', 'Unlimited team & orgs', 'Priority support']
+		}
+	];
+
 	const steps = [
 		{ n: '1', title: 'Create a stream', body: 'Pick webcam or encoder. Get an ingest URL, key, and a player instantly.' },
 		{ n: '2', title: 'Go live', body: 'Publish from the browser or your encoder. Adaptive HLS, recording and multistream kick in automatically.' },
@@ -114,6 +143,11 @@
 				class="hidden text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-text)] sm:block"
 				>Features</a
 			>
+			<a
+				href="#pricing"
+				class="hidden text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-text)] sm:block"
+				>Pricing</a
+			>
 			{#if auth.isAuthenticated}
 				<a href="/dashboard" class="btn-primary px-5 py-2.5 text-sm">Dashboard</a>
 			{:else}
@@ -129,7 +163,10 @@
 
 	<!-- Hero -->
 	<section class="mx-auto max-w-6xl px-5 pb-10 pt-16 text-center sm:px-8 sm:pt-28">
-		<h1 class="mx-auto max-w-3xl text-4xl font-semibold leading-[1.18] tracking-tight sm:text-6xl">
+		<h1
+			in:fly={{ y: 18, duration: 500 }}
+			class="mx-auto max-w-3xl text-4xl font-semibold leading-[1.18] tracking-tight sm:text-6xl"
+		>
 			The all-in-one live
 			<span class="relative whitespace-nowrap">
 				streaming
@@ -156,11 +193,14 @@
 			</span>
 			platform
 		</h1>
-		<p class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-[var(--color-muted)]">
+		<p
+			in:fly={{ y: 18, duration: 500, delay: 90 }}
+			class="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-[var(--color-muted)]"
+		>
 			Go live from the browser or any encoder, multistream everywhere, record, caption, secure and
 			analyze — all from one platform. No infrastructure to manage.
 		</p>
-		<div class="mt-8 flex items-center justify-center gap-3">
+		<div in:fly={{ y: 18, duration: 500, delay: 180 }} class="mt-8 flex items-center justify-center gap-3">
 			<a href={cta} class="btn-primary px-6 py-3 text-base">
 				{ctaLabel} <ArrowRight size={18} />
 			</a>
@@ -169,7 +209,7 @@
 		<p class="mt-4 text-xs text-[var(--color-muted)]">No credit card · generous free tier</p>
 
 		<!-- product glimpse -->
-		<div class="mx-auto mt-14 max-w-4xl">
+		<div in:fly={{ y: 24, duration: 600, delay: 260 }} class="mx-auto mt-14 max-w-4xl">
 			<div class="card squircle overflow-hidden p-2">
 				<div
 					class="squircle relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[var(--color-accent-2)] to-[var(--color-accent)]"
@@ -189,13 +229,16 @@
 
 	<!-- Features -->
 	<section id="features" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:px-8">
-		<div class="mx-auto max-w-2xl text-center">
+		<div class="mx-auto max-w-2xl text-center" use:reveal>
 			<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Everything you need to broadcast</h2>
 			<p class="mt-3 text-[var(--color-muted)]">
 				One platform for ingest, delivery, engagement and monetization.
 			</p>
 		</div>
-		<div class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+		<div
+			use:reveal={{ delay: 80 }}
+			class="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center"
+		>
 			<!-- feature list -->
 			<div class="flex flex-col gap-1.5">
 				{#each features as f, i (f.title)}
@@ -337,7 +380,7 @@
 		<div class="mx-auto max-w-2xl text-center">
 			<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Live in three steps</h2>
 		</div>
-		<div class="relative mt-14 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-8">
+		<div use:reveal class="relative mt-14 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-8">
 			<!-- connecting line (desktop) -->
 			<div
 				class="absolute left-[16%] right-[16%] top-7 hidden h-0.5 bg-gradient-to-r from-[var(--color-accent)]/40 via-[var(--color-accent)]/40 to-[var(--color-accent)]/40 md:block"
@@ -361,7 +404,7 @@
 
 	<!-- Managed — tinted highlight band with benefit cards -->
 	<section class="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-		<div class="squircle rounded-[28px] bg-[var(--color-accent)]/[0.06] p-8 sm:p-14">
+		<div use:reveal class="squircle rounded-[28px] bg-[var(--color-accent)]/[0.06] p-8 sm:p-14">
 			<div class="mx-auto max-w-2xl text-center">
 				<span
 					class="squircle inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-white"
@@ -388,9 +431,59 @@
 		</div>
 	</section>
 
+	<!-- Pricing -->
+	<section id="pricing" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:px-8">
+		<div class="mx-auto max-w-2xl text-center" use:reveal>
+			<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Simple, scalable pricing</h2>
+			<p class="mt-3 text-[var(--color-muted)]">Start free. Upgrade when you grow. Cancel anytime.</p>
+		</div>
+		<div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+			{#each tiers as t, i (t.name)}
+				<div
+					use:reveal={{ delay: i * 90 }}
+					class="card relative flex flex-col p-6 {t.featured
+						? 'ring-2 ring-[var(--color-accent)]'
+						: ''}"
+				>
+					{#if t.featured}
+						<span
+							class="squircle absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--color-accent)] px-3 py-0.5 text-xs font-semibold text-white"
+						>
+							Most popular
+						</span>
+					{/if}
+					<p class="text-sm font-medium text-[var(--color-muted)]">{t.name}</p>
+					<p class="mt-1 text-xs text-[var(--color-muted)]">{t.tagline}</p>
+					<p class="mt-4 flex items-end gap-1">
+						<span class="text-4xl font-semibold tracking-tight">{t.price}</span>
+						<span class="pb-1 text-sm text-[var(--color-muted)]">{t.period}</span>
+					</p>
+					<ul class="mt-6 flex-1 space-y-2.5">
+						{#each t.features as f (f)}
+							<li class="flex items-start gap-2.5 text-sm">
+								<BadgeCheck size={18} class="mt-px shrink-0 text-[var(--color-accent)]" />
+								{f}
+							</li>
+						{/each}
+					</ul>
+					<a
+						href={cta}
+						class="mt-7 w-full {t.featured ? 'btn-primary' : 'btn-ghost'}"
+					>
+						{t.name === 'Free' ? 'Start free' : `Choose ${t.name}`}
+					</a>
+				</div>
+			{/each}
+		</div>
+		<p class="mt-4 text-center text-xs text-[var(--color-muted)]">
+			Prices shown are placeholders — set your own tiers anytime.
+		</p>
+	</section>
+
 	<!-- Final CTA -->
 	<section class="mx-auto max-w-6xl px-5 pb-20 pt-4 sm:px-8">
 		<div
+			use:reveal
 			class="squircle relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[var(--color-accent-2)] to-[var(--color-accent)] p-10 text-center text-white sm:p-16"
 			style="box-shadow: var(--shadow-accent)"
 		>
