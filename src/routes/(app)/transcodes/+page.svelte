@@ -114,7 +114,21 @@
 			<tbody class="divide-y divide-[var(--color-border)]">
 				{#each items as a (a.id)}
 					<tr class="transition-colors hover:bg-[var(--color-surface-2)]">
-						<td class="max-w-[260px] truncate px-4 py-2.5 font-medium">{a.title}</td>
+						<td class="px-4 py-2.5">
+							<div class="flex items-center gap-3">
+								{#if a.thumbnail}
+									<img
+										src={api.thumbnailUrl(a.id)}
+										alt=""
+										loading="lazy"
+										class="h-9 w-16 shrink-0 rounded bg-[var(--color-surface-2)] object-cover"
+									/>
+								{:else}
+									<div class="h-9 w-16 shrink-0 rounded bg-[var(--color-surface-2)]"></div>
+								{/if}
+								<span class="max-w-[220px] truncate font-medium">{a.title}</span>
+							</div>
+						</td>
 						<td class="px-4 py-2.5 text-[var(--color-muted)]">{typeLabel[a.type] ?? a.type}</td>
 						<td class="px-4 py-2.5">
 							<span class="rounded px-1.5 py-0.5 text-[11px] font-medium {statusColor[a.status] ?? ''}"

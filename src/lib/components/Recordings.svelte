@@ -91,7 +91,18 @@
 		<ul class="divide-y divide-[var(--color-border)]">
 			{#each assets as a (a.id)}
 				<li class="flex items-center justify-between gap-3 px-5 py-3">
-					<div class="min-w-0">
+					<div class="flex min-w-0 items-center gap-3">
+						{#if a.thumbnail}
+							<img
+								src={api.thumbnailUrl(a.id)}
+								alt=""
+								loading="lazy"
+								class="h-10 w-16 shrink-0 rounded bg-[var(--color-surface-2)] object-cover"
+							/>
+						{:else}
+							<div class="h-10 w-16 shrink-0 rounded bg-[var(--color-surface-2)]"></div>
+						{/if}
+						<div class="min-w-0">
 						<p class="flex items-center gap-2 truncate text-sm font-medium">
 							<span class="truncate">{a.title}</span>
 							<span
@@ -111,6 +122,7 @@
 							{:else if a.status === 'errored'}
 								· <span class="text-red-500" title={a.error}>failed</span>
 							{/if}
+						</div>
 						</div>
 					</div>
 					<div class="flex shrink-0 items-center gap-2">

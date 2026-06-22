@@ -144,6 +144,8 @@ export const api = {
 	// recordings / assets
 	assets: (params?: { q?: string; limit?: number; offset?: number; category?: 'recording' | 'transcode' }) =>
 		request<Paginated<Asset>>(`/v1/assets${qs(params)}`),
+	thumbnailUrl: (id: string) =>
+		`${BASE}/v1/assets/${id}/thumbnail?access_token=${encodeURIComponent(auth.token ?? '')}`,
 	transcodeLogs: (id: string) =>
 		request<{ status: string; logs: { stage: string; line: string; at: string }[] }>(
 			`/v1/assets/${id}/transcode`

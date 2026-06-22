@@ -19,8 +19,9 @@
 		src,
 		live = false,
 		reload = 0,
-		streamId = ''
-	}: { src: string; live?: boolean; reload?: number; streamId?: string } = $props();
+		streamId = '',
+		poster = ''
+	}: { src: string; live?: boolean; reload?: number; streamId?: string; poster?: string } = $props();
 
 	const isHls = $derived(/\.m3u8(\?|$)/i.test(src));
 
@@ -306,6 +307,7 @@
 		bind:this={video}
 		autoplay
 		playsinline
+		poster={poster || undefined}
 		bind:muted
 		bind:volume
 		onplay={() => (paused = false)}

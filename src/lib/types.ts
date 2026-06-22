@@ -113,6 +113,7 @@ export interface Asset {
 	duration_sec: number;
 	size_bytes: number;
 	error?: string;
+	thumbnail?: boolean;
 	created_at: string;
 }
 
