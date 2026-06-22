@@ -7,9 +7,11 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { toast } from '$lib/toast.svelte';
+	import { apiKeySchema, fieldErrors } from '$lib/schemas';
 	import { KeyRound, Plus } from '@lucide/svelte';
 
 	let createOpen = $state(false);
+	let nameError = $state('');
 
 	const qc = useQueryClient();
 
@@ -76,14 +78,22 @@
 <Dialog bind:open={createOpen} title="Create API key" subtitle="Generate a key to call the API">
 	<form
 		class="space-y-4"
+		novalidate
 		onsubmit={(e) => {
 			e.preventDefault();
+			const r = apiKeySchema.safeParse({ name });
+			if (!r.success) {
+				nameError = fieldErrors(r.error).name ?? '';
+				return;
+			}
+			nameError = '';
 			create.mutate();
 		}}
 	>
 		<div>
 			<label class="label" for="name">Key name</label>
-			<input id="name" class="input" bind:value={name} placeholder="CI pipeline" required />
+			<input id="name" class="input" bind:value={name} placeholder="CI pipeline" />
+			{#if nameError}<p class="mt-1 text-xs text-red-500">{nameError}</p>{/if}
 		</div>
 		<div>
 			<label class="label" for="access">Access</label>

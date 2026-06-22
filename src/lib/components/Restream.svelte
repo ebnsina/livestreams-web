@@ -4,6 +4,7 @@
 	import { keys } from '$lib/query';
 	import { auth } from '$lib/auth.svelte';
 	import { toast } from '$lib/toast.svelte';
+	import { destinationSchema, fieldErrors } from '$lib/schemas';
 
 	let { streamId }: { streamId: string } = $props();
 	const qc = useQueryClient();
@@ -37,9 +38,20 @@
 	let url = $state('rtmp://a.rtmp.youtube.com/live2');
 	let streamKey = $state('');
 
+	let destErrors = $state<Record<string, string>>({});
 	function pickPlatform(id: string) {
 		platform = id;
 		url = providers.find((p) => p.id === id)?.url ?? '';
+	}
+	function submitDest(e: SubmitEvent) {
+		e.preventDefault();
+		const r = destinationSchema.safeParse({ name, url, streamKey });
+		if (!r.success) {
+			destErrors = fieldErrors(r.error);
+			return;
+		}
+		destErrors = {};
+		add.mutate();
 	}
 
 	const toggle = createMutation(() => ({
@@ -169,13 +181,7 @@
 	{/if}
 
 	{#if showForm}
-		<form
-			class="space-y-3 border-b border-[var(--color-border)] p-5"
-			onsubmit={(e) => {
-				e.preventDefault();
-				add.mutate();
-			}}
-		>
+		<form class="space-y-3 border-b border-[var(--color-border)] p-5" novalidate onsubmit={submitDest}>
 			<div>
 				<span class="label">Platform</span>
 				<div class="flex flex-wrap gap-1.5">
@@ -195,18 +201,15 @@
 			</div>
 			<div>
 				<label class="label" for="dname">Name</label>
-				<input id="dname" class="input" bind:value={name} placeholder="My channel" required />
+				<input id="dname" class="input" bind:value={name} placeholder="My channel" />
+				{#if destErrors.name}<p class="mt-1 text-xs text-red-500">{destErrors.name}</p>{/if}
 			</div>
 			<div>
 				<label class="label" for="durl">RTMP/RTMPS URL</label>
-				<input
-					id="durl"
-					class="input font-mono text-xs"
-					bind:value={url}
-					placeholder="rtmp://…"
-					required
-				/>
-				{#if !url}
+				<input id="durl" class="input font-mono text-xs" bind:value={url} placeholder="rtmp://…" />
+				{#if destErrors.url}
+					<p class="mt-1 text-xs text-red-500">{destErrors.url}</p>
+				{:else if !url}
 					<p class="mt-1 text-xs text-[var(--color-muted)]">
 						Paste the ingest URL {platformLabel[platform] ?? 'your platform'} gives you in its live dashboard.
 					</p>
@@ -214,7 +217,8 @@
 			</div>
 			<div>
 				<label class="label" for="dkey">Stream key</label>
-				<input id="dkey" class="input font-mono text-xs" bind:value={streamKey} required />
+				<input id="dkey" class="input font-mono text-xs" bind:value={streamKey} />
+				{#if destErrors.streamKey}<p class="mt-1 text-xs text-red-500">{destErrors.streamKey}</p>{/if}
 			</div>
 			{#if add.isError}<p class="text-sm text-red-500">Could not add destination</p>{/if}
 			<button class="btn-primary w-full" type="submit" disabled={add.isPending}>

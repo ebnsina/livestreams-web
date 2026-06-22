@@ -7,6 +7,7 @@
 	import CopyField from '$lib/components/CopyField.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { theme } from '$lib/theme.svelte';
+	import { profileSchema, changePasswordSchema, fieldErrors } from '$lib/schemas';
 	import { Settings, Pencil, Sun, Moon } from '@lucide/svelte';
 
 	let profileOpen = $state(false);
@@ -92,6 +93,7 @@
 	};
 
 	let name = $state('');
+	let nameError = $state('');
 	$effect(() => {
 		if (user && !name) name = user.name;
 	});
@@ -106,9 +108,21 @@
 		onError: () => toast.error('Could not update profile')
 	}));
 
+	function submitProfile(e: SubmitEvent) {
+		e.preventDefault();
+		const r = profileSchema.safeParse({ name });
+		if (!r.success) {
+			nameError = fieldErrors(r.error).name ?? '';
+			return;
+		}
+		nameError = '';
+		saveName.mutate();
+	}
+
 	let current = $state('');
 	let next = $state('');
 	let confirm = $state('');
+	let pwErrors = $state<Record<string, string>>({});
 
 	const changePw = createMutation(() => ({
 		mutationFn: () => api.changePassword(current, next),
@@ -122,7 +136,12 @@
 
 	function submitPw(e: SubmitEvent) {
 		e.preventDefault();
-		if (next !== confirm) return;
+		const r = changePasswordSchema.safeParse({ current, next, confirm });
+		if (!r.success) {
+			pwErrors = fieldErrors(r.error);
+			return;
+		}
+		pwErrors = {};
 		changePw.mutate();
 	}
 
@@ -335,16 +354,11 @@
 
 <!-- Edit profile dialog -->
 <Dialog bind:open={profileOpen} title="Edit profile" subtitle="Update your display name">
-	<form
-		class="space-y-4"
-		onsubmit={(e) => {
-			e.preventDefault();
-			saveName.mutate();
-		}}
-	>
+	<form class="space-y-4" novalidate onsubmit={submitProfile}>
 		<div>
 			<label class="label" for="name">Display name</label>
-			<input id="name" class="input" bind:value={name} required />
+			<input id="name" class="input" bind:value={name} />
+			{#if nameError}<p class="mt-1 text-xs text-red-500">{nameError}</p>{/if}
 		</div>
 		<div class="flex justify-end gap-2 pt-2">
 			<button type="button" class="btn-ghost" onclick={() => (profileOpen = false)}>Cancel</button>
@@ -357,22 +371,22 @@
 
 <!-- Change password dialog -->
 <Dialog bind:open={pwOpen} title="Change password" subtitle="Choose a new password">
-	<form class="space-y-4" onsubmit={submitPw}>
+	<form class="space-y-4" novalidate onsubmit={submitPw}>
 		<div>
 			<label class="label" for="cur">Current password</label>
-			<input id="cur" class="input" type="password" bind:value={current} required />
+			<input id="cur" class="input" type="password" bind:value={current} />
+			{#if pwErrors.current}<p class="mt-1 text-xs text-red-500">{pwErrors.current}</p>{/if}
 		</div>
 		<div>
 			<label class="label" for="new">New password</label>
-			<input id="new" class="input" type="password" bind:value={next} minlength="8" required />
+			<input id="new" class="input" type="password" bind:value={next} />
+			{#if pwErrors.next}<p class="mt-1 text-xs text-red-500">{pwErrors.next}</p>{/if}
 		</div>
 		<div>
 			<label class="label" for="conf">Confirm new password</label>
-			<input id="conf" class="input" type="password" bind:value={confirm} required />
+			<input id="conf" class="input" type="password" bind:value={confirm} />
+			{#if pwErrors.confirm}<p class="mt-1 text-xs text-red-500">{pwErrors.confirm}</p>{/if}
 		</div>
-		{#if next && confirm && next !== confirm}
-			<p class="text-sm text-red-500">Passwords don't match</p>
-		{/if}
 		{#if changePw.isError}
 			<p class="text-sm text-red-500">{(changePw.error as ApiError)?.message ?? 'Failed'}</p>
 		{/if}

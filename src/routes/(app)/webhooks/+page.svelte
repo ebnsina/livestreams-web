@@ -7,9 +7,11 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { toast } from '$lib/toast.svelte';
+	import { webhookSchema, fieldErrors } from '$lib/schemas';
 	import { Webhook, Plus } from '@lucide/svelte';
 
 	let createOpen = $state(false);
+	let urlError = $state('');
 
 	const qc = useQueryClient();
 
@@ -95,20 +97,22 @@
 <Dialog bind:open={createOpen} title="Add endpoint" subtitle="Receive signed event callbacks">
 	<form
 		class="space-y-4"
+		novalidate
 		onsubmit={(e) => {
 			e.preventDefault();
+			const r = webhookSchema.safeParse({ url });
+			if (!r.success) {
+				urlError = fieldErrors(r.error).url ?? '';
+				return;
+			}
+			urlError = '';
 			create.mutate();
 		}}
 	>
 		<div>
 			<label class="label" for="url">Endpoint URL</label>
-			<input
-				id="url"
-				class="input"
-				bind:value={url}
-				placeholder="https://example.com/webhooks"
-				required
-			/>
+			<input id="url" class="input" bind:value={url} placeholder="https://example.com/webhooks" />
+			{#if urlError}<p class="mt-1 text-xs text-red-500">{urlError}</p>{/if}
 		</div>
 		<div class="flex justify-end gap-2 pt-2">
 			<button type="button" class="btn-ghost" onclick={() => (createOpen = false)}>Cancel</button>

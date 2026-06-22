@@ -43,6 +43,18 @@ export const createStreamSchema = z.object({
 
 export const inviteSchema = z.object({ email, role: z.string().min(1) });
 
+export const profileSchema = z.object({
+	name: z.string().trim().min(1, 'Display name is required').max(80, 'Too long')
+});
+
+export const apiKeySchema = z.object({
+	name: z.string().trim().min(1, 'Give the key a name')
+});
+
+export const webhookSchema = z.object({
+	url: z.string().trim().url('Enter a valid https:// URL')
+});
+
 export const destinationSchema = z.object({
 	name: z.string().trim().min(1, 'Name is required'),
 	url: z

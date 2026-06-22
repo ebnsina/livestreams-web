@@ -7,9 +7,11 @@
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { toast } from '$lib/toast.svelte';
+	import { inviteSchema, fieldErrors } from '$lib/schemas';
 	import { Users, Plus } from '@lucide/svelte';
 
 	let inviteOpen = $state(false);
+	let inviteErr = $state('');
 
 	const qc = useQueryClient();
 	const members = createQuery(() => ({ queryKey: keys.teamMembers, queryFn: () => api.teamMembers() }));
@@ -75,8 +77,15 @@
 <Dialog bind:open={inviteOpen} title="Invite member" subtitle="Send an invite link by email">
 	<form
 		class="space-y-4"
+		novalidate
 		onsubmit={(e) => {
 			e.preventDefault();
+			const r = inviteSchema.safeParse({ email, role });
+			if (!r.success) {
+				inviteErr = fieldErrors(r.error).email ?? '';
+				return;
+			}
+			inviteErr = '';
 			create.mutate();
 		}}
 	>
@@ -88,8 +97,8 @@
 				type="email"
 				bind:value={email}
 				placeholder="teammate@example.com"
-				required
 			/>
+			{#if inviteErr}<p class="mt-1 text-xs text-red-500">{inviteErr}</p>{/if}
 		</div>
 		<div>
 			<label class="label" for="role">Role</label>
