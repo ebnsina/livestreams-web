@@ -8,7 +8,18 @@
 	import Dialog from '$lib/components/Dialog.svelte';
 	import { theme } from '$lib/theme.svelte';
 	import { profileSchema, changePasswordSchema, fieldErrors } from '$lib/schemas';
-	import { Settings, Pencil, Sun, Moon } from '@lucide/svelte';
+	import {
+		Settings,
+		Pencil,
+		Sun,
+		Moon,
+		User,
+		Lock,
+		Palette,
+		Bell,
+		Link2,
+		Building2
+	} from '@lucide/svelte';
 
 	let profileOpen = $state(false);
 	let pwOpen = $state(false);
@@ -160,7 +171,9 @@
 	<!-- Profile -->
 	<section class="card p-6">
 		<div class="mb-4 flex items-center justify-between">
-			<h2 class="text-base font-semibold">Profile</h2>
+			<h2 class="flex items-center gap-2 text-base font-semibold">
+				<User size={16} class="text-[var(--color-accent)]" /> Profile
+			</h2>
 			<button class="btn-ghost px-4 py-2 text-sm" onclick={() => (profileOpen = true)}>
 				<Pencil size={15} /> Edit
 			</button>
@@ -180,7 +193,9 @@
 	<!-- Password -->
 	<section class="card flex flex-col p-6">
 		<div class="mb-2 flex items-center justify-between">
-			<h2 class="text-base font-semibold">Password</h2>
+			<h2 class="flex items-center gap-2 text-base font-semibold">
+				<Lock size={16} class="text-[var(--color-accent)]" /> Password
+			</h2>
 		</div>
 		<p class="mb-4 flex-1 text-sm text-[var(--color-muted)]">
 			Keep your account secure with a strong, unique password.
@@ -192,7 +207,9 @@
 
 	<!-- Appearance -->
 	<section class="card p-6 lg:col-span-2">
-		<h2 class="mb-1 text-base font-semibold">Appearance</h2>
+		<h2 class="mb-1 flex items-center gap-2 text-base font-semibold">
+			<Palette size={16} class="text-[var(--color-accent)]" /> Appearance
+		</h2>
 		<p class="mb-4 text-sm text-[var(--color-muted)]">Choose how the dashboard looks.</p>
 		<div class="squircle inline-flex gap-1 rounded-xl bg-[var(--color-surface-2)] p-1">
 			<button
@@ -218,7 +235,9 @@
 
 	<!-- Notifications -->
 	<section class="card p-5 lg:col-span-2">
-		<h2 class="mb-1 text-[15px] font-semibold">Notifications</h2>
+		<h2 class="mb-1 flex items-center gap-2 text-[15px] font-semibold">
+			<Bell size={16} class="text-[var(--color-accent)]" /> Notifications
+		</h2>
 		<p class="mb-4 text-sm text-[var(--color-muted)]">
 			In-app alerts always appear in the bell. Optionally also receive them by email.
 		</p>
@@ -248,7 +267,9 @@
 
 	<!-- Connected accounts -->
 	<section class="card p-5 lg:col-span-2">
-		<h2 class="mb-1 text-[15px] font-semibold">Connected accounts</h2>
+		<h2 class="mb-1 flex items-center gap-2 text-[15px] font-semibold">
+			<Link2 size={16} class="text-[var(--color-accent)]" /> Connected accounts
+		</h2>
 		<p class="mb-4 text-sm text-[var(--color-muted)]">
 			Link platform accounts for multistreaming. Provide your own OAuth app credentials below —
 			register an app on the platform with the redirect URI shown, then paste the client ID/secret.
@@ -340,7 +361,9 @@
 
 	<!-- Organizations -->
 	<section class="card p-6 lg:col-span-2">
-		<h2 class="mb-4 text-base font-semibold">Organizations</h2>
+		<h2 class="mb-4 flex items-center gap-2 text-base font-semibold">
+			<Building2 size={16} class="text-[var(--color-accent)]" /> Organizations
+		</h2>
 		<ul class="divide-y divide-[var(--color-border)]">
 			{#each orgs as o (o.id)}
 				<li class="flex items-center justify-between py-2.5 text-sm">

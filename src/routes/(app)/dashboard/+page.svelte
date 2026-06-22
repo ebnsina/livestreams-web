@@ -71,7 +71,9 @@
 <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
 	<section class="card overflow-hidden lg:col-span-2">
 		<div class="flex items-center justify-between px-6 py-4">
-			<h2 class="text-base font-semibold">Recent streams</h2>
+			<h2 class="flex items-center gap-2 text-base font-semibold">
+				<Radio size={16} class="text-[var(--color-accent)]" /> Recent streams
+			</h2>
 			<a class="text-sm font-medium text-[var(--color-accent)] hover:underline" href="/streams">
 				View all
 			</a>
@@ -103,7 +105,9 @@
 	</section>
 
 	<section class="card p-6">
-		<h2 class="text-base font-semibold">Viewers · 24h</h2>
+		<h2 class="flex items-center gap-2 text-base font-semibold">
+			<Users size={16} class="text-[var(--color-accent)]" /> Viewers · 24h
+		</h2>
 		<div class="mt-5">
 			<Chart points={viewerSeries} color="var(--color-accent)" height={140} />
 		</div>

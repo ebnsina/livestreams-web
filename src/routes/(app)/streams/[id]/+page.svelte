@@ -12,7 +12,7 @@
 	import ChatPanel from '$lib/components/ChatPanel.svelte';
 	import SecureLinkDialog from '$lib/components/SecureLinkDialog.svelte';
 	import ErrorState from '$lib/components/ErrorState.svelte';
-	import { Radio, ArrowRight } from '@lucide/svelte';
+	import { Radio, ArrowRight, Share2, KeyRound, History } from '@lucide/svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Recordings from '$lib/components/Recordings.svelte';
@@ -267,7 +267,9 @@
 
 			<div class="card space-y-3 p-4">
 				<div class="flex items-center justify-between">
-					<h2 class="text-sm font-semibold text-[var(--color-muted)]">Share &amp; embed</h2>
+					<h2 class="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-muted)]">
+					<Share2 size={14} /> Share &amp; embed
+				</h2>
 					{#if auth.canWrite}
 						<button
 							class="text-xs font-medium text-[var(--color-accent)] hover:underline"
@@ -283,7 +285,9 @@
 		<!-- Ingest + meta -->
 		<div class="min-w-0 space-y-4">
 			<div class="card space-y-4 p-5">
-				<h2 class="text-sm font-semibold text-[var(--color-muted)]">Ingest</h2>
+				<h2 class="flex items-center gap-1.5 text-sm font-semibold text-[var(--color-muted)]">
+				<KeyRound size={14} /> Ingest
+			</h2>
 				{#if s.ingest?.rtmp_url}
 					<CopyField label="RTMP Server" value={s.ingest.rtmp_url} />
 				{/if}
@@ -388,7 +392,9 @@
 
 	<!-- Sessions -->
 	<section class="mt-8">
-		<h2 class="mb-3 text-lg font-medium">Session history</h2>
+		<h2 class="mb-3 flex items-center gap-2 text-lg font-medium">
+			<History size={18} class="text-[var(--color-muted)]" /> Session history
+		</h2>
 		<div class="card overflow-hidden">
 			<div class="overflow-x-auto">
 			{#if (sessions.data?.data ?? []).length === 0}

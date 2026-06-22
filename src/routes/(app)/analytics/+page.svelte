@@ -10,7 +10,8 @@
 	import InsightsPanel from '$lib/components/InsightsPanel.svelte';
 	import BreakdownGrid from '$lib/components/BreakdownGrid.svelte';
 	import ContentPicker from '$lib/components/ContentPicker.svelte';
-	import { BarChart3, ArrowRight } from '@lucide/svelte';
+	import SectionHeading from '$lib/components/SectionHeading.svelte';
+	import { BarChart3, ArrowRight, TrendingUp, PieChart, Trophy, Server } from '@lucide/svelte';
 
 	// URL is the source of truth for range + scope (so deep links from a stream work)
 	const sp = $derived(page.url.searchParams);
@@ -134,7 +135,7 @@
 
 	<!-- trends: viewers is primary, quality charts secondary -->
 	<section>
-		<h2 class="mb-3 text-sm font-semibold">Trends</h2>
+		<SectionHeading icon={TrendingUp} title="Trends" />
 		<div class="grid gap-4 lg:grid-cols-3">
 			<div class="card p-5 lg:col-span-2">
 				<h3 class="mb-3 text-sm font-semibold">Concurrent viewers</h3>
@@ -153,14 +154,14 @@
 
 	<!-- breakdowns, grouped -->
 	<section>
-		<h2 class="mb-3 text-sm font-semibold">Breakdowns</h2>
+		<SectionHeading icon={PieChart} title="Breakdowns" />
 		<BreakdownGrid insights={activeInsights} />
 	</section>
 
 	<!-- top content (all-content only) -->
 	{#if isAll && topContent.length > 0}
 		<section>
-			<h2 class="mb-3 text-sm font-semibold">Top content</h2>
+			<SectionHeading icon={Trophy} title="Top content" />
 			<div class="card overflow-hidden">
 				<table class="w-full text-sm">
 					<thead class="bg-[var(--color-surface-2)] text-left text-[var(--color-muted)]">
@@ -194,7 +195,7 @@
 	<!-- library & infrastructure (org-wide footer band) -->
 	{#if isAll}
 		<section>
-			<h2 class="mb-3 text-sm font-semibold">Library &amp; infrastructure</h2>
+			<SectionHeading icon={Server} title="Library & infrastructure" />
 			<div class="card flex flex-wrap divide-y divide-[var(--color-border)] p-0 sm:divide-x sm:divide-y-0">
 				{#each cards as c (c.label)}
 					<div class="min-w-[50%] flex-1 px-5 py-4 sm:min-w-[120px]">
