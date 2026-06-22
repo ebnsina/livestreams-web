@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
@@ -8,7 +9,7 @@
 	import Pager from '$lib/components/Pager.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
-	import { Radio, Plus } from '@lucide/svelte';
+	import { Radio, Plus, MonitorPlay, Video } from '@lucide/svelte';
 	import { toast } from '$lib/toast.svelte';
 	import type { LatencyMode } from '$lib/types';
 
@@ -33,6 +34,7 @@
 
 	let showForm = $state(false);
 	let name = $state('');
+	let source = $state<'rtmp' | 'webcam'>('rtmp'); // how they'll go live
 	let latency = $state<LatencyMode>('low');
 	let recording = $state(true);
 	let schedule = $state(''); // datetime-local value
@@ -45,12 +47,14 @@
 				recording_enabled: recording,
 				scheduled_at: schedule ? new Date(schedule).toISOString() : null
 			}),
-		onSuccess: () => {
+		onSuccess: (stream) => {
 			qc.invalidateQueries({ queryKey: keys.streams });
 			showForm = false;
 			name = '';
 			schedule = '';
 			toast.success('Stream created');
+			// route by intent: webcam → Studio, OBS/RTMP → detail (ingest creds)
+			goto(source === 'webcam' ? `/streams/${stream.id}/studio` : `/streams/${stream.id}`);
 		},
 		onError: () => toast.error("Couldn't create stream — try again")
 	}));
@@ -77,6 +81,35 @@
 		<div>
 			<label class="label" for="name">Name</label>
 			<input id="name" class="input" bind:value={name} placeholder="Main channel" required />
+		</div>
+		<div>
+			<span class="label">How will you go live?</span>
+			<div class="grid grid-cols-2 gap-2">
+				<button
+					type="button"
+					class="squircle flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-colors {source ===
+					'rtmp'
+						? 'border-[var(--color-accent)] bg-[var(--color-accent)]/8'
+						: 'border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'}"
+					onclick={() => (source = 'rtmp')}
+				>
+					<MonitorPlay size={18} class="text-[var(--color-accent)]" />
+					<span class="text-sm font-medium">Encoder / OBS</span>
+					<span class="text-xs text-[var(--color-muted)]">RTMP or SRT ingest</span>
+				</button>
+				<button
+					type="button"
+					class="squircle flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-colors {source ===
+					'webcam'
+						? 'border-[var(--color-accent)] bg-[var(--color-accent)]/8'
+						: 'border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'}"
+					onclick={() => (source = 'webcam')}
+				>
+					<Video size={18} class="text-[var(--color-accent)]" />
+					<span class="text-sm font-medium">Webcam / Screen</span>
+					<span class="text-xs text-[var(--color-muted)]">Go live in the browser</span>
+				</button>
+			</div>
 		</div>
 		<div>
 			<label class="label" for="latency">Latency mode</label>

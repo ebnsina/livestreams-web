@@ -9,9 +9,9 @@
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import ScheduleBadge from '$lib/components/ScheduleBadge.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
-	import BrowserGoLive from '$lib/components/BrowserGoLive.svelte';
 	import ChatPanel from '$lib/components/ChatPanel.svelte';
 	import SecureLinkDialog from '$lib/components/SecureLinkDialog.svelte';
+	import { Radio } from '@lucide/svelte';
 	import Player from '$lib/components/Player.svelte';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Recordings from '$lib/components/Recordings.svelte';
@@ -243,7 +243,9 @@
 			<Player src={s.playback_url} live={isLive} reload={playerReload} streamId={id} />
 
 			{#if auth.canWrite && s.ingest?.whip_url}
-				<BrowserGoLive whipUrl={s.ingest.whip_url} />
+				<a href="/streams/{id}/studio" class="btn-accent w-full">
+					<Radio size={16} /> Go live from your browser
+				</a>
 			{/if}
 
 			<!-- Playback QoS (from viewer beacons) -->
