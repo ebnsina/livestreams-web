@@ -86,8 +86,16 @@ Full product UI, well beyond the original dashboard:
 - **Streams:** create (choose webcam vs encoder), detail (hls.js player, ingest
   reveal/rotate, QoS, multistream, recordings, activity), and a dedicated **Studio**
   (`/streams/[id]/studio`) for browser go-live (WebRTC/WHIP) + live chat.
-- **Player:** quality switching, seek-preview storyboards, **caption tracks**, and
-  graceful states (protected / not-ready-auto-retry / error).
+- **Player:** quality switching, seek-preview storyboards, **caption tracks**,
+  graceful states (protected / not-ready-auto-retry / error), and **stream-end
+  detection** (HLS end-of-list, live→offline, buffering watchdog → "ended"
+  overlay instead of infinite buffering).
+- **Playback analytics:** a built-in per-view tracker (`src/lib/tracker.ts`,
+  `PlaybackTracker`) ships start/heartbeat/end pings (final flush via
+  `sendBeacon`) capturing engagement (watch time, completion, seeks) + QoE +
+  device/OS/browser dimensions to `POST /v1/playback/track`. Surfaced by
+  `InsightsPanel` (engagement KPIs + country/device/browser/OS breakdowns) on
+  the analytics and stream pages.
 - **Cross-cutting:** create-forms-in-dialogs, secure-link generator, toasts, and a
   friendly error system (`+error.svelte`, `ErrorState`, hardened API client).
 
