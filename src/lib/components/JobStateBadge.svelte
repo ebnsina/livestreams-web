@@ -14,7 +14,7 @@
 </script>
 
 <span
-	class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[10px] font-medium {styles[
+	class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-tight {styles[
 		state
 	] ?? 'bg-slate-500/12 text-slate-400'}"
 >

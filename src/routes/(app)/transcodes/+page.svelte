@@ -172,7 +172,7 @@
 						</td>
 						<td class="px-4 py-2.5 text-[var(--color-muted)]">{typeLabel[a.type] ?? a.type}</td>
 						<td class="px-4 py-2.5">
-							<span class="rounded px-1.5 py-0.5 text-[11px] font-medium {statusColor[a.status] ?? ''}"
+							<span class="rounded px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-tight {statusColor[a.status] ?? ''}"
 								>{a.status}</span
 							>
 						</td>

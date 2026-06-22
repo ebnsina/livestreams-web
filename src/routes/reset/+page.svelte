@@ -5,10 +5,12 @@
 	import { api, ApiError } from '$lib/api';
 	import { toast } from '$lib/toast.svelte';
 	import AuthShell from '$lib/components/AuthShell.svelte';
+	import { resetSchema, fieldErrors } from '$lib/schemas';
 
 	const token = $derived(page.url.searchParams.get('token') ?? '');
 	let pw = $state('');
 	let confirm = $state('');
+	let errors = $state<Record<string, string>>({});
 
 	const reset = createMutation(() => ({
 		mutationFn: () => api.resetPassword(token, pw),
@@ -20,7 +22,12 @@
 
 	function submit(e: SubmitEvent) {
 		e.preventDefault();
-		if (pw !== confirm) return;
+		const r = resetSchema.safeParse({ password: pw, confirm });
+		if (!r.success) {
+			errors = fieldErrors(r.error);
+			return;
+		}
+		errors = {};
 		reset.mutate();
 	}
 </script>
@@ -38,18 +45,17 @@
 			This reset link is missing its token. Request a new one.
 		</div>
 	{:else}
-		<form class="space-y-4" onsubmit={submit}>
+		<form class="space-y-4" onsubmit={submit} novalidate>
 			<div>
 				<label class="label" for="pw">New password</label>
-				<input id="pw" class="input" type="password" bind:value={pw} minlength="8" required />
+				<input id="pw" class="input" type="password" bind:value={pw} />
+				{#if errors.password}<p class="mt-1 text-xs text-red-500">{errors.password}</p>{/if}
 			</div>
 			<div>
 				<label class="label" for="confirm">Confirm password</label>
-				<input id="confirm" class="input" type="password" bind:value={confirm} required />
+				<input id="confirm" class="input" type="password" bind:value={confirm} />
+				{#if errors.confirm}<p class="mt-1 text-xs text-red-500">{errors.confirm}</p>{/if}
 			</div>
-			{#if pw && confirm && pw !== confirm}
-				<p class="text-sm text-red-500">Passwords don't match</p>
-			{/if}
 			{#if reset.isError}
 				<p class="text-sm text-red-500">{(reset.error as ApiError)?.message ?? 'Reset failed'}</p>
 			{/if}

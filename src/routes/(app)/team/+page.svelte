@@ -118,7 +118,7 @@
 					<p class="truncate font-medium">{m.name || m.email}</p>
 					<p class="truncate text-xs text-[var(--color-muted)]">{m.email}</p>
 				</div>
-				<span class="rounded px-2 py-0.5 text-[11px] font-medium {roleColor[m.role] ?? ''}">{m.role}</span>
+				<span class="rounded px-2 py-0.5 text-[11px] font-semibold uppercase tracking-tight {roleColor[m.role] ?? ''}">{m.role}</span>
 			</div>
 		{/each}
 	</div>

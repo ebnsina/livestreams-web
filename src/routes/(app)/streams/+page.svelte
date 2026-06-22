@@ -9,6 +9,7 @@
 	import Pager from '$lib/components/Pager.svelte';
 	import PageHeader from '$lib/components/PageHeader.svelte';
 	import Dialog from '$lib/components/Dialog.svelte';
+	import { createStreamSchema, fieldErrors } from '$lib/schemas';
 	import { Radio, Plus, MonitorPlay, Video } from '@lucide/svelte';
 	import { toast } from '$lib/toast.svelte';
 	import type { LatencyMode } from '$lib/types';
@@ -34,6 +35,7 @@
 
 	let showForm = $state(false);
 	let name = $state('');
+	let nameError = $state('');
 	let source = $state<'rtmp' | 'webcam'>('rtmp'); // how they'll go live
 	let latency = $state<LatencyMode>('low');
 	let recording = $state(true);
@@ -73,14 +75,22 @@
 <Dialog bind:open={showForm} title="New stream" subtitle="Create a channel to start streaming">
 	<form
 		class="space-y-4"
+		novalidate
 		onsubmit={(e) => {
 			e.preventDefault();
+			const r = createStreamSchema.safeParse({ name });
+			if (!r.success) {
+				nameError = fieldErrors(r.error).name ?? '';
+				return;
+			}
+			nameError = '';
 			create.mutate();
 		}}
 	>
 		<div>
 			<label class="label" for="name">Name</label>
-			<input id="name" class="input" bind:value={name} placeholder="Main channel" required />
+			<input id="name" class="input" bind:value={name} placeholder="Main channel" />
+			{#if nameError}<p class="mt-1 text-xs text-red-500">{nameError}</p>{/if}
 		</div>
 		<div>
 			<span class="label">How will you go live?</span>

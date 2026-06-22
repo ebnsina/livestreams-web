@@ -5,9 +5,11 @@
 	import { auth } from '$lib/auth.svelte';
 	import { toast } from '$lib/toast.svelte';
 	import AuthShell from '$lib/components/AuthShell.svelte';
+	import { loginSchema, fieldErrors } from '$lib/schemas';
 
 	let email = $state('');
 	let password = $state('');
+	let errors = $state<Record<string, string>>({});
 
 	const login = createMutation(() => ({
 		mutationFn: () => api.login({ email, password }),
@@ -21,6 +23,12 @@
 
 	function submit(e: SubmitEvent) {
 		e.preventDefault();
+		const r = loginSchema.safeParse({ email, password });
+		if (!r.success) {
+			errors = fieldErrors(r.error);
+			return;
+		}
+		errors = {};
 		login.mutate();
 	}
 </script>
@@ -33,10 +41,11 @@
 		<p class="mt-1.5 text-sm text-[var(--color-muted)]">Sign in to your dashboard</p>
 	</div>
 
-	<form class="space-y-4" onsubmit={submit}>
+	<form class="space-y-4" onsubmit={submit} novalidate>
 		<div>
 			<label class="label" for="email">Email</label>
-			<input id="email" class="input" type="email" bind:value={email} required />
+			<input id="email" class="input" type="email" bind:value={email} />
+			{#if errors.email}<p class="mt-1 text-xs text-red-500">{errors.email}</p>{/if}
 		</div>
 		<div>
 			<div class="mb-1.5 flex items-center justify-between">
@@ -45,7 +54,8 @@
 					>Forgot?</a
 				>
 			</div>
-			<input id="password" class="input" type="password" bind:value={password} required />
+			<input id="password" class="input" type="password" bind:value={password} />
+			{#if errors.password}<p class="mt-1 text-xs text-red-500">{errors.password}</p>{/if}
 		</div>
 
 		{#if login.isError}

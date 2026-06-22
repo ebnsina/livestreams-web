@@ -69,6 +69,8 @@ html {
 body {
 	margin: 0;
 	min-height: 100vh;
+	/* tabular figures app-wide so numbers/stats align */
+	font-variant-numeric: tabular-nums;
 }
 
 /* Headlines use the display font (Sora) — tighter leading + tracking. */
@@ -139,6 +141,10 @@ h4 {
 	}
 	.label {
 		@apply mb-1.5 block text-sm font-medium text-[var(--color-muted)];
+	}
+	/* status pills — consistent uppercase, tight tracking everywhere */
+	.badge {
+		@apply inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-tight;
 	}
 	.menu-item {
 		@apply flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface-2)] disabled:cursor-not-allowed disabled:opacity-40;

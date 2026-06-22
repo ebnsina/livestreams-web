@@ -3,9 +3,11 @@
 	import { api } from '$lib/api';
 	import { toast } from '$lib/toast.svelte';
 	import AuthShell from '$lib/components/AuthShell.svelte';
+	import { forgotSchema, fieldErrors } from '$lib/schemas';
 
 	let email = $state('');
 	let sent = $state(false);
+	let errors = $state<Record<string, string>>({});
 
 	const forgot = createMutation(() => ({
 		mutationFn: () => api.forgotPassword(email),
@@ -15,6 +17,12 @@
 
 	function submit(e: SubmitEvent) {
 		e.preventDefault();
+		const r = forgotSchema.safeParse({ email });
+		if (!r.success) {
+			errors = fieldErrors(r.error);
+			return;
+		}
+		errors = {};
 		forgot.mutate();
 	}
 </script>
@@ -38,10 +46,11 @@
 			</p>
 		</div>
 	{:else}
-		<form class="space-y-4" onsubmit={submit}>
+		<form class="space-y-4" onsubmit={submit} novalidate>
 			<div>
 				<label class="label" for="email">Email</label>
-				<input id="email" class="input" type="email" bind:value={email} required />
+				<input id="email" class="input" type="email" bind:value={email} />
+				{#if errors.email}<p class="mt-1 text-xs text-red-500">{errors.email}</p>{/if}
 			</div>
 			<button class="btn-primary w-full" type="submit" disabled={forgot.isPending}>
 				{forgot.isPending ? 'Sending…' : 'Send reset link'}
