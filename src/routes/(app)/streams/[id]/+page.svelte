@@ -19,6 +19,7 @@
 	import Restream from '$lib/components/Restream.svelte';
 	import Chart from '$lib/components/Chart.svelte';
 	import EmbedSnippet from '$lib/components/EmbedSnippet.svelte';
+	import AnimatedNumber from '$lib/components/AnimatedNumber.svelte';
 	import { toast } from '$lib/toast.svelte';
 
 	const qc = useQueryClient();
@@ -181,10 +182,16 @@
 	}
 </script>
 
-{#snippet qosStat(label: string, value: string)}
+{#snippet qosStat(label: string, value: number | null, suffix = '')}
 	<div class="bg-[var(--color-surface)] p-3">
 		<p class="text-[11px] text-[var(--color-muted)]">{label}</p>
-		<p class="mt-0.5 font-mono text-lg font-semibold tabular-nums">{value}</p>
+		<p class="mt-0.5 font-mono text-lg font-semibold tabular-nums">
+			{#if value === null}
+				—
+			{:else}
+				<AnimatedNumber {value} format={(n) => `${Math.round(n).toLocaleString()}${suffix}`} />
+			{/if}
+		</p>
 	</div>
 {/snippet}
 
@@ -247,7 +254,7 @@
 		<div class="min-w-0 space-y-4">
 			<Player src={s.playback_url} live={isLive} reload={playerReload} streamId={id} />
 
-			{#if auth.canWrite && s.ingest?.whip_url}
+			{#if auth.canWrite && s.ingest_protocol === 'whip' && s.ingest?.whip_url}
 				<a href="/streams/{id}/studio" class="btn-accent w-full">
 					<Radio size={16} /> Go live from your browser
 				</a>
@@ -255,16 +262,10 @@
 
 			<!-- Playback QoS (from viewer beacons) -->
 			<div class="card grid grid-cols-2 gap-px overflow-hidden sm:grid-cols-4">
-				{@render qosStat('Viewers', qos.data ? String(qos.data.viewers) : '—')}
-				{@render qosStat(
-					'Avg startup',
-					qos.data?.avg_startup_ms ? `${qos.data.avg_startup_ms} ms` : '—'
-				)}
-				{@render qosStat('Rebuffers', qos.data ? String(qos.data.total_rebuffers) : '—')}
-				{@render qosStat(
-					'Avg bitrate',
-					qos.data?.avg_bitrate_kbps ? `${qos.data.avg_bitrate_kbps}k` : '—'
-				)}
+				{@render qosStat('Viewers', qos.data ? qos.data.viewers : null)}
+				{@render qosStat('Avg startup', qos.data?.avg_startup_ms || null, ' ms')}
+				{@render qosStat('Rebuffers', qos.data ? qos.data.total_rebuffers : null)}
+				{@render qosStat('Avg bitrate', qos.data?.avg_bitrate_kbps || null, 'k')}
 			</div>
 
 			<div class="card space-y-3 p-4">
@@ -408,21 +409,26 @@
 			<div class="card p-4">
 				<p class="text-xs text-[var(--color-muted)]">Peak viewers</p>
 				<p class="mt-1 text-2xl font-semibold tabular-nums">
-					{analytics.data?.summary.peak_viewers ?? 0}
+					<AnimatedNumber value={analytics.data?.summary.peak_viewers ?? 0} />
 				</p>
 			</div>
 			<div class="card p-4">
 				<p class="text-xs text-[var(--color-muted)]">Avg startup</p>
 				<p class="mt-1 text-2xl font-semibold tabular-nums">
-					{analytics.data?.summary.avg_startup_ms
-						? `${analytics.data.summary.avg_startup_ms}ms`
-						: '—'}
+					{#if analytics.data?.summary.avg_startup_ms}
+						<AnimatedNumber
+							value={analytics.data.summary.avg_startup_ms}
+							format={(n) => `${Math.round(n)}ms`}
+						/>
+					{:else}
+						—
+					{/if}
 				</p>
 			</div>
 			<div class="card p-4">
 				<p class="text-xs text-[var(--color-muted)]">Total rebuffers</p>
 				<p class="mt-1 text-2xl font-semibold tabular-nums">
-					{analytics.data?.summary.total_rebuffers ?? 0}
+					<AnimatedNumber value={analytics.data?.summary.total_rebuffers ?? 0} />
 				</p>
 			</div>
 		</div>
