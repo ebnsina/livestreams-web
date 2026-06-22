@@ -15,8 +15,7 @@
 		Sparkles,
 		BadgeCheck,
 		ArrowRight,
-		MonitorPlay,
-		KeyRound
+		MonitorPlay
 	} from '@lucide/svelte';
 
 	const cta = $derived(auth.isAuthenticated ? '/dashboard' : '/register');
@@ -76,6 +75,15 @@
 		{ n: '1', title: 'Create a stream', body: 'Pick webcam or encoder. Get an ingest URL, key, and a player instantly.' },
 		{ n: '2', title: 'Go live', body: 'Publish from the browser or your encoder. Adaptive HLS, recording and multistream kick in automatically.' },
 		{ n: '3', title: 'Share & grow', body: 'Embed the player, share secure links, watch analytics, and reach every platform at once.' }
+	];
+
+	const managed = [
+		'Managed ingest, transcoding & global delivery',
+		'Recording, VOD & clips included',
+		'Connect YouTube, Twitch & your AI provider',
+		'Signed, expiring, domain-locked delivery',
+		'Teams, roles & organizations built in',
+		'Open REST API, webhooks & embeddable player'
 	];
 </script>
 
@@ -324,49 +332,59 @@
 		</div>
 	</section>
 
-	<!-- How it works -->
-	<section class="mx-auto max-w-6xl px-5 py-16 sm:px-8">
+	<!-- How it works — connected stepper -->
+	<section class="mx-auto max-w-5xl px-5 py-16 sm:px-8">
 		<div class="mx-auto max-w-2xl text-center">
 			<h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">Live in three steps</h2>
 		</div>
-		<div class="mt-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+		<div class="relative mt-14 grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-8">
+			<!-- connecting line (desktop) -->
+			<div
+				class="absolute left-[16%] right-[16%] top-7 hidden h-0.5 bg-gradient-to-r from-[var(--color-accent)]/40 via-[var(--color-accent)]/40 to-[var(--color-accent)]/40 md:block"
+			></div>
 			{#each steps as s (s.n)}
-				<div class="card p-6">
+				<div class="relative text-center">
 					<div
-						class="squircle flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent)] text-sm font-bold text-white"
+						class="squircle relative z-10 mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-xl font-bold text-white"
+						style="box-shadow: var(--shadow-accent)"
 					>
 						{s.n}
 					</div>
-					<h3 class="mt-4 font-semibold">{s.title}</h3>
-					<p class="mt-1.5 text-sm leading-relaxed text-[var(--color-muted)]">{s.body}</p>
+					<h3 class="mt-5 text-lg font-semibold">{s.title}</h3>
+					<p class="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-[var(--color-muted)]">
+						{s.body}
+					</p>
 				</div>
 			{/each}
 		</div>
 	</section>
 
-	<!-- Managed -->
+	<!-- Managed — tinted highlight band with benefit cards -->
 	<section class="mx-auto max-w-6xl px-5 py-16 sm:px-8">
-		<div class="card grid grid-cols-1 items-center gap-8 p-8 sm:p-12 lg:grid-cols-2">
-			<div>
-				<div
-					class="squircle inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--color-accent)]/12 text-[var(--color-accent)]"
+		<div class="squircle rounded-[28px] bg-[var(--color-accent)]/[0.06] p-8 sm:p-14">
+			<div class="mx-auto max-w-2xl text-center">
+				<span
+					class="squircle inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-accent)] text-white"
+					style="box-shadow: var(--shadow-accent)"
 				>
-					<Server size={20} />
-				</div>
-				<h2 class="mt-4 text-3xl font-semibold tracking-tight">Fully managed, scales with you</h2>
+					<Server size={22} />
+				</span>
+				<h2 class="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">
+					Fully managed, scales with you
+				</h2>
 				<p class="mt-3 text-[var(--color-muted)]">
 					No servers to run, no media stack to babysit. We handle ingest, transcoding, storage and
 					delivery — you just go live. Start free and upgrade as you grow.
 				</p>
 			</div>
-			<ul class="grid gap-3">
-				{#each ['Managed ingest, transcoding & global delivery', 'Connect YouTube, Twitch & your AI provider', 'Signed, expiring, domain-locked delivery', 'Teams, roles & organizations built in', 'Open REST API, webhooks & embeddable player'] as point (point)}
-					<li class="flex items-start gap-3">
-						<BadgeCheck size={20} class="mt-0.5 shrink-0 text-[var(--color-accent)]" />
-						<span class="text-sm">{point}</span>
-					</li>
+			<div class="mt-9 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+				{#each managed as point (point)}
+					<div class="card squircle flex items-center gap-3 p-4">
+						<BadgeCheck size={20} class="shrink-0 text-[var(--color-accent)]" />
+						<span class="text-sm font-medium">{point}</span>
+					</div>
 				{/each}
-			</ul>
+			</div>
 		</div>
 	</section>
 
@@ -398,7 +416,10 @@
 			class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 py-8 text-sm text-[var(--color-muted)] sm:flex-row sm:px-8"
 		>
 			<div class="flex items-center gap-2">
-				<KeyRound size={14} />
+				<span
+					class="squircle flex h-6 w-6 items-center justify-center rounded-lg bg-[var(--color-accent)] text-[11px] font-bold text-white"
+					>L</span
+				>
 				<span>Livestreams — live &amp; video platform</span>
 			</div>
 			<div class="flex gap-5">
