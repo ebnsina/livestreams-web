@@ -5,6 +5,8 @@
 	import type { Job } from '$lib/types';
 	import JobStateBadge from '$lib/components/JobStateBadge.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { Cpu } from '@lucide/svelte';
 
 	let streamFilter = $state('');
 	let search = $state('');
@@ -44,10 +46,7 @@
 	}
 </script>
 
-<header class="mb-6">
-	<h1 class="text-2xl font-semibold">Jobs</h1>
-	<p class="mt-1 text-sm text-[var(--color-muted)]">Background transcoder and restream jobs</p>
-</header>
+<PageHeader icon={Cpu} title="Jobs" subtitle="Background transcoder and restream jobs" />
 
 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
 	<input class="input sm:max-w-xs" bind:value={search} placeholder="Search jobs…" />

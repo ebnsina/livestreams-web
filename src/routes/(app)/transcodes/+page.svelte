@@ -11,7 +11,8 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import Menu from '$lib/components/Menu.svelte';
 	import Pager from '$lib/components/Pager.svelte';
-	import { UploadCloud, Play, ScrollText, RefreshCw, Trash2 } from '@lucide/svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { UploadCloud, Play, ScrollText, RefreshCw, Trash2, FileVideo } from '@lucide/svelte';
 
 	const qc = useQueryClient();
 	const LIMIT = 20;
@@ -73,17 +74,19 @@
 	}
 </script>
 
-<header class="mb-6 flex items-start justify-between gap-4">
-	<div>
-		<h1 class="text-2xl font-semibold">Transcodes</h1>
-		<p class="mt-1 text-sm text-[var(--color-muted)]">Uploaded videos and clips processed into adaptive HLS</p>
-	</div>
-	{#if auth.canWrite}
-		<button class="btn-primary inline-flex items-center gap-2" onclick={() => (showUpload = true)}>
-			<UploadCloud size={16} /> Upload video
-		</button>
-	{/if}
-</header>
+<PageHeader
+	icon={FileVideo}
+	title="Transcodes"
+	subtitle="Uploaded videos and clips processed into adaptive HLS"
+>
+	{#snippet actions()}
+		{#if auth.canWrite}
+			<button class="btn-primary inline-flex items-center gap-2" onclick={() => (showUpload = true)}>
+				<UploadCloud size={16} /> Upload video
+			</button>
+		{/if}
+	{/snippet}
+</PageHeader>
 
 <div class="mb-5">
 	<input class="input sm:max-w-xs" bind:value={q} placeholder="Search…" />

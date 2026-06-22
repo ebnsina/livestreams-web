@@ -7,6 +7,8 @@
 	import Recordings from '$lib/components/Recordings.svelte';
 	import ClipModal from '$lib/components/ClipModal.svelte';
 	import Pager from '$lib/components/Pager.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { Film } from '@lucide/svelte';
 
 	const qc = useQueryClient();
 	const LIMIT = 24;
@@ -36,13 +38,7 @@
 	}
 </script>
 
-<header class="mb-6">
-	<h1 class="text-2xl font-semibold">Recordings</h1>
-	<p class="mt-1 text-sm text-[var(--color-muted)]">
-		Recorded sessions from your live streams. Upload videos under
-		<a href="/transcodes" class="text-[#ff5b3e] hover:underline">Transcodes</a>.
-	</p>
-</header>
+<PageHeader icon={Film} title="Recordings" subtitle="Recorded sessions from your live streams" />
 
 <div class="mb-5">
 	<input class="input sm:max-w-xs" bind:value={q} placeholder="Search…" />

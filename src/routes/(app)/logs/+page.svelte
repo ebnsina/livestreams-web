@@ -5,6 +5,8 @@
 	import type { StreamEvent } from '$lib/types';
 	import Timeline from '$lib/components/Timeline.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { ScrollText } from '@lucide/svelte';
 
 	let level = $state<'all' | 'error'>('all');
 	let streamFilter = $state('');
@@ -48,10 +50,7 @@
 	];
 </script>
 
-<header class="mb-6">
-	<h1 class="text-2xl font-semibold">Logs</h1>
-	<p class="mt-1 text-sm text-[var(--color-muted)]">Account-wide event activity. Click an entry for details.</p>
-</header>
+<PageHeader icon={ScrollText} title="Logs" subtitle="Account-wide event activity — click an entry for details" />
 
 <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
 	<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">

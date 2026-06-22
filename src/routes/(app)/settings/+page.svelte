@@ -2,6 +2,8 @@
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { api, ApiError } from '$lib/api';
 	import { keys } from '$lib/query';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { Settings } from '@lucide/svelte';
 
 	const qc = useQueryClient();
 	const me = createQuery(() => ({ queryKey: keys.me, queryFn: () => api.me() }));
@@ -67,10 +69,7 @@
 	}
 </script>
 
-<header class="mb-6">
-	<h1 class="text-2xl font-semibold">Settings</h1>
-	<p class="mt-1 text-sm text-[var(--color-muted)]">Manage your account</p>
-</header>
+<PageHeader icon={Settings} title="Settings" subtitle="Manage your account" />
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
 	<!-- Profile -->

@@ -3,6 +3,8 @@
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
 	import Chart from '$lib/components/Chart.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { BarChart3 } from '@lucide/svelte';
 
 	let range = $state<'24h' | '7d' | '30d'>('24h');
 
@@ -47,26 +49,26 @@
 	]);
 </script>
 
-<header class="mb-6 flex items-start justify-between gap-4">
-	<div>
-		<h1 class="text-2xl font-semibold">Analytics</h1>
-		<p class="mt-1 text-sm text-[var(--color-muted)]">
-			Audience and playback quality across your organization
-		</p>
-	</div>
-	<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">
-		{#each ranges as r (r.id)}
-			<button
-				class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {range === r.id
-					? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
-					: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
-				onclick={() => (range = r.id)}
-			>
-				{r.label}
-			</button>
-		{/each}
-	</div>
-</header>
+<PageHeader
+	icon={BarChart3}
+	title="Analytics"
+	subtitle="Audience and playback quality across your organization"
+>
+	{#snippet actions()}
+		<div class="inline-flex gap-px rounded-lg bg-[var(--color-border)] p-0.5">
+			{#each ranges as r (r.id)}
+				<button
+					class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors {range === r.id
+						? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
+						: 'text-[var(--color-muted)] hover:text-[var(--color-text)]'}"
+					onclick={() => (range = r.id)}
+				>
+					{r.label}
+				</button>
+			{/each}
+		</div>
+	{/snippet}
+</PageHeader>
 
 <!-- summary cards -->
 <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

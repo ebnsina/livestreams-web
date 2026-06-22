@@ -6,6 +6,8 @@
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 	import ScheduleBadge from '$lib/components/ScheduleBadge.svelte';
 	import Pager from '$lib/components/Pager.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { Radio } from '@lucide/svelte';
 	import type { LatencyMode } from '$lib/types';
 
 	const qc = useQueryClient();
@@ -50,17 +52,15 @@
 	}));
 </script>
 
-<header class="mb-6 flex items-center justify-between">
-	<div>
-		<h1 class="text-2xl font-semibold">Streams</h1>
-		<p class="mt-1 text-sm text-[var(--color-muted)]">Create and manage your channels</p>
-	</div>
-	{#if auth.canWrite}
-		<button class="btn-primary" onclick={() => (showForm = !showForm)}>
-			{showForm ? 'Cancel' : '+ New stream'}
-		</button>
-	{/if}
-</header>
+<PageHeader icon={Radio} title="Streams" subtitle="Create and manage your channels">
+	{#snippet actions()}
+		{#if auth.canWrite}
+			<button class="btn-primary" onclick={() => (showForm = !showForm)}>
+				{showForm ? 'Cancel' : '+ New stream'}
+			</button>
+		{/if}
+	{/snippet}
+</PageHeader>
 
 {#if showForm}
 	<form

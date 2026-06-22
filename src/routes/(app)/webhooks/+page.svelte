@@ -4,6 +4,8 @@
 	import { keys } from '$lib/query';
 	import { auth } from '$lib/auth.svelte';
 	import CopyField from '$lib/components/CopyField.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import { Webhook } from '@lucide/svelte';
 
 	const qc = useQueryClient();
 
@@ -52,13 +54,7 @@
 	}
 </script>
 
-<header class="mb-6">
-	<h1 class="text-2xl font-semibold">Webhooks</h1>
-	<p class="mt-1 text-sm text-[var(--color-muted)]">
-		Receive signed HTTP callbacks for stream events (verify with the
-		<code class="font-mono text-xs">X-LS-Signature</code> HMAC-SHA256 header).
-	</p>
-</header>
+<PageHeader icon={Webhook} title="Webhooks" subtitle="Signed HTTP callbacks for stream events (verify the X-LS-Signature HMAC-SHA256 header)" />
 
 {#if newSecret}
 	<div class="card mb-6 border-[#ff5b3e]/40 bg-[#ff5b3e]/5 p-5">
