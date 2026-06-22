@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api';
 	import { keys } from '$lib/query';
@@ -88,10 +89,11 @@
 {#if open}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
-		class="squircle fixed z-50 max-h-[70vh] w-80 overflow-hidden rounded-2xl bg-[var(--color-surface)]"
-		style="{style}; box-shadow: var(--shadow-pop)"
+		class="squircle fixed z-50 max-h-[70vh] w-80 origin-top-right overflow-hidden rounded-2xl bg-[var(--color-surface)]"
+		style="{style}; transform-origin: top right; box-shadow: var(--shadow-pop)"
 		role="menu"
 		tabindex="-1"
+		transition:scale={{ start: 0.85, opacity: 0, duration: 160 }}
 		onclick={(e) => e.stopPropagation()}
 	>
 		<div class="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-2.5">
